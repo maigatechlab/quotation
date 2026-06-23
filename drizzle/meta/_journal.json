@@ -15,6 +15,34 @@
       "when": 1766719908715,
       "tag": "0001_last_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782149735368,
+      "tag": "0002_tan_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782173573240,
+      "tag": "0003_silly_groot",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782174628708,
+      "tag": "0004_closed_blonde_phantom",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782183789949,
+      "tag": "0005_huge_wallop",
+      "breakpoints": true
     }
   ]
 }

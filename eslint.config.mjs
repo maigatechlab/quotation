@@ -1,4 +1,4 @@
-import nextConfig from "eslint-config-next/core-web-vitals";
+﻿import nextConfig from "eslint-config-next/core-web-vitals";
 
 const config = [
   {
@@ -11,6 +11,12 @@ const config = [
       "create-agentic-app/**",
       "drizzle/**",
       "scripts/**",
+      "public/sw.js",
+      "public/swe-worker-*.js",
+      "_bmad/**",
+      "_bmad-output/**",
+      ".agent/**",
+      ".claude/skills/**",
     ],
   },
   ...nextConfig,

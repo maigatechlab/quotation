@@ -1,0 +1,105 @@
+{
+  "app": {
+    "name": "Quotation Logistique",
+    "shortName": "Quotation"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "search": "Rechercher",
+    "filter": "Filtrer"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signOut": "Se dÃ©connecter",
+    "email": "Email",
+    "password": "Mot de passe",
+    "login": {
+      "title": "Quotation Â· Logistique",
+      "email": "Email",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "forgotPassword": "Mot de passe oubliÃ© ?",
+      "offlineSession": "Fonctionne hors ligne Â· session 7 jours",
+      "errorInvalid": "Email ou mot de passe incorrect.",
+      "errorLocked": "Compte temporairement verrouillÃ©. Contactez l'administrateur pour dÃ©verrouiller.",
+      "errorRevoked": "Session rÃ©voquÃ©e. Reconnectez-vous.",
+      "errorExpired": "Session expirÃ©e. Reconnectez-vous pour continuer.",
+      "role": {
+        "admin": "Administrateur",
+        "commercial": "Commercial",
+        "operateur": "OpÃ©rateur"
+      },
+      "roleIncorrect": "Rôle incorrect. Votre rôle est {role}.",
+      "resetSuccess": "Mot de passe réinitialisé avec succès. Reconnectez-vous."
+    },
+    "forgotPassword": {
+      "title": "Mot de passe oublié ?",
+      "description": "Saisissez votre email pour recevoir un lien de réinitialisation.",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "vous@exemple.com",
+      "submitIdle": "Envoyer le lien",
+      "submitPending": "Envoi en cours…",
+      "successMessage": "Si un compte correspond à cet email, vous recevrez un lien de réinitialisation.",
+      "backToLogin": "Retour à la connexion",
+      "rememberPassword": "Vous vous souvenez de votre mot de passe ?",
+      "signIn": "Se connecter",
+      "errorRateLimit": "Trop de demandes. Réessayez dans une heure.",
+      "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "resetPassword": {
+      "title": "Nouveau mot de passe",
+      "description": "Choisissez un mot de passe sécurisé pour votre compte.",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Au moins 8 caractères",
+      "confirmPasswordLabel": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Confirmer votre nouveau mot de passe",
+      "submitIdle": "Réinitialiser le mot de passe",
+      "submitPending": "Réinitialisation…",
+      "errorMinLength": "Le mot de passe doit contenir au moins 8 caractères.",
+      "errorMismatch": "Les mots de passe ne correspondent pas.",
+      "errorInvalidToken": "Ce lien est invalide ou a déjà été utilisé.",
+      "errorNoToken": "Aucun lien de réinitialisation fourni.",
+      "errorExpiredToken": "Ce lien a expiré. Demandez un nouveau lien.",
+      "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
+      "requestNewLink": "Demander un nouveau lien"
+    }
+  },
+  "users": {
+    "title": "Utilisateurs",
+    "subtitle": "Rôles & accès",
+    "roleLabel": "Rôle",
+    "updateRoleSuccess": "Rôle mis à jour",
+    "updateRoleError": "Erreur lors de la mise à jour du rôle",
+    "ownRoleDisabled": "Votre propre rôle",
+    "roles": {
+      "admin": "Administrateur",
+      "commercial": "Commercial",
+      "operateur": "Opérateur"
+    }
+  },
+  "nav": {
+    "main": "Navigation principale",
+    "home": "Accueil",
+    "quotes": "Devis",
+    "newQuote": "Nouveau devis",
+    "clients": "Clients",
+    "account": "Compte"
+  },
+  "offline": {
+    "banner": "Hors ligne Â· {count} devis en attente"
+  },
+  "pwa": {
+    "installTitle": "Installer l'application",
+    "installDescription": "Installer Quotation Logistique sur votre appareil",
+    "installButton": "Installer",
+    "installDismiss": "Plus tard",
+    "updateAvailable": "Mise à jour disponible. L'application va se recharger."
+  }
+}

@@ -1,4 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+﻿# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
 /node_modules
@@ -13,7 +13,12 @@
 
 # testing
 /coverage
+/test-results
 /.playwright-mcp
+
+# generated PWA service worker
+/public/sw.js
+/public/swe-worker-*.js
 
 # next.js
 /.next/
@@ -45,4 +50,6 @@ next-env.d.ts
 # uploads
 public/uploads
 
-nul
+# local tooling (BMad skills, agent runtime)
+.claude/
+.agent/

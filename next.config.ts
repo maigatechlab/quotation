@@ -1,7 +1,19 @@
+import { withSentryConfig } from "@sentry/nextjs";
+import withSerwistInit from "@serwist/next";
+import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  disable: process.env.NODE_ENV !== "production",
+  reloadOnOnline: true,
+  cacheOnNavigation: true,
+});
+
 const nextConfig: NextConfig = {
-  // Image optimization configuration
   images: {
     remotePatterns: [
       {
@@ -18,11 +30,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-
-  // Enable compression
   compress: true,
-
-  // Security headers
   async headers() {
     return [
       {
@@ -54,4 +62,9 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(withSerwist(withNextIntl(nextConfig)), {
+  ...(process.env.SENTRY_ORG ? { org: process.env.SENTRY_ORG } : {}),
+  ...(process.env.SENTRY_PROJECT ? { project: process.env.SENTRY_PROJECT } : {}),
+  silent: true,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+});

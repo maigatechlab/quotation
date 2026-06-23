@@ -1,44 +1,53 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { SignInButton } from "@/components/auth/sign-in-button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { LoginForm } from "@/components/auth/login-form"
 import { auth } from "@/lib/auth"
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string }>
+  searchParams: Promise<{ reason?: string; reset?: string }>
 }) {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const { reason, reset } = await searchParams
+  const isForced = reason === "session-expired" || reason === "session-revoked"
 
-  if (session) {
-    redirect("/dashboard")
+  // Skip the "already authenticated → redirect to /" check when the user was
+  // sent here by the offline-session guard. The guard signs out before pushing,
+  // but we bypass as a safety net in case the cookie clears asynchronously.
+  if (!isForced) {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (session) {
+      redirect("/")
+    }
   }
 
-  const { reset } = await searchParams
-
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center">
-          {reset === "success" && (
-            <p className="mb-4 text-sm text-green-600 dark:text-green-400">
-              Password reset successfully. Please sign in with your new password.
-            </p>
-          )}
-          <SignInButton />
-        </CardContent>
-      </Card>
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center">
+      {reason === "session-expired" && (
+        <div
+          role="alert"
+          className="mb-4 w-full max-w-sm rounded-xl border border-status-expire-bg bg-status-expire-bg px-4 py-3 text-sm text-status-expire-text"
+        >
+          Session expirée. Reconnectez-vous pour continuer.
+        </div>
+      )}
+      {reason === "session-revoked" && (
+        <div
+          role="alert"
+          className="mb-4 w-full max-w-sm rounded-xl border border-status-expire-bg bg-status-expire-bg px-4 py-3 text-sm text-status-expire-text"
+        >
+          Session révoquée. Reconnectez-vous.
+        </div>
+      )}
+      {reset === "success" && (
+        <div
+          role="alert"
+          className="mb-4 w-full max-w-sm rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+        >
+          Mot de passe réinitialisé avec succès. Reconnectez-vous.
+        </div>
+      )}
+      <LoginForm />
     </div>
   )
 }

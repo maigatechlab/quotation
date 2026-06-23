@@ -25,12 +25,16 @@ export function ForgotPasswordForm() {
       })
 
       if (result.error) {
-        setError(result.error.message || "Failed to send reset email")
+        if (result.error.message === "RESET_RATE_LIMIT_EXCEEDED") {
+          setError("Trop de demandes. Réessayez dans une heure.")
+        } else {
+          setError("Une erreur est survenue. Veuillez réessayer.")
+        }
       } else {
         setSuccess(true)
       }
     } catch {
-      setError("An unexpected error occurred")
+      setError("Une erreur est survenue. Veuillez réessayer.")
     } finally {
       setIsPending(false)
     }
@@ -40,12 +44,11 @@ export function ForgotPasswordForm() {
     return (
       <div className="space-y-4 w-full max-w-sm text-center">
         <p className="text-sm text-muted-foreground">
-          If an account exists with that email, a password reset link has been sent.
-          Check your terminal for the reset URL.
+          Si un compte correspond à cet email, vous recevrez un lien de réinitialisation.
         </p>
         <Link href="/login">
           <Button variant="outline" className="w-full">
-            Back to sign in
+            Retour à la connexion
           </Button>
         </Link>
       </div>
@@ -55,11 +58,11 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Adresse e-mail</Label>
         <Input
           id="email"
           type="email"
-          placeholder="you@example.com"
+          placeholder="vous@exemple.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -70,12 +73,12 @@ export function ForgotPasswordForm() {
         <p className="text-sm text-destructive">{error}</p>
       )}
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Sending..." : "Send reset link"}
+        {isPending ? "Envoi en cours…" : "Envoyer le lien"}
       </Button>
       <div className="text-center text-sm text-muted-foreground">
-        Remember your password?{" "}
+        Vous vous souvenez de votre mot de passe ?{" "}
         <Link href="/login" className="text-primary hover:underline">
-          Sign in
+          Se connecter
         </Link>
       </div>
     </form>

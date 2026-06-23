@@ -1,53 +1,45 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { spectral, hankenGrotesk } from "@/app/fonts";
+import { SessionGuard } from "@/components/auth/session-guard";
+import { RegisterSW } from "@/components/pwa/register-sw";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Agentic Coding Boilerplate",
-    template: "%s | Agentic Coding Boilerplate",
+    default: "Quotation Logistique",
+    template: "%s | Quotation Logistique",
   },
   description:
-    "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling - perfect for building AI-powered applications and autonomous agents by Leon van Zyl",
+    "Gestion de devis pour professionnels du transport et de la logistique au Niger.",
   keywords: [
-    "Next.js",
-    "React",
-    "TypeScript",
-    "AI",
-    "OpenRouter",
-    "Boilerplate",
-    "Authentication",
-    "PostgreSQL",
+    "devis",
+    "transport",
+    "logistique",
+    "Niger",
+    "FCFA",
+    "gestion",
+    "professionnels",
   ],
-  authors: [{ name: "Leon van Zyl" }],
-  creator: "Leon van Zyl",
+  authors: [{ name: "Maiga Tech Lab" }],
+  creator: "Maiga Tech Lab",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://quotation.logistique.ne"),
   openGraph: {
     type: "website",
-    locale: "en_US",
-    siteName: "Agentic Coding Boilerplate",
-    title: "Agentic Coding Boilerplate",
+    locale: "fr_NE",
+    siteName: "Quotation Logistique",
+    title: "Quotation Logistique",
     description:
-      "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
+      "Gestion de devis pour professionnels du transport et de la logistique au Niger.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Agentic Coding Boilerplate",
+    title: "Quotation Logistique",
     description:
-      "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
+      "Gestion de devis pour professionnels du transport et de la logistique au Niger.",
   },
   robots: {
     index: true,
@@ -55,33 +47,29 @@ export const metadata: Metadata = {
   },
 };
 
-// JSON-LD structured data for SEO
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "Agentic Coding Boilerplate",
+  name: "Quotation Logistique",
   description:
-    "Complete agentic coding boilerplate with authentication, database, AI integration, and modern tooling",
-  applicationCategory: "DeveloperApplication",
+    "Gestion de devis pour professionnels du transport et de la logistique au Niger.",
+  applicationCategory: "BusinessApplication",
   operatingSystem: "Any",
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
   author: {
-    "@type": "Person",
-    name: "Leon van Zyl",
+    "@type": "Organization",
+    name: "Maiga Tech Lab",
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -89,19 +77,21 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${spectral.variable} ${hankenGrotesk.variable} antialiased min-h-dvh flex flex-col`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <SiteHeader />
-          <main id="main-content" className="flex-1">{children}</main>
-          <SiteFooter />
-          <Toaster richColors position="top-right" />
-        </ThemeProvider>
+        <NextIntlClientProvider messages={messages} locale="fr-NE">
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <RegisterSW />
+            <SessionGuard />
+            {children}
+            <Toaster richColors position="top-right" />
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import type { Role } from "@/lib/permissions";
 
 /**
  * Protected routes that require authentication.
@@ -33,6 +34,18 @@ export async function requireAuth() {
  */
 export async function getOptionalSession() {
   return await auth.api.getSession({ headers: await headers() });
+}
+
+export type SessionWithRole = {
+  session: NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
+  role: Role;
+};
+
+export async function getSessionWithRole(): Promise<SessionWithRole | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return null;
+  const role = ((session.user as Record<string, unknown>).role ?? "commercial") as Role;
+  return { session, role };
 }
 
 /**
