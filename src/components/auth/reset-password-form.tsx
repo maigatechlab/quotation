@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -12,24 +12,42 @@ export function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
-  const error = searchParams.get("error")
+  const urlError = searchParams.get("error")
 
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [formError, setFormError] = useState("")
   const [isPending, setIsPending] = useState(false)
+  const [isExpired, setIsExpired] = useState(false)
 
-  if (error === "invalid_token" || !token) {
+  const normalizedUrlError = urlError?.toUpperCase() ?? ""
+
+  if (normalizedUrlError === "INVALID_TOKEN" || !token) {
     return (
       <div className="space-y-4 w-full max-w-sm text-center">
         <p className="text-sm text-destructive">
-          {error === "invalid_token"
-            ? "This password reset link is invalid or has expired."
-            : "No reset token provided."}
+          {normalizedUrlError === "INVALID_TOKEN"
+            ? "Ce lien est invalide ou a déjà été utilisé."
+            : "Aucun lien de réinitialisation fourni."}
         </p>
         <Link href="/forgot-password">
           <Button variant="outline" className="w-full">
-            Request a new link
+            Demander un nouveau lien
+          </Button>
+        </Link>
+      </div>
+    )
+  }
+
+  if (isExpired) {
+    return (
+      <div className="space-y-4 w-full max-w-sm text-center">
+        <p className="text-sm text-destructive">
+          Ce lien a expiré. Demandez un nouveau lien.
+        </p>
+        <Link href="/forgot-password">
+          <Button variant="outline" className="w-full">
+            Demander un nouveau lien
           </Button>
         </Link>
       </div>
@@ -40,13 +58,13 @@ export function ResetPasswordForm() {
     e.preventDefault()
     setFormError("")
 
-    if (password !== confirmPassword) {
-      setFormError("Passwords do not match")
+    if (password.length < 8) {
+      setFormError("Le mot de passe doit contenir au moins 8 caractères.")
       return
     }
 
-    if (password.length < 8) {
-      setFormError("Password must be at least 8 characters")
+    if (password !== confirmPassword) {
+      setFormError("Les mots de passe ne correspondent pas.")
       return
     }
 
@@ -59,12 +77,25 @@ export function ResetPasswordForm() {
       })
 
       if (result.error) {
-        setFormError(result.error.message || "Failed to reset password")
+        const msg = result.error.message?.toLowerCase() ?? ""
+        const code = (result.error as { code?: string }).code ?? ""
+
+        if (msg.includes("expired") || code === "EXPIRED_TOKEN") {
+          setIsExpired(true)
+        } else if (
+          msg.includes("invalid") ||
+          msg.includes("already") ||
+          code === "INVALID_TOKEN"
+        ) {
+          setFormError("Ce lien est invalide ou a déjà été utilisé.")
+        } else {
+          setFormError("Une erreur est survenue. Veuillez réessayer.")
+        }
       } else {
         router.push("/login?reset=success")
       }
     } catch {
-      setFormError("An unexpected error occurred")
+      setFormError("Une erreur est survenue. Veuillez réessayer.")
     } finally {
       setIsPending(false)
     }
@@ -73,11 +104,11 @@ export function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
       <div className="space-y-2">
-        <Label htmlFor="password">New Password</Label>
+        <Label htmlFor="password">Nouveau mot de passe</Label>
         <Input
           id="password"
           type="password"
-          placeholder="Enter new password"
+          placeholder="Au moins 8 caractères"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -85,11 +116,11 @@ export function ResetPasswordForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+        <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
         <Input
           id="confirmPassword"
           type="password"
-          placeholder="Confirm new password"
+          placeholder="Confirmer votre nouveau mot de passe"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
@@ -100,8 +131,9 @@ export function ResetPasswordForm() {
         <p className="text-sm text-destructive">{formError}</p>
       )}
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Resetting..." : "Reset password"}
+        {isPending ? "Réinitialisation…" : "Réinitialiser le mot de passe"}
       </Button>
     </form>
   )
 }
+

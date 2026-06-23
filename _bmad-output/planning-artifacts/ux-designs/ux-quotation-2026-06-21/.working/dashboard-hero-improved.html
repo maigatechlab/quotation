@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr-NE">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quotation Logistique — Dashboard (improved)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-navy:#1B3070; --brand-navy-deep:#152659; --brand-slate:#3A4C7A;
+    --brand-amber:#F6A624; --amber-deep:#9a6a07; --terracotta:#b8502d;
+    --app-bg:#f7f4ee; --surface:#fff; --surface-alt:#faf8f3; --surface-tint-amber:#fdf3df;
+    --border:#ece6da; --border-input:#e3dcce;
+    --text-primary:#1c1a17; --text-secondary:#57534e; --text-muted:#6b6259; --text-faint:#a39d92;
+    --text-on-dark:#faf6ef;
+    --r-card:15px; --r-dark:16px;
+    --sh-flat:0 1px 2px rgba(40,30,15,.03);
+    --sh-overlay:0 8px 30px -10px rgba(40,30,15,.4);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(circle at 50% 0%, #ece6da, #e2dcce);font-family:"Hanken Grotesk",sans-serif;
+       min-height:100vh;display:flex;justify-content:center;padding:32px 0;color:var(--text-secondary)}
+  .phone{width:402px;background:var(--app-bg);border-radius:42px;overflow:hidden;box-shadow:var(--sh-overlay);
+         padding:20px;min-height:780px}
+  .num{font-variant-numeric:tabular-nums}
+  .serif{font-family:"Spectral",serif;letter-spacing:-.012em}
+
+  /* header */
+  .top{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 16px}
+  .greet{font-size:13px;color:var(--text-faint)}
+  .name{font-family:"Spectral",serif;font-size:27px;font-weight:600;color:var(--brand-navy);line-height:1.1}
+  .avatar{width:42px;height:42px;border-radius:50%;background:var(--brand-navy);color:#fff;
+          display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px}
+
+  /* offline banner */
+  .offline{display:flex;align-items:center;gap:8px;background:#fdf6e7;border:1px solid #f1e2b8;
+           border-radius:11px;padding:9px 13px;font-size:12px;color:#92580a;margin-bottom:12px}
+  .blink{width:8px;height:8px;border-radius:50%;background:var(--brand-amber);animation:blink 1.8s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  /* HERO — D1 navy, D5 filigrane, D6 sunset glow */
+  .hero{position:relative;background:var(--brand-navy);border-radius:var(--r-dark);padding:20px;overflow:hidden;
+        color:var(--text-on-dark);margin-bottom:14px}
+  /* D6 sunset radial glow top-right: amber -> terracotta */
+  .hero::before{content:"";position:absolute;top:-60px;right:-40px;width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle, rgba(246,166,36,.55), rgba(184,80,45,.35) 45%, transparent 70%);
+    filter:blur(4px);animation:glow 5s ease-in-out infinite}
+  @keyframes glow{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+  /* D5 Sahel filigrane ~4% navy-on-navy geometric motif */
+  .hero::after{content:"";position:absolute;inset:0;opacity:.04;pointer-events:none;
+    background-image:
+      repeating-linear-gradient(45deg, #fff 0 1px, transparent 1px 14px),
+      repeating-linear-gradient(-45deg, #fff 0 1px, transparent 1px 14px);}
+  .hero>*{position:relative;z-index:1}
+  .eyebrow{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#b9c2da}
+  .hero-amt{font-family:"Spectral",serif;font-size:36px;font-weight:600;letter-spacing:-.015em;margin:6px 0 2px}
+  .hero-sub{font-size:11.5px;color:#aab3cf}
+  .seg{display:flex;gap:4px;margin-top:16px;background:rgba(255,255,255,.08);padding:4px;border-radius:11px}
+  .seg button{flex:1;border:0;background:transparent;color:#b6bcd0;font-family:inherit;font-size:12px;
+              font-weight:600;padding:7px 0;border-radius:8px;cursor:pointer}
+  .seg button.on{background:var(--brand-amber);color:var(--brand-navy)}
+
+  /* status counters 2x2 */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:14px;
+        box-shadow:var(--sh-flat)}
+  .stat .row{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);font-weight:500}
+  .dot{width:8px;height:8px;border-radius:50%}
+  .stat .n{font-family:"Spectral",serif;font-size:28px;font-weight:600;color:var(--text-primary);margin-top:4px}
+
+  /* recent */
+  .sec{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 10px}
+  .sec h3{font-family:"Spectral",serif;font-size:18px;font-weight:600;color:var(--text-primary)}
+  .sec a{font-size:12.5px;font-weight:600;color:var(--brand-navy);text-decoration:none}
+  .q{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:13px 14px;
+     box-shadow:var(--sh-flat);margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start}
+  .q .left .no{font-size:13.5px;font-weight:700;color:var(--text-primary)}
+  .q .client{font-size:13px;color:var(--text-secondary);margin:3px 0 1px}
+  .q .meta{font-size:11.5px;color:var(--text-muted)}
+  .q .amt{font-family:"Spectral",serif;font-size:16px;font-weight:600;color:var(--text-primary);text-align:right}
+  .q .cur{font-size:10px;color:var(--text-muted);text-align:right;letter-spacing:.03em}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  .seg button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;
+         padding:3px 8px;border-radius:6px;margin-top:5px}
+  .b-env{background:#fbeedd;color:#b45309}
+  .b-acc{background:#e8f1ea;color:#15803d}
+  .note{font-size:10.5px;color:var(--text-muted);text-align:center;margin-top:14px;line-height:1.5}
+  @media (prefers-reduced-motion: reduce){
+    .hero::before,.blink{animation:none}
+  }
+</style>
+</head>
+<body>
+  <main class="phone">
+    <h1 class="sr-only">Tableau de bord — Quotation Logistique</h1>
+    <header class="top">
+      <div><div class="greet">Bonjour,</div><div class="name">Amadou</div></div>
+      <div class="avatar" role="img" aria-label="Amadou — profil">AM</div>
+    </header>
+
+    <div class="offline" role="status"><span class="blink" aria-hidden="true"></span>Hors ligne · 2 devis en attente de synchronisation</div>
+
+    <!-- HERO: D1 navy base · D6 amber→terracotta sunset glow · D5 4% Sahel filigrane -->
+    <section class="hero" aria-label="Montant devisé">
+      <div class="eyebrow">Montant devisé · 30 jours</div>
+      <div class="hero-amt num">12 450 000 <span style="font-size:22px">F</span></div>
+      <div class="hero-sub">Envoyé + Accepté · FCFA</div>
+      <div class="seg" role="tablist" aria-label="Période">
+        <button role="tab" aria-selected="false">7j</button><button role="tab" aria-selected="true" class="on">30j</button><button role="tab" aria-selected="false">90j</button><button role="tab" aria-selected="false">Tout</button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <div class="stat"><div class="row"><span class="dot" style="background:#a8a29e"></span>Brouillon</div><div class="n num">5</div></div>
+      <div class="stat"><div class="row"><span class="dot" style="background:#d97706"></span>Envoyé</div><div class="n num">8</div></div>
+      <div class="stat"><div class="row"><span class="dot" style="background:#16a34a"></span>Accepté</div><div class="n num">12</div></div>
+      <div class="stat"><div class="row"><span class="dot" style="background:#2f6e96"></span>Validé</div><div class="n num">3</div></div>
+    </div>
+
+    <div class="sec"><h3>Devis récents</h3><a href="#">Voir tout</a></div>
+
+    <div class="q">
+      <div class="left">
+        <div class="no">DEV-2026-0042</div>
+        <div class="client">Sahel Négoce SARL</div>
+        <div class="meta">Niamey → Ouagadougou · 18 juin</div>
+        <span class="badge b-env">● Envoyé</span>
+      </div>
+      <div><div class="amt num">3 200 000</div><div class="cur">FCFA</div></div>
+    </div>
+
+    <div class="q">
+      <div class="left">
+        <div class="no">DEV-2026-0041</div>
+        <div class="client">Transit Liptako</div>
+        <div class="meta">Cotonou → Niamey · 17 juin</div>
+        <span class="badge b-acc">● Accepté</span>
+      </div>
+      <div><div class="amt num">5 750 000</div><div class="cur">FCFA</div></div>
+    </div>
+
+    <p class="note">Mock — améliorations D1 (navy unifié) · D5 (filigrane Sahel 4%) · D6 (glow sunset).<br>Spines font foi en cas de conflit. prefers-reduced-motion → animations off.</p>
+  </main>
+</body>
+</html>

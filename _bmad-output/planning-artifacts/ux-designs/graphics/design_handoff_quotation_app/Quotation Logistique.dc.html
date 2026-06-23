@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+  .scr { -ms-overflow-style: none; scrollbar-width: none; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes scrIn { from { transform: translateY(10px); } }
+  @keyframes sheetUp { from { transform: translateY(20px); } }
+  @keyframes toastIn { from { transform: translate(-50%, 12px); } }
+  @keyframes pop { 0% { transform: scale(.4); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  @keyframes dotPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.72); opacity: .6; } }
+  @keyframes glowPulse { 0%, 100% { opacity: .5; transform: scale(1); } 50% { opacity: .9; transform: scale(1.15); } }
+  @keyframes floatY { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+  input, button, select, textarea { font-family: inherit; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: #1b3070 !important; }
+</style>
+</helmet>
+
+<div style="min-height:100vh; width:100%; background:radial-gradient(120% 90% at 50% 0%, #ece6da 0%, #e2dcce 100%); display:flex; align-items:flex-start; justify-content:center; padding:36px 24px 56px; font-family:'Hanken Grotesk',sans-serif; color:#1b3070;">
+  <div style="width:402px; height:858px; background:#f7f4ee; border-radius:42px; box-shadow:0 2px 1px rgba(0,0,0,.04),0 26px 60px -18px rgba(40,30,15,.45), 0 0 0 1px rgba(0,0,0,.04); overflow:hidden; display:flex; flex-direction:column; position:relative;">
+
+    <!-- STATUS BAR -->
+    <div style="height:46px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 24px 0 28px; font-size:14px; font-weight:600; letter-spacing:.01em;">
+      <span>9:41</span>
+      <div style="display:flex; align-items:center; gap:7px;">
+        <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="1" fill="#1b3070"/><rect x="4.5" y="5" width="3" height="6" rx="1" fill="#1b3070"/><rect x="9" y="2.5" width="3" height="8.5" rx="1" fill="#1b3070"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="#1b3070"/></svg>
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><path d="M8 2.2c2.1 0 4 .8 5.4 2.1l1.1-1.2A9.5 9.5 0 0 0 8 .5 9.5 9.5 0 0 0 1.5 3.1l1.1 1.2A7.8 7.8 0 0 1 8 2.2Z" fill="#1b3070"/><path d="M8 5.4c1.2 0 2.3.5 3.1 1.2l1.1-1.2A6 6 0 0 0 8 3.7a6 6 0 0 0-4.2 1.7l1.1 1.2A4.4 4.4 0 0 1 8 5.4Z" fill="#1b3070"/><path d="M8 8.5c.6 0 1.1.2 1.5.6L8 11l-1.5-1.9c.4-.4 1-.6 1.5-.6Z" fill="#1b3070"/></svg>
+        <div style="display:flex; align-items:center; gap:3px;"><div style="width:23px; height:11px; border:1px solid #1b3070; border-radius:3px; padding:1.5px; opacity:.9;"><div style="width:70%; height:100%; background:#1b3070; border-radius:1px;"></div></div><div style="width:2px; height:4px; background:#1b3070; border-radius:0 1px 1px 0; opacity:.5;"></div></div>
+      </div>
+    </div>
+
+    <!-- SCREEN AREA -->
+    <div class="scr" style="flex:1; overflow-y:auto; overflow-x:hidden;">
+
+      <!-- ============ LOGIN ============ -->
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Connexion" style="min-height:100%; display:flex; flex-direction:column; padding:0 28px 26px; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; width:100%;">
+          <div style="width:60px; height:60px; border-radius:17px; background:#1b3070; display:flex; align-items:center; justify-content:center; margin-bottom:22px; box-shadow:0 10px 22px -8px rgba(27,48,112,.5);"><svg width="38" height="38" viewBox="235 325 175 175" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" d="M317.004 339.064C356.469 336.52 390.139 371.831 389.526 410.286C389.361 420.639 386.608 427.735 382.879 437.053C375.882 431.844 366.4 420.911 358.246 414.344C357.168 394.084 351.68 376.583 329.675 371.034C319.296 368.349 308.276 369.914 299.055 375.383C278.386 387.823 274.656 411.765 287.076 431.66C296.749 445.158 308.874 447.925 324.446 448.134C331.032 453.123 344.242 466.743 350.553 472.989C342.997 476.287 334.956 478.338 326.742 479.063C307.684 480.823 288.716 474.868 274.083 462.529C259.904 450.417 251.152 433.142 249.773 414.544C248.117 396.238 253.893 378.036 265.802 364.036C279.419 348.059 296.443 340.782 317.004 339.064Z"/><path fill="#F6A624" d="M315.099 383.592C327.814 381.561 339.784 390.175 341.899 402.878C344.014 415.581 335.481 427.61 322.794 429.809C309.988 432.029 297.823 423.396 295.688 410.574C293.554 397.751 302.265 385.642 315.099 383.592Z" style="transform-box:fill-box; transform-origin:center; animation:dotPulse 2.4s ease-in-out infinite;"/><path fill="#ffffff" d="M347.756 425.161C348.434 425.097 349.115 425.069 349.797 425.076C358.108 425.091 377.434 447.35 384.662 454.527L395.594 442.625L395.627 485.672L383.906 485.65C373.542 485.538 363.177 485.77 352.828 486.347C357.225 481.533 361.642 477.657 366.488 473.304C360.839 467.707 354.979 462.383 349.278 456.915C343.691 451.556 334.536 443.409 337.007 434.815C338.458 429.767 343.457 427.325 347.756 425.161Z"/></svg></div>
+          <div style="font-family:'Spectral',serif; font-size:30px; font-weight:600; line-height:1.05; letter-spacing:-.015em;">Quotation<br>Logistique</div>
+          <div style="font-size:13.5px; color:#8a8377; margin-top:9px; margin-bottom:26px; line-height:1.45;">Devis professionnels pour le transport et le transit — Niger &amp; espace AES.</div>
+          <div style="margin-bottom:13px;">
+            <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Adresse e-mail</div>
+            <input value="{{ loginEmail }}" onInput="{{ onLoginEmail }}" style="width:100%; padding:13px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+          </div>
+          <div style="margin-bottom:18px;">
+            <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Mot de passe</div>
+            <input type="password" value="{{ loginPass }}" onInput="{{ onLoginPass }}" style="width:100%; padding:13px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+          </div>
+          <div style="font-size:11.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:9px;">Se connecter en tant que</div>
+          <div style="display:flex; gap:7px; margin-bottom:22px;">
+            <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="3">
+              <button onClick="{{ r.onClick }}" style="flex:1; cursor:pointer; padding:9px 4px; border-radius:10px; border:1px solid {{ r.border }}; background:{{ r.bg }}; color:{{ r.col }}; font-size:11px; font-weight:600;">{{ r.label }}</button>
+            </sc-for>
+          </div>
+          <button onClick="{{ doLogin }}" style="width:100%; cursor:pointer; padding:15px; border-radius:13px; border:none; background:#1b3070; color:#fff; font-size:15px; font-weight:600; box-shadow:0 5px 16px -5px rgba(27,48,112,.45);">Se connecter</button>
+          <button onClick="{{ forgotPw }}" style="background:none; border:none; cursor:pointer; color:#8a8377; font-size:13px; font-weight:500; margin-top:15px; align-self:center;">Mot de passe oublié ?</button>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; font-size:12px; color:#a39d92;">
+          <div style="width:6px; height:6px; border-radius:50%; background:#16a34a;"></div>Fonctionne hors ligne · session 7 jours
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ DASHBOARD ============ -->
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Tableau de bord" style="padding:8px 20px 28px; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:18px;">
+          <div>
+            <div style="font-size:13px; color:#8a8377; font-weight:500;">Bonjour,</div>
+            <div style="font-family:'Spectral',serif; font-size:27px; font-weight:600; line-height:1.1; letter-spacing:-.01em;">{{ userName }}</div>
+          </div>
+          <div style="width:42px; height:42px; border-radius:50%; background:#1b3070; color:#f7f4ee; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px; flex:none;">{{ userInitials }}</div>
+        </div>
+
+        <sc-if value="{{ showOffline }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex; align-items:center; gap:9px; background:#fdf6e7; border:1px solid #f1e2b8; border-radius:11px; padding:10px 13px; margin-bottom:18px;">
+          <div style="width:7px; height:7px; border-radius:50%; background:#d97706; flex:none; animation:blink 1.8s ease-in-out infinite;"></div>
+          <div style="font-size:12.5px; color:#92580a; font-weight:500; line-height:1.3;">Hors ligne · 2 devis en attente de synchronisation</div>
+        </div>
+        </sc-if>
+
+        <!-- hero amount -->
+        <div style="background:#1b3070; border-radius:18px; padding:20px 20px 18px; margin-bottom:14px; position:relative; overflow:hidden;">
+          <div style="position:absolute; right:-26px; top:-30px; width:140px; height:140px; border-radius:50%; background:radial-gradient(circle, rgba(246,166,36,.55), transparent 70%); animation:glowPulse 5s ease-in-out infinite;"></div>
+          <div style="font-size:12px; color:#b6ada0; font-weight:500; letter-spacing:.03em; text-transform:uppercase;">Montant devisé · {{ periodLabel }}</div>
+          <div style="font-family:'Spectral',serif; font-size:36px; font-weight:600; color:#faf6ef; margin-top:6px; letter-spacing:-.015em; font-variant-numeric:tabular-nums;">{{ totalAmountFmt }}</div>
+          <div style="font-size:12.5px; color:#9c9488; margin-top:4px;">{{ totalAmountSub }}</div>
+          <div style="display:flex; gap:6px; margin-top:16px;">
+            <sc-for list="{{ periods }}" as="p" hint-placeholder-count="4">
+              <button onClick="{{ p.onClick }}" style="border:none; cursor:pointer; padding:7px 13px; border-radius:9px; font-size:12.5px; font-weight:600; background:{{ p.bg }}; color:{{ p.col }};">{{ p.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- status counters -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:24px;">
+          <sc-for list="{{ counters }}" as="c" hint-placeholder-count="4">
+            <div style="background:#fff; border:1px solid #ece6da; border-radius:14px; padding:14px 15px; box-shadow:0 1px 2px rgba(40,30,15,.03);">
+              <div style="display:flex; align-items:center; gap:7px;">
+                <div style="width:8px; height:8px; border-radius:50%; background:{{ c.dot }};"></div>
+                <div style="font-size:12.5px; color:#78716c; font-weight:500;">{{ c.label }}</div>
+              </div>
+              <div style="font-family:'Spectral',serif; font-size:28px; font-weight:600; margin-top:6px; line-height:1;">{{ c.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <div style="font-family:'Spectral',serif; font-size:18px; font-weight:600;">Devis récents</div>
+          <button onClick="{{ goList }}" style="border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; color:#1b3070;">Voir tout</button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <sc-for list="{{ recentQuotes }}" as="q" hint-placeholder-count="4">
+            <button onClick="{{ q.onClick }}" style="text-align:left; cursor:pointer; background:#fff; border:1px solid #ece6da; border-radius:14px; padding:13px 15px; display:flex; align-items:center; gap:13px; box-shadow:0 1px 2px rgba(40,30,15,.03);">
+              <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:13.5px; font-weight:700; letter-spacing:-.01em;">{{ q.number }}</span>
+                  <span style="font-size:10.5px; font-weight:600; padding:2px 7px; border-radius:6px; color:{{ q.col }}; background:{{ q.bg }};">{{ q.statusLabel }}</span>
+                </div>
+                <div style="font-size:13px; color:#44403c; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ q.clientName }}</div>
+                <div style="font-size:11.5px; color:#a39d92; margin-top:2px;">{{ q.trajet }} · {{ q.dateShort }}</div>
+              </div>
+              <div style="text-align:right; flex:none;">
+                <div style="font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.01em;">{{ q.amountFmt }}</div>
+                <div style="font-size:10.5px; color:#a39d92;">FCFA</div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ LIST ============ -->
+      <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Liste des devis" style="padding:8px 20px 28px; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="font-family:'Spectral',serif; font-size:27px; font-weight:600; letter-spacing:-.01em; margin-bottom:14px;">Devis</div>
+
+        <div style="position:relative; margin-bottom:13px;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="position:absolute; left:14px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7" stroke="#a39d92" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="#a39d92" stroke-width="2" stroke-linecap="round"/></svg>
+          <input value="{{ search }}" onInput="{{ onSearch }}" placeholder="Rechercher client, n° de devis…" style="width:100%; padding:12px 14px 12px 40px; border:1px solid #e3dcce; border-radius:12px; background:#fff; font-size:14px; color:#1b3070;">
+        </div>
+
+        <div class="scr" style="display:flex; gap:7px; overflow-x:auto; margin:0 -20px 16px; padding:0 20px;">
+          <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="6">
+            <button onClick="{{ f.onClick }}" style="flex:none; cursor:pointer; border:1px solid {{ f.border }}; background:{{ f.bg }}; color:{{ f.col }}; padding:7px 13px; border-radius:20px; font-size:12.5px; font-weight:600;">{{ f.label }}</button>
+          </sc-for>
+        </div>
+
+        <div style="font-size:12.5px; color:#8a8377; margin-bottom:10px; font-weight:500;">{{ filteredCount }}</div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <sc-for list="{{ filteredQuotes }}" as="q" hint-placeholder-count="5">
+            <button onClick="{{ q.onClick }}" style="text-align:left; cursor:pointer; background:#fff; border:1px solid #ece6da; border-radius:14px; padding:14px 15px; box-shadow:0 1px 2px rgba(40,30,15,.03);">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <span style="font-size:14px; font-weight:700; letter-spacing:-.01em;">{{ q.number }}</span>
+                <span style="font-size:10.5px; font-weight:600; padding:3px 8px; border-radius:6px; color:{{ q.col }}; background:{{ q.bg }};">{{ q.statusLabel }}</span>
+              </div>
+              <div style="font-size:13.5px; color:#292524; margin-top:6px; font-weight:500;">{{ q.clientName }}</div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:7px;">
+                <div style="font-size:11.5px; color:#a39d92;">{{ q.trajet }} · {{ q.dateShort }}</div>
+                <div style="font-size:13.5px; font-weight:700; font-variant-numeric:tabular-nums;">{{ q.amountFmt }} <span style="font-size:10.5px; color:#a39d92; font-weight:500;">FCFA</span></div>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ CLIENTS ============ -->
+      <sc-if value="{{ isClients }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Clients" style="padding:8px 20px 28px; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+          <div style="font-family:'Spectral',serif; font-size:27px; font-weight:600; letter-spacing:-.01em;">Clients</div>
+          <button onClick="{{ openNewClient }}" style="width:38px; height:38px; border-radius:11px; border:none; cursor:pointer; background:#1b3070; color:#fff; display:flex; align-items:center; justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg></button>
+        </div>
+        <div style="position:relative; margin-bottom:16px;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="position:absolute; left:14px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="7" stroke="#a39d92" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="#a39d92" stroke-width="2" stroke-linecap="round"/></svg>
+          <input placeholder="Rechercher un client…" style="width:100%; padding:12px 14px 12px 40px; border:1px solid #e3dcce; border-radius:12px; background:#fff; font-size:14px;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <sc-for list="{{ clientCards }}" as="c" hint-placeholder-count="5">
+            <div style="background:#fff; border:1px solid #ece6da; border-radius:14px; padding:14px 15px; display:flex; align-items:center; gap:13px; box-shadow:0 1px 2px rgba(40,30,15,.03);">
+              <div style="width:44px; height:44px; border-radius:12px; background:{{ c.tint }}; color:{{ c.tintCol }}; display:flex; align-items:center; justify-content:center; font-family:'Spectral',serif; font-weight:600; font-size:17px; flex:none;">{{ c.initials }}</div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-size:14px; font-weight:600;">{{ c.name }}</div>
+                <div style="font-size:12px; color:#8a8377; margin-top:2px;">{{ c.ville }} · {{ c.phone }}</div>
+              </div>
+              <div style="text-align:right; flex:none;">
+                <div style="font-size:15px; font-weight:700; font-family:'Spectral',serif;">{{ c.count }}</div>
+                <div style="font-size:10px; color:#a39d92; text-transform:uppercase; letter-spacing:.03em;">devis</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ COMPTE ============ -->
+      <sc-if value="{{ isCompte }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Compte" style="padding:8px 20px 28px; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="font-family:'Spectral',serif; font-size:27px; font-weight:600; letter-spacing:-.01em; margin-bottom:16px;">Paramètres</div>
+        <div style="background:#fff; border:1px solid #ece6da; border-radius:16px; padding:18px; box-shadow:0 1px 2px rgba(40,30,15,.03); margin-bottom:16px;">
+          <div style="display:flex; gap:14px; align-items:center;">
+            <div style="width:54px; height:54px; border-radius:13px; background:#1b3070; display:flex; align-items:center; justify-content:center; flex:none;"><img src="assets/logo-mark-light.svg" width="34" height="34" alt="logo"></div>
+            <div>
+              <div style="font-size:15.5px; font-weight:700; letter-spacing:-.01em;">{{ companyName }}</div>
+              <div style="font-size:12px; color:#8a8377; margin-top:2px;">SARL · Niamey, Niger</div>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; padding-top:16px; border-top:1px solid #f0ebe0;">
+            <div><div style="font-size:10.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600;">RCCM</div><div style="font-size:13px; font-weight:500; margin-top:3px;">NE-NIA-2021-B-1234</div></div>
+            <div><div style="font-size:10.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600;">NIF</div><div style="font-size:13px; font-weight:500; margin-top:3px;">12345 / P</div></div>
+            <div><div style="font-size:10.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600;">Signataire</div><div style="font-size:13px; font-weight:500; margin-top:3px;">Amadou Diallo</div></div>
+            <div><div style="font-size:10.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600;">Fonction</div><div style="font-size:13px; font-weight:500; margin-top:3px;">Directeur Comm.</div></div>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #ece6da; border-radius:16px; overflow:hidden; box-shadow:0 1px 2px rgba(40,30,15,.03);">
+          <sc-for list="{{ settingsRows }}" as="r" hint-placeholder-count="5">
+            <div onClick="{{ r.onClick }}" style="display:flex; align-items:center; gap:13px; padding:15px 17px; border-bottom:1px solid #f3eee4; cursor:pointer;">
+              <div style="width:34px; height:34px; border-radius:9px; background:#faede4; display:flex; align-items:center; justify-content:center; flex:none; color:#1b3070; font-size:15px;">{{ r.icon }}</div>
+              <div style="flex:1;"><div style="font-size:14px; font-weight:500;">{{ r.label }}</div><div style="font-size:11.5px; color:#a39d92; margin-top:1px;">{{ r.sub }}</div></div>
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="m1 1 6 6-6 6" stroke="#c4bdb0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ NEW CLIENT ============ -->
+      <sc-if value="{{ isNewClient }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Nouveau client" style="display:flex; flex-direction:column; min-height:100%; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="padding:6px 20px 14px; display:flex; align-items:center; justify-content:space-between;">
+          <button onClick="{{ cancelNewClient }}" style="border:1px solid #e3dcce; background:#fff; cursor:pointer; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;"><svg width="9" height="15" viewBox="0 0 8 14" fill="none"><path d="m7 1-6 6 6 6" stroke="#1b3070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div style="font-size:15px; font-weight:600; white-space:nowrap;">Nouveau client</div>
+          <div style="width:36px;"></div>
+        </div>
+        <div class="scr" style="flex:1; overflow-y:auto; padding:4px 20px 20px;">
+          <div style="margin-bottom:13px;">
+            <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Nom de la société <span style="color:#1b3070;">*</span></div>
+            <input value="{{ ncName }}" onInput="{{ onNcName }}" placeholder="Ex. Maiga Tech Lab" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:13px;">
+            <div>
+              <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Contact</div>
+              <input value="{{ ncContact }}" onInput="{{ onNcContact }}" placeholder="Nom du contact" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+            </div>
+            <div>
+              <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Téléphone <span style="color:#1b3070;">*</span></div>
+              <input value="{{ ncPhone }}" onInput="{{ onNcPhone }}" inputmode="tel" placeholder="+227 …" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+            </div>
+          </div>
+          <div style="margin-bottom:13px;">
+            <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">E-mail</div>
+            <input value="{{ ncEmail }}" onInput="{{ onNcEmail }}" inputmode="email" placeholder="contact@exemple.ne" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:13px;">
+            <div>
+              <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Pays</div>
+              <select value="{{ ncPays }}" onChange="{{ onNcPays }}" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+                <sc-for list="{{ paysList }}" as="p" hint-placeholder-count="6"><option value="{{ p }}">{{ p }}</option></sc-for>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Ville</div>
+              <input value="{{ ncVille }}" onInput="{{ onNcVille }}" placeholder="Ex. Niamey" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+            </div>
+          </div>
+          <div style="margin-bottom:13px;">
+            <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Adresse</div>
+            <input value="{{ ncAdresse }}" onInput="{{ onNcAdresse }}" placeholder="Quartier, BP…" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+          </div>
+          <div>
+            <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Notes internes</div>
+            <textarea value="{{ ncNotes }}" onInput="{{ onNcNotes }}" rows="2" placeholder="Conditions particulières, historique…" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:13.5px; resize:none; line-height:1.4; color:#1b3070;"></textarea>
+          </div>
+        </div>
+        <div style="flex:none; padding:13px 20px calc(13px + env(safe-area-inset-bottom)); background:#f7f4ee; border-top:1px solid #ece6da;">
+          <button onClick="{{ saveClient }}" style="width:100%; cursor:pointer; padding:14px; border-radius:13px; border:none; background:#1b3070; color:#fff; font-size:14.5px; font-weight:600; box-shadow:0 4px 14px -4px rgba(27,48,112,.45);">Enregistrer le client</button>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ CREATE WIZARD ============ -->
+      <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Nouveau devis" style="display:flex; flex-direction:column; min-height:100%; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="padding:4px 20px 14px; background:#f7f4ee; position:sticky; top:0; z-index:5;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <button onClick="{{ wizardBack }}" style="border:none; background:#fff; border:1px solid #e3dcce; cursor:pointer; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;">
+              <svg width="9" height="15" viewBox="0 0 8 14" fill="none"><path d="m7 1-6 6 6 6" stroke="#1b3070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div style="text-align:center;">
+              <div style="font-size:15px; font-weight:600; white-space:nowrap;">Nouveau devis</div>
+              <div style="font-size:11.5px; color:#a39d92;">{{ stepCaption }}</div>
+            </div>
+            <div style="width:36px;"></div>
+          </div>
+          <div style="display:flex; gap:5px;">
+            <sc-for list="{{ wizardSteps }}" as="s" hint-placeholder-count="5">
+              <div style="flex:1; height:4px; border-radius:2px; background:{{ s.bg }}; transition:background .35s ease;"></div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div class="scr" style="flex:1; overflow-y:auto; padding:6px 20px 20px;">
+
+          <!-- STEP 1: CLIENT -->
+          <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+          <div style="animation:scrIn .34s cubic-bezier(.22,1,.36,1);">
+            <div style="font-family:'Spectral',serif; font-size:22px; font-weight:600; margin-bottom:4px;">Sélectionner le client</div>
+            <div style="font-size:13px; color:#8a8377; margin-bottom:18px;">À qui ce devis est-il destiné ?</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <sc-for list="{{ clientPick }}" as="c" hint-placeholder-count="4">
+                <button onClick="{{ c.onClick }}" style="text-align:left; cursor:pointer; background:{{ c.cardBg }}; border:1.5px solid {{ c.cardBorder }}; border-radius:14px; padding:14px 15px; display:flex; align-items:center; gap:13px;">
+                  <div style="width:42px; height:42px; border-radius:11px; background:{{ c.tint }}; color:{{ c.tintCol }}; display:flex; align-items:center; justify-content:center; font-family:'Spectral',serif; font-weight:600; font-size:16px; flex:none;">{{ c.initials }}</div>
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-size:14px; font-weight:600;">{{ c.name }}</div>
+                    <div style="font-size:12px; color:#8a8377; margin-top:2px;">{{ c.ville }} · {{ c.phone }}</div>
+                  </div>
+                  <sc-if value="{{ c.selected }}" hint-placeholder-val="{{ false }}">
+                    <div style="width:24px; height:24px; border-radius:50%; background:#1b3070; display:flex; align-items:center; justify-content:center; flex:none; animation:pop .3s cubic-bezier(.22,1,.36,1);"><svg width="13" height="10" viewBox="0 0 13 10" fill="none"><path d="m1 5 4 4 7-8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  </sc-if>
+                </button>
+              </sc-for>
+              <button onClick="{{ newClientFromWizard }}" style="cursor:pointer; background:none; border:1.5px dashed #d8cfbe; border-radius:14px; padding:14px; display:flex; align-items:center; justify-content:center; gap:8px; color:#8a8377; font-size:13.5px; font-weight:600;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="#a39d92" stroke-width="2" stroke-linecap="round"/></svg>Nouveau client
+              </button>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- STEP 2: TRAJET -->
+          <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:scrIn .34s cubic-bezier(.22,1,.36,1);">
+            <div style="font-family:'Spectral',serif; font-size:22px; font-weight:600; margin-bottom:4px;">Trajet / corridor</div>
+            <div style="font-size:13px; color:#8a8377; margin-bottom:18px;">Itinéraire de la marchandise.</div>
+
+            <div style="background:#fff; border:1px solid #ece6da; border-radius:16px; padding:16px; box-shadow:0 1px 2px rgba(40,30,15,.03);">
+              <div style="display:flex; gap:12px; align-items:stretch;">
+                <div style="display:flex; flex-direction:column; align-items:center; padding-top:30px;">
+                  <div style="width:11px; height:11px; border-radius:50%; border:2.5px solid #1b3070;"></div>
+                  <div style="width:2px; flex:1; background:repeating-linear-gradient(#d8cfbe 0 4px, transparent 4px 8px); margin:3px 0;"></div>
+                  <div style="width:11px; height:11px; border-radius:2px; background:#1b3070;"></div>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:14px;">
+                  <div>
+                    <div style="font-size:10.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:6px;">Départ</div>
+                    <input value="{{ villeDep }}" onInput="{{ onVilleDep }}" style="width:100%; padding:11px 13px; border:1px solid #e3dcce; border-radius:10px; background:#faf8f3; font-size:14px; font-weight:600; margin-bottom:7px;">
+                    <select value="{{ paysDep }}" onChange="{{ onPaysDep }}" style="width:100%; padding:10px 13px; border:1px solid #e3dcce; border-radius:10px; background:#fff; font-size:13px; color:#57534e;">
+                      <sc-for list="{{ paysList }}" as="p" hint-placeholder-count="6"><option value="{{ p }}">{{ p }}</option></sc-for>
+                    </select>
+                  </div>
+                  <div>
+                    <div style="font-size:10.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:6px;">Arrivée</div>
+                    <input value="{{ villeArr }}" onInput="{{ onVilleArr }}" style="width:100%; padding:11px 13px; border:1px solid #e3dcce; border-radius:10px; background:#faf8f3; font-size:14px; font-weight:600; margin-bottom:7px;">
+                    <select value="{{ paysArr }}" onChange="{{ onPaysArr }}" style="width:100%; padding:10px 13px; border:1px solid #e3dcce; border-radius:10px; background:#fff; font-size:13px; color:#57534e;">
+                      <sc-for list="{{ paysList }}" as="p" hint-placeholder-count="6"><option value="{{ p }}">{{ p }}</option></sc-for>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:11.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin:18px 0 9px;">Corridors fréquents</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <sc-for list="{{ routeChips }}" as="r" hint-placeholder-count="5">
+                <button onClick="{{ r.onClick }}" style="cursor:pointer; border:1px solid #e3dcce; background:#fff; padding:9px 13px; border-radius:20px; font-size:12.5px; font-weight:500; color:#44403c;">{{ r.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- STEP 3: MARCHANDISE -->
+          <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:scrIn .34s cubic-bezier(.22,1,.36,1);">
+            <div style="font-family:'Spectral',serif; font-size:22px; font-weight:600; margin-bottom:4px;">Marchandise</div>
+            <div style="font-size:13px; color:#8a8377; margin-bottom:18px;">Le calcul est automatique.</div>
+
+            <div style="margin-bottom:14px;">
+              <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Nature de la marchandise</div>
+              <input value="{{ gNature }}" onInput="{{ onNature }}" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+              <div>
+                <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Tonnage (t)</div>
+                <input value="{{ gQte }}" onInput="{{ onQte }}" inputmode="decimal" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;">
+              </div>
+              <div>
+                <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Capacité camion (t)</div>
+                <input value="{{ gCap }}" onInput="{{ onCap }}" inputmode="decimal" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums;">
+              </div>
+            </div>
+
+            <!-- live camions -->
+            <div style="background:#fdf3df; border:1px solid #f6e2b4; border-radius:14px; padding:15px 16px; display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+              <div>
+                <div style="font-size:12px; color:#9a6a07; font-weight:600;">Nombre de camions</div>
+                <div style="font-size:11px; color:#c08a3a; margin-top:2px; font-variant-numeric:tabular-nums;">{{ camionFormula }}</div>
+              </div>
+              <div style="font-family:'Spectral',serif; font-size:34px; font-weight:600; color:#9a6a07; line-height:1;">{{ camions }}</div>
+            </div>
+
+            <div style="font-size:11.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:11px;">Valeur déclarée</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+              <div>
+                <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Prix unitaire / t</div>
+                <input value="{{ gPu }}" onInput="{{ onPu }}" inputmode="numeric" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px; font-variant-numeric:tabular-nums;">
+              </div>
+              <div>
+                <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Devise</div>
+                <select value="{{ gDevise }}" onChange="{{ onDevise }}" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px;">
+                  <option value="FCFA">FCFA</option><option value="EUR">EUR</option><option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+            <sc-if value="{{ showTaux }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-bottom:14px;">
+              <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Taux de change (1 {{ gDevise }} = ? FCFA)</div>
+              <input value="{{ gTaux }}" onInput="{{ onTaux }}" inputmode="decimal" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:14px; font-variant-numeric:tabular-nums;">
+            </div>
+            </sc-if>
+            <div style="background:#fff; border:1px solid #ece6da; border-radius:14px; padding:15px 16px; display:flex; align-items:center; justify-content:space-between;">
+              <div style="font-size:13px; color:#57534e; font-weight:500;">Valeur marchandise</div>
+              <div style="text-align:right;"><div style="font-family:'Spectral',serif; font-size:20px; font-weight:600; font-variant-numeric:tabular-nums;">{{ valeurFcfaFmt }}</div><div style="font-size:11px; color:#a39d92;">{{ valeurSrcFmt }}</div></div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- STEP 4: PRESTATIONS -->
+          <sc-if value="{{ isStep4 }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:scrIn .34s cubic-bezier(.22,1,.36,1);">
+            <div style="font-family:'Spectral',serif; font-size:22px; font-weight:600; margin-bottom:4px;">Prestations</div>
+            <div style="font-size:13px; color:#8a8377; margin-bottom:18px;">Lignes de frais du devis.</div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+              <sc-for list="{{ lineCards }}" as="l" hint-placeholder-count="3">
+                <div style="background:#fff; border:1px solid #ece6da; border-radius:14px; padding:13px 14px;">
+                  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                    <div style="flex:1; font-size:13.5px; font-weight:600; line-height:1.3;">{{ l.label }}</div>
+                    <button onClick="{{ l.onRemove }}" style="border:none; background:none; cursor:pointer; color:#c4bdb0; padding:0; flex:none;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+                  </div>
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-top:11px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <button onClick="{{ l.onDec }}" style="width:30px; height:30px; border-radius:9px; border:1px solid #e3dcce; background:#faf8f3; cursor:pointer; font-size:17px; color:#57534e; display:flex; align-items:center; justify-content:center; line-height:1;">−</button>
+                      <span style="font-size:14px; font-weight:700; min-width:18px; text-align:center; font-variant-numeric:tabular-nums;">{{ l.qte }}</span>
+                      <button onClick="{{ l.onInc }}" style="width:30px; height:30px; border-radius:9px; border:1px solid #e3dcce; background:#faf8f3; cursor:pointer; font-size:16px; color:#57534e; display:flex; align-items:center; justify-content:center; line-height:1;">+</button>
+                      <span style="font-size:11.5px; color:#a39d92; margin-left:2px;">× {{ l.puFmt }}</span>
+                    </div>
+                    <div style="font-size:14.5px; font-weight:700; font-variant-numeric:tabular-nums;">{{ l.totalFmt }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-size:11.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:9px;">Ajouter depuis un modèle</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
+              <sc-for list="{{ lineTemplateChips }}" as="t" hint-placeholder-count="5">
+                <button onClick="{{ t.onClick }}" style="cursor:pointer; border:1px solid #e3dcce; background:#fff; padding:8px 12px; border-radius:20px; font-size:12px; font-weight:500; color:#44403c; display:flex; align-items:center; gap:6px;"><span style="color:#1b3070; font-weight:700;">+</span>{{ t.label }}</button>
+              </sc-for>
+            </div>
+
+            <div style="background:#1b3070; border-radius:14px; padding:16px 17px; display:flex; align-items:center; justify-content:space-between;">
+              <div style="font-size:13px; color:#b6ada0; font-weight:500;">Total prestations</div>
+              <div style="font-family:'Spectral',serif; font-size:23px; font-weight:600; color:#faf6ef; font-variant-numeric:tabular-nums;">{{ linesTotalFmt }}</div>
+            </div>
+          </div>
+          </sc-if>
+
+          <!-- STEP 5: CONDITIONS -->
+          <sc-if value="{{ isStep5 }}" hint-placeholder-val="{{ false }}">
+          <div style="animation:scrIn .34s cubic-bezier(.22,1,.36,1);">
+            <div style="font-family:'Spectral',serif; font-size:22px; font-weight:600; margin-bottom:4px;">Conditions</div>
+            <div style="font-size:13px; color:#8a8377; margin-bottom:18px;">Paiement et clauses contractuelles.</div>
+
+            <div style="margin-bottom:18px;">
+              <div style="font-size:11.5px; color:#78716c; font-weight:600; margin-bottom:6px;">Conditions de paiement</div>
+              <textarea value="{{ payment }}" onInput="{{ onPayment }}" rows="2" style="width:100%; padding:12px 14px; border:1px solid #e3dcce; border-radius:11px; background:#fff; font-size:13.5px; resize:none; line-height:1.4; color:#1b3070;"></textarea>
+            </div>
+
+            <div style="font-size:11.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:600; margin-bottom:10px;">Clauses standards</div>
+            <div style="display:flex; flex-direction:column; gap:9px; margin-bottom:22px;">
+              <sc-for list="{{ clausePick }}" as="cl" hint-placeholder-count="5">
+                <button onClick="{{ cl.onClick }}" style="text-align:left; cursor:pointer; background:{{ cl.bg }}; border:1.5px solid {{ cl.border }}; border-radius:13px; padding:13px 14px; display:flex; gap:12px; align-items:flex-start;">
+                  <div style="width:21px; height:21px; border-radius:6px; border:1.5px solid {{ cl.boxBorder }}; background:{{ cl.boxBg }}; flex:none; display:flex; align-items:center; justify-content:center; margin-top:1px;">
+                    <sc-if value="{{ cl.selected }}" hint-placeholder-val="{{ false }}"><svg width="12" height="9" viewBox="0 0 13 10" fill="none"><path d="m1 5 4 4 7-8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></sc-if>
+                  </div>
+                  <div style="flex:1;">
+                    <div style="font-size:13.5px; font-weight:600;">{{ cl.title }}</div>
+                    <div style="font-size:12px; color:#8a8377; margin-top:3px; line-height:1.4;">{{ cl.content }}</div>
+                  </div>
+                </button>
+              </sc-for>
+            </div>
+
+            <div style="background:#fff; border:1px solid #ece6da; border-radius:16px; padding:17px; box-shadow:0 1px 2px rgba(40,30,15,.03);">
+              <div style="font-family:'Spectral',serif; font-size:16px; font-weight:600; margin-bottom:13px;">Récapitulatif</div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:#57534e; margin-bottom:8px;"><span>{{ recapClient }}</span><span style="color:#a39d92;">{{ recapTrajet }}</span></div>
+              <div style="display:flex; justify-content:space-between; font-size:13px; color:#57534e; margin-bottom:13px;"><span>{{ recapLines }} prestations</span><span style="color:#a39d92;">{{ recapCamions }} camion(s)</span></div>
+              <div style="display:flex; justify-content:space-between; align-items:baseline; padding-top:13px; border-top:1px solid #f0ebe0;">
+                <span style="font-size:13px; font-weight:600;">Total devis</span>
+                <span style="font-family:'Spectral',serif; font-size:26px; font-weight:600; color:#1b3070; font-variant-numeric:tabular-nums;">{{ linesTotalFmt }}</span>
+              </div>
+            </div>
+          </div>
+          </sc-if>
+        </div>
+
+        <!-- wizard bottom bar -->
+        <div style="flex:none; padding:13px 20px calc(13px + env(safe-area-inset-bottom)); background:#f7f4ee; border-top:1px solid #ece6da; display:flex; gap:11px;">
+          <sc-if value="{{ canPrev }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ prevStep }}" style="flex:none; cursor:pointer; padding:14px 20px; border-radius:13px; border:1px solid #e3dcce; background:#fff; font-size:14.5px; font-weight:600; color:#44403c;">Précédent</button>
+          </sc-if>
+          <button onClick="{{ nextStep }}" style="flex:1; cursor:pointer; padding:14px; border-radius:13px; border:none; background:#1b3070; color:#fff; font-size:14.5px; font-weight:600; box-shadow:0 4px 14px -4px rgba(27,48,112,.45);">{{ nextLabel }}</button>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ============ PREVIEW (PDF) ============ -->
+      <sc-if value="{{ isPreview }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Aperçu PDF" style="display:flex; flex-direction:column; min-height:100%; background:#e8e3d9; animation:scrIn .42s cubic-bezier(.22,1,.36,1);">
+        <div style="padding:8px 20px 12px; background:#f7f4ee; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:5; border-bottom:1px solid #ece6da;">
+          <button onClick="{{ previewBack }}" style="border:1px solid #e3dcce; background:#fff; cursor:pointer; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center;"><svg width="9" height="15" viewBox="0 0 8 14" fill="none"><path d="m7 1-6 6 6 6" stroke="#1b3070" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div style="text-align:center;"><div style="font-size:15px; font-weight:600; white-space:nowrap;">Aperçu du devis</div><div style="font-size:11.5px; color:#a39d92;">{{ pv.number }}</div></div>
+          <button onClick="{{ toggleStatusMenu }}" style="border:1px solid #e3dcce; background:#fff; cursor:pointer; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#57534e; font-size:18px; line-height:1;">⋯</button>
+        </div>
+
+        <div class="scr" style="flex:1; overflow-y:auto; padding:18px 16px 20px;">
+          <!-- A4 document -->
+          <div style="background:#fff; border-radius:4px; box-shadow:0 8px 30px -10px rgba(40,30,15,.4); overflow:hidden;">
+            <!-- header -->
+            <div style="padding:22px 22px 18px; border-bottom:2px solid #1b3070;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px;">
+                <div style="display:flex; gap:11px; align-items:center;">
+                  <div style="width:46px; height:46px; border-radius:9px; background:#1b3070; display:flex; align-items:center; justify-content:center; flex:none;"><img src="assets/logo-mark-light.svg" width="30" height="30" alt="logo"></div>
+                  <div>
+                    <div style="font-family:'Spectral',serif; font-size:15px; font-weight:700; line-height:1.1; letter-spacing:-.01em;">{{ companyName }}</div>
+                    <div style="font-size:9px; color:#78716c; margin-top:3px; line-height:1.5;">Transport · Transit · Commission<br>Plateau, BP 1234 — Niamey, Niger</div>
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-family:'Spectral',serif; font-size:21px; font-weight:700; letter-spacing:.02em; color:#1b3070;">DEVIS</div>
+                  <div style="font-size:10px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums;">{{ pv.number }}</div>
+                </div>
+              </div>
+              <div style="display:flex; gap:18px; margin-top:13px; font-size:9px; color:#78716c;">
+                <span><b style="color:#44403c;">RCCM</b> NE-NIA-2021-B-1234</span>
+                <span><b style="color:#44403c;">NIF</b> 12345/P</span>
+                <span><b style="color:#44403c;">Tél</b> +227 20 35 00 00</span>
+              </div>
+            </div>
+
+            <!-- meta + client -->
+            <div style="display:flex; padding:16px 22px; gap:18px; border-bottom:1px solid #ece6da;">
+              <div style="flex:1;">
+                <div style="font-size:8.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.05em; font-weight:700; margin-bottom:6px;">Destinataire</div>
+                <div style="font-size:12px; font-weight:700;">{{ pv.clientName }}</div>
+                <div style="font-size:9.5px; color:#57534e; margin-top:3px; line-height:1.6;">{{ pv.clientVille }}, {{ pv.clientPays }}<br>{{ pv.clientPhone }}</div>
+              </div>
+              <div style="width:120px; flex:none;">
+                <div style="display:flex; justify-content:space-between; font-size:9.5px; margin-bottom:5px;"><span style="color:#a39d92;">Date</span><span style="font-weight:600;">{{ pv.dateFull }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:9.5px; margin-bottom:5px;"><span style="color:#a39d92;">Validité</span><span style="font-weight:600;">{{ pv.validiteFull }}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:9.5px;"><span style="color:#a39d92;">Statut</span><span style="font-weight:700; color:{{ pv.col }};">{{ pv.statusLabel }}</span></div>
+              </div>
+            </div>
+
+            <!-- objet/trajet -->
+            <div style="padding:14px 22px; border-bottom:1px solid #ece6da; background:#faf8f3;">
+              <div style="font-size:8.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.05em; font-weight:700; margin-bottom:7px;">Objet — Prestation logistique</div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div style="font-family:'Spectral',serif; font-size:13px; font-weight:600;">{{ pv.villeDep }}</div>
+                <svg width="26" height="8" viewBox="0 0 26 8" fill="none"><path d="M0 4h22m0 0-4-3m4 3-4 3" stroke="#1b3070" stroke-width="1.3"/></svg>
+                <div style="font-family:'Spectral',serif; font-size:13px; font-weight:600;">{{ pv.villeArr }}</div>
+              </div>
+              <div style="font-size:9.5px; color:#78716c; margin-top:6px;">{{ pv.nature }} · {{ pv.tonnage }} t · {{ pv.camions }} camion(s) · capacité {{ pv.cap }} t</div>
+            </div>
+
+            <!-- prestations table -->
+            <div style="padding:14px 22px 4px;">
+              <div style="display:flex; font-size:8.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.04em; font-weight:700; padding-bottom:7px; border-bottom:1px solid #1b3070;">
+                <div style="flex:1;">Désignation</div>
+                <div style="width:30px; text-align:center;">Qté</div>
+                <div style="width:64px; text-align:right;">P.U.</div>
+                <div style="width:70px; text-align:right;">Montant</div>
+              </div>
+              <sc-for list="{{ pv.lines }}" as="l" hint-placeholder-count="4">
+                <div style="display:flex; font-size:10px; padding:8px 0; border-bottom:1px solid #f3eee4; align-items:center;">
+                  <div style="flex:1; font-weight:500; color:#292524;">{{ l.label }}</div>
+                  <div style="width:30px; text-align:center; color:#57534e; font-variant-numeric:tabular-nums;">{{ l.qte }}</div>
+                  <div style="width:64px; text-align:right; color:#57534e; font-variant-numeric:tabular-nums;">{{ l.puFmt }}</div>
+                  <div style="width:70px; text-align:right; font-weight:600; font-variant-numeric:tabular-nums;">{{ l.totalFmt }}</div>
+                </div>
+              </sc-for>
+              <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+                <div style="width:200px;">
+                  <div style="display:flex; justify-content:space-between; font-size:10px; color:#57534e; margin-bottom:6px;"><span>Sous-total</span><span style="font-variant-numeric:tabular-nums;">{{ pv.subtotalFmt }}</span></div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; background:#1b3070; color:#faf6ef; padding:8px 11px; border-radius:5px;"><span style="font-size:10px; font-weight:600;">TOTAL</span><span style="font-family:'Spectral',serif; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums;">{{ pv.totalFmt }}</span></div>
+                  <div style="text-align:right; font-size:8px; color:#a39d92; margin-top:3px;">Montant en francs CFA (XOF)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- conditions -->
+            <div style="padding:14px 22px;">
+              <div style="font-size:8.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.05em; font-weight:700; margin-bottom:7px;">Conditions</div>
+              <div style="font-size:9.5px; color:#44403c; margin-bottom:8px; font-weight:600;">{{ pv.payment }}</div>
+              <sc-for list="{{ pv.clauses }}" as="c" hint-placeholder-count="2">
+                <div style="font-size:9px; color:#78716c; line-height:1.5; margin-bottom:5px;"><b style="color:#44403c;">{{ c.title }}.</b> {{ c.content }}</div>
+              </sc-for>
+            </div>
+
+            <!-- signature -->
+            <div style="display:flex; gap:14px; padding:6px 22px 20px;">
+              <div style="flex:1;">
+                <div style="font-size:8.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.05em; font-weight:700; margin-bottom:5px;">Le prestataire</div>
+                <div style="font-size:10px; font-weight:600;">{{ pv.signataire }}</div>
+                <div style="font-size:8.5px; color:#78716c;">{{ pv.signataireRole }}</div>
+                <div style="height:46px; border-bottom:1px dotted #c4bdb0; margin-top:6px;"></div>
+              </div>
+              <div style="flex:1;">
+                <div style="font-size:8.5px; color:#a39d92; text-transform:uppercase; letter-spacing:.05em; font-weight:700; margin-bottom:5px;">Bon pour accord — Client</div>
+                <div style="font-size:8.5px; color:#78716c;">Nom, date, signature & cachet</div>
+                <div style="height:54px; border:1px dashed #d8cfbe; border-radius:4px; margin-top:6px;"></div>
+              </div>
+            </div>
+
+            <div style="background:#faf8f3; border-top:1px solid #ece6da; padding:8px 22px; text-align:center; font-size:8px; color:#a39d92;">Document généré par Quotation Logistique · {{ companyName }}</div>
+          </div>
+        </div>
+
+        <!-- preview actions -->
+        <div style="flex:none; padding:13px 18px calc(13px + env(safe-area-inset-bottom)); background:#f7f4ee; border-top:1px solid #ece6da; display:flex; gap:11px;">
+          <button onClick="{{ editFromPreview }}" style="flex:none; cursor:pointer; padding:14px 18px; border-radius:13px; border:1px solid #e3dcce; background:#fff; font-size:14px; font-weight:600; color:#44403c;">Modifier</button>
+          <button onClick="{{ doShare }}" style="flex:1; cursor:pointer; padding:14px; border-radius:13px; border:none; background:#1b3070; color:#fff; font-size:14px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px -4px rgba(27,48,112,.45);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            {{ shareLabel }}
+          </button>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:none; height:74px; background:rgba(247,244,238,.92); backdrop-filter:blur(12px); border-top:1px solid #ece6da; display:flex; align-items:flex-start; padding:9px 14px 0; position:relative;">
+      <button onClick="{{ goDash }}" style="flex:1; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ cAccueil }}; transition:color .2s ease;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 10.5 12 3l9 7.5M5 9.5V20h5v-6h4v6h5V9.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="font-size:10px; font-weight:600;">Accueil</span>
+      </button>
+      <button onClick="{{ goList }}" style="flex:1; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ cDevis }}; transition:color .2s ease;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 3h9l4 4v14H6z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h7M9 17h5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="font-size:10px; font-weight:600;">Devis</span>
+      </button>
+      <div style="flex:none; width:56px; display:flex; justify-content:center;">
+        <button onClick="{{ startCreate }}" style="width:54px; height:54px; margin-top:-16px; border-radius:18px; border:none; cursor:pointer; background:#F6A624; color:#1b3070; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 18px -5px rgba(246,166,36,.7); animation:floatY 3.2s ease-in-out infinite;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#1b3070" stroke-width="2.6" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <button onClick="{{ goClients }}" style="flex:1; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ cClients }}; transition:color .2s ease;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.9"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M16 6.2A3 3 0 0 1 17 12m-.5 2.3c2.2.4 3.9 2.1 3.9 4.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        <span style="font-size:10px; font-weight:600;">Clients</span>
+      </button>
+      <button onClick="{{ goCompte }}" style="flex:1; background:none; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; color:{{ cCompte }}; transition:color .2s ease;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.9"/><path d="M5 20c0-3.3 3-6 7-6s7 2.7 7 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+        <span style="font-size:10px; font-weight:600;">Compte</span>
+      </button>
+    </div>
+    </sc-if>
+
+    <!-- STATUS SHEET -->
+    <sc-if value="{{ statusSheet }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeStatusSheet }}" style="position:absolute; inset:0; background:rgba(28,25,23,.42); z-index:40; display:flex; flex-direction:column; justify-content:flex-end; animation:fadeBg .22s ease;">
+      <div onClick="{{ sheetStop }}" style="background:#f7f4ee; border-radius:22px 22px 0 0; padding:10px 20px calc(22px + env(safe-area-inset-bottom)); animation:sheetUp .34s cubic-bezier(.22,1,.36,1);">
+        <div style="width:38px; height:4px; border-radius:2px; background:#d8cfbe; margin:4px auto 14px;"></div>
+        <div style="font-family:'Spectral',serif; font-size:18px; font-weight:600;">Changer le statut</div>
+        <div style="font-size:12.5px; color:#8a8377; margin:3px 0 15px;">Cycle de vie du devis</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <sc-for list="{{ statusOptions }}" as="s" hint-placeholder-count="6">
+            <button onClick="{{ s.onClick }}" style="text-align:left; cursor:pointer; background:#fff; border:1.5px solid {{ s.selBorder }}; border-radius:13px; padding:13px 15px; display:flex; align-items:center; gap:12px;">
+              <div style="width:10px; height:10px; border-radius:50%; background:{{ s.dot }}; flex:none;"></div>
+              <span style="flex:1; font-size:14px; font-weight:600;">{{ s.label }}</span>
+              <sc-if value="{{ s.sel }}" hint-placeholder-val="{{ false }}"><svg width="16" height="12" viewBox="0 0 13 10" fill="none"><path d="m1 5 4 4 7-8" stroke="#1b3070" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></sc-if>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- toast -->
+    <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute; left:50%; bottom:92px; transform:translateX(-50%); background:#1b3070; color:#faf6ef; padding:11px 18px; border-radius:12px; font-size:13px; font-weight:500; box-shadow:0 10px 30px -8px rgba(0,0,0,.5); white-space:nowrap; animation:toastIn .3s cubic-bezier(.22,1,.36,1); z-index:30;">{{ toast }}</div>
+    </sc-if>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:470,&quot;height&quot;:928},&quot;companyName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;TRANS-SAHEL LOGISTIQUE&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;userName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Amadou&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showOffline&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;validiteDays&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:30,&quot;min&quot;:7,&quot;max&quot;:90,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'dashboard',
+    period: '30j',
+    search: '',
+    statusFilter: 'tous',
+    step: 1,
+    previewSource: 'quote',
+    activeId: 'q1',
+    toast: '',
+    draft: {
+      clientId: 'cl1',
+      paysDep: 'Niger', villeDep: 'Niamey',
+      paysArr: 'Burkina Faso', villeArr: 'Ouagadougou',
+      nature: 'Sacs de ciment', qte: '60', cap: '30', pu: '85000', devise: 'FCFA', taux: '1',
+      lines: [
+        { id: 'l1', label: 'Transport routier (par camion)', pu: 1200000, qte: 2 },
+        { id: 'l2', label: 'Carnet TRIE / transit', pu: 150000, qte: 1 },
+        { id: 'l3', label: 'Droits et taxes de douane', pu: 850000, qte: 1 }
+      ],
+      clauses: ['c1', 'c3'],
+      payment: 'Paiement à 30 jours fin de mois, par virement bancaire.'
+    },
+    _lid: 10,
+    authed: false,
+    role: 'Commercial',
+    loginEmail: 'amadou@trans-sahel.ne',
+    loginPass: 'transsahel',
+    statusSheet: false,
+    ncReturn: 'clients',
+    nc: { name: '', contact: '', phone: '', email: '', pays: 'Niger', ville: '', adresse: '', notes: '' }
+  };
+
+  companyName = 'TRANS-SAHEL LOGISTIQUE';
+
+  STATUS = {
+    brouillon: { label: 'Brouillon', col: '#78716c', bg: '#f2efe9', dot: '#a8a29e' },
+    valide:    { label: 'Validé',    col: '#1d4e6f', bg: '#e9eff3', dot: '#2f6e96' },
+    envoye:    { label: 'Envoyé',    col: '#b45309', bg: '#fbeedd', dot: '#d97706' },
+    accepte:   { label: 'Accepté',   col: '#15803d', bg: '#e8f1ea', dot: '#16a34a' },
+    expire:    { label: 'Expiré',    col: '#b91c1c', bg: '#f7e8e5', dot: '#dc2626' },
+    annule:    { label: 'Annulé',    col: '#78716c', bg: '#f0eeea', dot: '#a8a29e' }
+  };
+
+  clients = [
+    { id: 'cl1', name: 'SONIDEP SA', ville: 'Niamey', pays: 'Niger', phone: '+227 90 12 34 56', count: 6, tint: '#faede4', tintCol: '#1b3070' },
+    { id: 'cl2', name: 'Niger Agro SARL', ville: 'Niamey', pays: 'Niger', phone: '+227 96 45 22 10', count: 4, tint: '#e8f1ea', tintCol: '#15803d' },
+    { id: 'cl3', name: 'Établissements Tassiou', ville: 'Maradi', pays: 'Niger', phone: '+227 91 78 03 44', count: 3, tint: '#e9eff3', tintCol: '#1d4e6f' },
+    { id: 'cl4', name: 'Sahel Distribution', ville: 'Zinder', pays: 'Niger', phone: '+227 93 11 67 89', count: 2, tint: '#f3ecdc', tintCol: '#a16207' },
+    { id: 'cl5', name: 'COMINAK Trading', ville: 'Agadez', pays: 'Niger', phone: '+227 90 55 41 23', count: 5, tint: '#f0e8f0', tintCol: '#7c3a7c' }
+  ];
+
+  lineTemplates = [
+    { label: 'Transport routier (par camion)', pu: 1200000 },
+    { label: 'Carnet TRIE / transit', pu: 150000 },
+    { label: 'Droits et taxes de douane', pu: 850000 },
+    { label: 'Manutention / chargement', pu: 200000 },
+    { label: 'Escorte douanière', pu: 120000 },
+    { label: 'Frais phytosanitaires', pu: 75000 },
+    { label: 'Assurance marchandise', pu: 90000 }
+  ];
+
+  clauseLib = [
+    { id: 'c1', title: 'Paiement', content: 'Le règlement intervient à 30 jours fin de mois. Tout retard entraîne des pénalités de 1,5% par mois.' },
+    { id: 'c2', title: 'Responsabilité', content: 'Le transporteur décline toute responsabilité en cas de force majeure ou de fermeture de corridor.' },
+    { id: 'c3', title: 'Assurance', content: 'La marchandise est couverte à hauteur de la valeur déclarée pendant le transport.' },
+    { id: 'c4', title: 'Exclusions', content: 'Sont exclus les frais de stationnement prolongé, surestaries et immobilisations non imputables au prestataire.' },
+    { id: 'c5', title: 'Litiges', content: 'Tout différend relève de la compétence exclusive des tribunaux de Niamey (droit OHADA).' }
+  ];
+
+  routeTemplates = [
+    { villeDep: 'Niamey', paysDep: 'Niger', villeArr: 'Ouagadougou', paysArr: 'Burkina Faso' },
+    { villeDep: 'Cotonou', paysDep: 'Bénin', villeArr: 'Niamey', paysArr: 'Niger' },
+    { villeDep: 'Lomé', paysDep: 'Togo', villeArr: 'Niamey', paysArr: 'Niger' },
+    { villeDep: 'Tema', paysDep: 'Ghana', villeArr: 'Niamey', paysArr: 'Niger' },
+    { villeDep: 'Niamey', paysDep: 'Niger', villeArr: 'Zinder', paysArr: 'Niger' }
+  ];
+
+  paysList = ['Niger', 'Burkina Faso', 'Mali', 'Bénin', 'Togo', 'Ghana', "Côte d'Ivoire", 'Nigéria'];
+
+  quotes = [
+    { id: 'q1', number: 'DEV-2026-0042', clientId: 'cl1', status: 'envoye', dateShort: '18 juin', dateFull: '18/06/2026', validiteFull: '18/07/2026',
+      villeDep: 'Niamey', paysDep: 'Niger', villeArr: 'Ouagadougou', paysArr: 'Burkina Faso', nature: 'Sacs de ciment', qte: 60, cap: 30, pu: 85000, devise: 'FCFA', taux: 1,
+      lines: [ { label: 'Transport routier (par camion)', pu: 1200000, qte: 2 }, { label: 'Carnet TRIE / transit', pu: 150000, qte: 1 }, { label: 'Droits et taxes de douane', pu: 850000, qte: 1 }, { label: 'Manutention / chargement', pu: 200000, qte: 1 } ],
+      clauses: ['c1', 'c3', 'c5'], payment: 'Paiement à 30 jours fin de mois, par virement bancaire.' },
+    { id: 'q2', number: 'DEV-2026-0041', clientId: 'cl2', status: 'accepte', dateShort: '15 juin', dateFull: '15/06/2026', validiteFull: '15/07/2026',
+      villeDep: 'Cotonou', paysDep: 'Bénin', villeArr: 'Niamey', paysArr: 'Niger', nature: 'Engrais NPK', qte: 120, cap: 30, pu: 95000, devise: 'FCFA', taux: 1,
+      lines: [ { label: 'Transport routier (par camion)', pu: 1200000, qte: 4 }, { label: 'Droits et taxes de douane', pu: 1500000, qte: 1 }, { label: 'Escorte douanière', pu: 120000, qte: 1 }, { label: 'Assurance marchandise', pu: 90000, qte: 1 } ],
+      clauses: ['c1', 'c2', 'c3'], payment: 'Paiement à 45 jours, lettre de change.' },
+    { id: 'q3', number: 'DEV-2026-0040', clientId: 'cl3', status: 'brouillon', dateShort: '14 juin', dateFull: '14/06/2026', validiteFull: '14/07/2026',
+      villeDep: 'Lomé', paysDep: 'Togo', villeArr: 'Maradi', paysArr: 'Niger', nature: 'Riz importé', qte: 50, cap: 25, pu: 110000, devise: 'FCFA', taux: 1,
+      lines: [ { label: 'Transport routier (par camion)', pu: 1200000, qte: 2 }, { label: 'Carnet TRIE / transit', pu: 150000, qte: 1 }, { label: 'Frais phytosanitaires', pu: 75000, qte: 1 } ],
+      clauses: ['c1', 'c4'], payment: 'Paiement à la livraison.' },
+    { id: 'q4', number: 'DEV-2026-0039', clientId: 'cl4', status: 'valide', dateShort: '12 juin', dateFull: '12/06/2026', validiteFull: '12/07/2026',
+      villeDep: 'Niamey', paysDep: 'Niger', villeArr: 'Zinder', paysArr: 'Niger', nature: 'Matériel BTP', qte: 28, cap: 30, pu: 200000, devise: 'FCFA', taux: 1,
+      lines: [ { label: 'Transport routier (par camion)', pu: 1200000, qte: 1 }, { label: 'Manutention / chargement', pu: 200000, qte: 1 }, { label: 'Carnet TRIE / transit', pu: 150000, qte: 1 } ],
+      clauses: ['c1'], payment: 'Paiement à 30 jours fin de mois.' },
+    { id: 'q5', number: 'DEV-2026-0038', clientId: 'cl5', status: 'expire', dateShort: '02 juin', dateFull: '02/06/2026', validiteFull: '02/07/2026',
+      villeDep: 'Niamey', paysDep: 'Niger', villeArr: 'Agadez', paysArr: 'Niger', nature: 'Produits pétroliers', qte: 55, cap: 30, pu: 150000, devise: 'FCFA', taux: 1,
+      lines: [ { label: 'Transport routier (par camion)', pu: 1200000, qte: 2 }, { label: 'Escorte douanière', pu: 120000, qte: 1 } ],
+      clauses: ['c1', 'c2'], payment: 'Paiement comptant.' },
+    { id: 'q6', number: 'DEV-2026-0037', clientId: 'cl1', status: 'accepte', dateShort: '28 mai', dateFull: '28/05/2026', validiteFull: '28/06/2026',
+      villeDep: 'Tema', paysDep: 'Ghana', villeArr: 'Niamey', paysArr: 'Niger', nature: 'Conteneurs divers', qte: 140, cap: 28, pu: 120000, devise: 'FCFA', taux: 1,
+      lines: [ { label: 'Transport routier (par camion)', pu: 1200000, qte: 5 }, { label: 'Droits et taxes de douane', pu: 2000000, qte: 1 }, { label: 'Manutention / chargement', pu: 200000, qte: 1 }, { label: 'Assurance marchandise', pu: 90000, qte: 1 } ],
+      clauses: ['c1', 'c3', 'c5'], payment: 'Paiement à 60 jours.' }
+  ];
+
+  // ---------- helpers ----------
+  fmt(n) { return new Intl.NumberFormat('fr-FR').format(Math.round(n || 0)); }
+  clientById(id) { return this.clients.find(c => c.id === id); }
+  amountOf(q) { return q.lines.reduce((s, l) => s + l.pu * l.qte, 0); }
+  qvm(q) {
+    const cl = this.clientById(q.clientId) || {};
+    const st = this.STATUS[q.status];
+    return { id: q.id, number: q.number, clientName: cl.name || '—', trajet: q.villeDep + ' → ' + q.villeArr,
+      dateShort: q.dateShort, amountFmt: this.fmt(this.amountOf(q)), statusLabel: st.label, col: st.col, bg: st.bg, dot: st.dot,
+      onClick: () => this.openQuote(q.id) };
+  }
+  toastMsg(m) { this.setState({ toast: m }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: '' }), 2200); }
+
+  // ---------- nav ----------
+  go(s) { this.setState({ screen: s }); }
+  openQuote(id) { this.setState({ activeId: id, previewSource: 'quote', screen: 'preview' }); }
+  startCreate() { this.setState({ screen: 'create', step: 1 }); }
+
+  login() { this.setState({ authed: true, screen: 'dashboard' }); }
+  logout() { this.setState({ authed: false }); }
+  openNewClient(ret) { this.setState({ screen: 'newClient', ncReturn: ret, nc: { name: '', contact: '', phone: '', email: '', pays: 'Niger', ville: '', adresse: '', notes: '' } }); }
+  setNc(patch) { this.setState(s => ({ nc: { ...s.nc, ...patch } })); }
+  saveClient() {
+    const nc = this.state.nc;
+    if (!nc.name.trim() || !nc.phone.trim()) { this.toastMsg('Nom et téléphone obligatoires'); return; }
+    const tints = [['#faede4', '#1b3070'], ['#e8f1ea', '#15803d'], ['#e9eff3', '#1d4e6f'], ['#f3ecdc', '#a16207'], ['#f0e8f0', '#7c3a7c']];
+    const t = tints[this.clients.length % tints.length];
+    const id = 'cl' + (this.clients.length + 1) + Date.now().toString().slice(-3);
+    this.clients.push({ id, name: nc.name.trim(), ville: nc.ville.trim() || '—', pays: nc.pays, phone: nc.phone.trim(), count: 0, tint: t[0], tintCol: t[1] });
+    if (this.state.ncReturn === 'create') { this.setDraft({ clientId: id }); this.setState({ screen: 'create' }); }
+    else this.setState({ screen: 'clients' });
+    this.toastMsg('Client « ' + nc.name.trim() + ' » créé');
+  }
+  openStatusSheet() {
+    if (this.state.previewSource === 'draft') { this.toastMsg('Enregistrez le devis pour changer son statut'); return; }
+    this.setState({ statusSheet: true });
+  }
+  setQuoteStatus(s) {
+    const q = this.quotes.find(x => x.id === this.state.activeId);
+    if (q) q.status = s;
+    this.setState({ statusSheet: false });
+    this.toastMsg('Statut → ' + this.STATUS[s].label);
+  }
+
+  // ---------- wizard ----------
+  nextStep() {
+    const s = this.state.step;
+    if (s >= 5) { this.setState({ previewSource: 'draft', screen: 'preview' }); return; }
+    this.setState({ step: s + 1 });
+  }
+  prevStep() { this.setState({ step: Math.max(1, this.state.step - 1) }); }
+  wizardBack() { if (this.state.step <= 1) this.setState({ screen: 'dashboard' }); else this.prevStep(); }
+
+  setDraft(patch) { this.setState(st => ({ draft: { ...st.draft, ...patch } })); }
+  setRoute(r) { this.setDraft({ villeDep: r.villeDep, paysDep: r.paysDep, villeArr: r.villeArr, paysArr: r.paysArr }); }
+
+  addLine(t) {
+    this.setState(st => ({ _lid: st._lid + 1, draft: { ...st.draft, lines: [...st.draft.lines, { id: 'l' + (st._lid + 1), label: t.label, pu: t.pu, qte: 1 }] } }));
+  }
+  incLine(id, d) {
+    this.setState(st => ({ draft: { ...st.draft, lines: st.draft.lines.map(l => l.id === id ? { ...l, qte: Math.max(1, l.qte + d) } : l) } }));
+  }
+  removeLine(id) { this.setState(st => ({ draft: { ...st.draft, lines: st.draft.lines.filter(l => l.id !== id) } })); }
+  toggleClause(id) {
+    this.setState(st => { const has = st.draft.clauses.includes(id); return { draft: { ...st.draft, clauses: has ? st.draft.clauses.filter(c => c !== id) : [...st.draft.clauses, id] } }; });
+  }
+
+  // ---------- preview ----------
+  frDate(d) { return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d); }
+  buildPreview() {
+    if (this.state.previewSource === 'draft') {
+      const d = this.state.draft; const cl = this.clientById(d.clientId) || { name: 'Client', ville: '—', pays: 'Niger', phone: '' };
+      const qte = parseFloat(d.qte) || 0, cap = parseFloat(d.cap) || 1;
+      const camions = cap > 0 ? Math.ceil(qte / cap) : 0;
+      const sub = d.lines.reduce((s, l) => s + l.pu * l.qte, 0);
+      const today = new Date(2026, 5, 21);
+      const vd = parseInt(this.props.validiteDays) || 30;
+      const val = new Date(today.getTime() + vd * 86400000);
+      return { number: 'TEMP-A1B2-0007', clientName: cl.name, clientVille: cl.ville, clientPays: cl.pays, clientPhone: cl.phone,
+        dateFull: this.frDate(today), validiteFull: this.frDate(val), statusLabel: 'Brouillon', col: this.STATUS.brouillon.col,
+        villeDep: d.villeDep, villeArr: d.villeArr, nature: d.nature, tonnage: this.fmt(qte), camions, cap: this.fmt(cap),
+        lines: d.lines.map(l => ({ label: l.label, qte: l.qte, puFmt: this.fmt(l.pu), totalFmt: this.fmt(l.pu * l.qte) })),
+        subtotalFmt: this.fmt(sub), totalFmt: this.fmt(sub),
+        payment: d.payment, clauses: this.clauseLib.filter(c => d.clauses.includes(c.id)),
+        signataire: 'Amadou Diallo', signataireRole: 'Directeur Commercial' };
+    }
+    const q = this.quotes.find(x => x.id === this.state.activeId) || this.quotes[0];
+    const cl = this.clientById(q.clientId) || {}; const camions = q.cap > 0 ? Math.ceil(q.qte / q.cap) : 0;
+    const sub = this.amountOf(q); const st = this.STATUS[q.status];
+    return { number: q.number, clientName: cl.name, clientVille: cl.ville, clientPays: cl.pays, clientPhone: cl.phone,
+      dateFull: q.dateFull, validiteFull: q.validiteFull, statusLabel: st.label, col: st.col,
+      villeDep: q.villeDep, villeArr: q.villeArr, nature: q.nature, tonnage: this.fmt(q.qte), camions, cap: this.fmt(q.cap),
+      lines: q.lines.map(l => ({ label: l.label, qte: l.qte, puFmt: this.fmt(l.pu), totalFmt: this.fmt(l.pu * l.qte) })),
+      subtotalFmt: this.fmt(sub), totalFmt: this.fmt(sub),
+      payment: q.payment, clauses: this.clauseLib.filter(c => q.clauses.includes(c.id)),
+      signataire: 'Amadou Diallo', signataireRole: 'Directeur Commercial' };
+  }
+
+  renderVals() {
+    const st = this.state; const d = st.draft;
+    const screen = st.screen;
+    const authed = st.authed;
+    const showOffline = this.props.showOffline !== false;
+
+    // dashboard metrics
+    const counts = { brouillon: 0, valide: 0, envoye: 0, accepte: 0, expire: 0 };
+    this.quotes.forEach(q => { counts[q.status] = (counts[q.status] || 0) + 1; });
+    const devised = this.quotes.filter(q => q.status === 'envoye' || q.status === 'accepte').reduce((s, q) => s + this.amountOf(q), 0);
+    const periodLabels = { '7j': '7 jours', '30j': '30 jours', '90j': '90 jours', 'tout': 'Tout' };
+    const periods = ['7j', '30j', '90j', 'tout'].map(p => ({ label: p === 'tout' ? 'Tout' : p,
+      bg: st.period === p ? '#1b3070' : 'rgba(255,255,255,.08)', col: st.period === p ? '#fff' : '#b6ada0',
+      onClick: () => this.setState({ period: p }) }));
+
+    const counters = [
+      { label: 'Brouillons', value: counts.brouillon, dot: this.STATUS.brouillon.dot },
+      { label: 'Validés', value: counts.valide, dot: this.STATUS.valide.dot },
+      { label: 'Envoyés', value: counts.envoye, dot: this.STATUS.envoye.dot },
+      { label: 'Acceptés', value: counts.accepte, dot: this.STATUS.accepte.dot }
+    ];
+
+    // list filtering
+    const FILTERS = [ ['tous', 'Tous'], ['brouillon', 'Brouillon'], ['valide', 'Validé'], ['envoye', 'Envoyé'], ['accepte', 'Accepté'], ['expire', 'Expiré'] ];
+    const q = st.search.trim().toLowerCase();
+    let filtered = this.quotes.filter(x => st.statusFilter === 'tous' || x.status === st.statusFilter);
+    if (q) filtered = filtered.filter(x => { const cl = this.clientById(x.clientId) || {}; return (x.number + ' ' + (cl.name || '') + ' ' + x.villeDep + ' ' + x.villeArr).toLowerCase().includes(q); });
+    const filterChips = FILTERS.map(([k, lbl]) => ({ label: lbl, onClick: () => this.setState({ statusFilter: k }),
+      bg: st.statusFilter === k ? '#1b3070' : '#fff', col: st.statusFilter === k ? '#faf6ef' : '#57534e', border: st.statusFilter === k ? '#1b3070' : '#e3dcce' }));
+
+    // wizard step view
+    const wizardSteps = [1, 2, 3, 4, 5].map(n => ({ bg: n <= st.step ? '#1b3070' : '#e3dcce' }));
+    const stepNames = { 1: 'Client', 2: 'Trajet', 3: 'Marchandise', 4: 'Prestations', 5: 'Conditions' };
+
+    // marchandise live calc
+    const qte = parseFloat(d.qte) || 0, cap = parseFloat(d.cap) || 0, pu = parseFloat(d.pu) || 0, taux = parseFloat(d.taux) || 0;
+    const camions = cap > 0 ? Math.ceil(qte / cap) : 0;
+    const camionFormula = cap > 0 ? ('ceil(' + this.fmt(qte) + ' ÷ ' + this.fmt(cap) + ')') : 'capacité requise';
+    const valeurFcfa = qte * pu * (d.devise === 'FCFA' ? 1 : taux);
+    const valeurSrc = qte * pu;
+
+    // prestation lines
+    const lineCards = d.lines.map(l => ({ id: l.id, label: l.label, qte: l.qte, puFmt: this.fmt(l.pu), totalFmt: this.fmt(l.pu * l.qte),
+      onInc: () => this.incLine(l.id, 1), onDec: () => this.incLine(l.id, -1), onRemove: () => this.removeLine(l.id) }));
+    const linesTotal = d.lines.reduce((s, l) => s + l.pu * l.qte, 0);
+
+    const clientObj = this.clientById(d.clientId) || {};
+    const pv = this.buildPreview();
+
+    return {
+      // screen flags
+      isLogin: !authed,
+      isDashboard: authed && screen === 'dashboard', isList: authed && screen === 'list', isClients: authed && screen === 'clients',
+      isCompte: authed && screen === 'compte', isCreate: authed && screen === 'create', isPreview: authed && screen === 'preview',
+      isNewClient: authed && screen === 'newClient',
+      showNav: authed && (screen === 'dashboard' || screen === 'list' || screen === 'clients' || screen === 'compte'),
+      statusSheet: authed && st.statusSheet,
+      toast: st.toast,
+      companyName: this.props.companyName || this.companyName,
+      userName: this.props.userName || 'Amadou',
+      userInitials: (this.props.userName || 'Amadou').slice(0, 2).toUpperCase(),
+
+      // nav colors
+      cAccueil: screen === 'dashboard' ? '#1b3070' : '#a39d92',
+      cDevis: screen === 'list' ? '#1b3070' : '#a39d92',
+      cClients: screen === 'clients' ? '#1b3070' : '#a39d92',
+      cCompte: screen === 'compte' ? '#1b3070' : '#a39d92',
+      goDash: () => this.go('dashboard'), goList: () => this.go('list'), goClients: () => this.go('clients'), goCompte: () => this.go('compte'),
+      startCreate: () => this.startCreate(),
+
+      // dashboard
+      showOffline,
+      periodLabel: periodLabels[st.period], periods,
+      totalAmountFmt: this.fmt(devised) + ' F',
+      totalAmountSub: (counts.envoye + counts.accepte) + ' devis envoyés ou acceptés',
+      counters,
+      recentQuotes: this.quotes.slice(0, 4).map(x => this.qvm(x)),
+
+      // list
+      search: st.search, onSearch: e => this.setState({ search: e.target.value }),
+      filterChips, filteredCount: filtered.length + ' devis', filteredQuotes: filtered.map(x => this.qvm(x)),
+
+      // clients
+      clientCards: this.clients.map(c => ({ name: c.name, ville: c.ville, phone: c.phone, count: c.count, initials: c.name.slice(0, 2).toUpperCase(), tint: c.tint, tintCol: c.tintCol })),
+
+      // compte
+      settingsRows: [
+        { icon: '§', label: 'Bibliothèque de clauses', sub: '5 clauses standards OHADA', onClick: () => this.toastMsg('Bibliothèque de clauses') },
+        { icon: '↹', label: 'Modèles de routes', sub: '5 corridors enregistrés', onClick: () => this.toastMsg('Modèles de routes') },
+        { icon: '⊞', label: 'Modèles de prestations', sub: '7 lignes prédéfinies', onClick: () => this.toastMsg('Modèles de prestations') },
+        { icon: '⊕', label: 'Utilisateurs & rôles', sub: '3 utilisateurs actifs', onClick: () => this.toastMsg('Gestion des utilisateurs') },
+        { icon: '⏻', label: 'Déconnexion', sub: 'Session locale 7 jours', onClick: () => this.logout() }
+      ],
+
+      // wizard
+      stepCaption: 'Étape ' + st.step + ' / 5 · ' + stepNames[st.step],
+      wizardSteps, wizardBack: () => this.wizardBack(),
+      isStep1: st.step === 1, isStep2: st.step === 2, isStep3: st.step === 3, isStep4: st.step === 4, isStep5: st.step === 5,
+      canPrev: st.step > 1, prevStep: () => this.prevStep(), nextStep: () => this.nextStep(),
+      nextLabel: st.step === 5 ? 'Générer le devis' : 'Suivant',
+
+      // step 1
+      clientPick: this.clients.map(c => { const sel = c.id === d.clientId; return { name: c.name, ville: c.ville, phone: c.phone, initials: c.name.slice(0, 2).toUpperCase(),
+        tint: c.tint, tintCol: c.tintCol, selected: sel, cardBg: sel ? '#fffaf6' : '#fff', cardBorder: sel ? '#1b3070' : '#ece6da',
+        onClick: () => this.setDraft({ clientId: c.id }) }; }),
+
+      // step 2
+      villeDep: d.villeDep, villeArr: d.villeArr, paysDep: d.paysDep, paysArr: d.paysArr, paysList: this.paysList,
+      onVilleDep: e => this.setDraft({ villeDep: e.target.value }), onVilleArr: e => this.setDraft({ villeArr: e.target.value }),
+      onPaysDep: e => this.setDraft({ paysDep: e.target.value }), onPaysArr: e => this.setDraft({ paysArr: e.target.value }),
+      routeChips: this.routeTemplates.map(r => ({ label: r.villeDep + ' → ' + r.villeArr, onClick: () => this.setRoute(r) })),
+
+      // step 3
+      gNature: d.nature, gQte: d.qte, gCap: d.cap, gPu: d.pu, gDevise: d.devise, gTaux: d.taux,
+      onNature: e => this.setDraft({ nature: e.target.value }), onQte: e => this.setDraft({ qte: e.target.value }),
+      onCap: e => this.setDraft({ cap: e.target.value }), onPu: e => this.setDraft({ pu: e.target.value }),
+      onDevise: e => this.setDraft({ devise: e.target.value, taux: e.target.value === 'FCFA' ? '1' : d.taux }), onTaux: e => this.setDraft({ taux: e.target.value }),
+      camions, camionFormula, showTaux: d.devise !== 'FCFA',
+      valeurFcfaFmt: this.fmt(valeurFcfa) + ' FCFA', valeurSrcFmt: d.devise === 'FCFA' ? (this.fmt(qte) + ' t × ' + this.fmt(pu)) : (this.fmt(valeurSrc) + ' ' + d.devise),
+
+      // step 4
+      lineCards, lineTemplateChips: this.lineTemplates.map(t => ({ label: t.label.split(' (')[0].split(' / ')[0], onClick: () => this.addLine(t) })),
+      linesTotalFmt: this.fmt(linesTotal) + ' FCFA',
+
+      // step 5
+      payment: d.payment, onPayment: e => this.setDraft({ payment: e.target.value }),
+      clausePick: this.clauseLib.map(c => { const sel = d.clauses.includes(c.id); return { title: c.title, content: c.content, selected: sel,
+        bg: sel ? '#fffaf6' : '#fff', border: sel ? '#f0d8c8' : '#ece6da', boxBg: sel ? '#1b3070' : '#fff', boxBorder: sel ? '#1b3070' : '#d8cfbe',
+        onClick: () => this.toggleClause(c.id) }; }),
+      recapClient: clientObj.name || 'Client', recapTrajet: d.villeDep + ' → ' + d.villeArr,
+      recapLines: d.lines.length, recapCamions: camions,
+
+      // preview
+      pv,
+      previewBack: () => this.setState({ screen: st.previewSource === 'draft' ? 'create' : 'list' }),
+      editFromPreview: () => this.setState({ screen: 'create', step: 1 }),
+      doShare: () => this.toastMsg('Devis ' + pv.number + ' prêt à partager'),
+      shareLabel: 'Partager le PDF',
+      toggleStatusMenu: () => this.openStatusSheet(),
+
+      // login
+      loginEmail: st.loginEmail, loginPass: st.loginPass,
+      onLoginEmail: e => this.setState({ loginEmail: e.target.value }),
+      onLoginPass: e => this.setState({ loginPass: e.target.value }),
+      doLogin: () => this.login(), forgotPw: () => this.toastMsg('Lien de réinitialisation envoyé'),
+      roleOptions: ['Administrateur', 'Commercial', 'Opérateur'].map(r => ({ label: r, sel: st.role === r,
+        bg: st.role === r ? '#1b3070' : '#fff', col: st.role === r ? '#faf6ef' : '#57534e', border: st.role === r ? '#1b3070' : '#e3dcce',
+        onClick: () => this.setState({ role: r }) })),
+
+      // new client
+      openNewClient: () => this.openNewClient('clients'), newClientFromWizard: () => this.openNewClient('create'),
+      ncName: st.nc.name, ncContact: st.nc.contact, ncPhone: st.nc.phone, ncEmail: st.nc.email, ncPays: st.nc.pays, ncVille: st.nc.ville, ncAdresse: st.nc.adresse, ncNotes: st.nc.notes,
+      onNcName: e => this.setNc({ name: e.target.value }), onNcContact: e => this.setNc({ contact: e.target.value }),
+      onNcPhone: e => this.setNc({ phone: e.target.value }), onNcEmail: e => this.setNc({ email: e.target.value }),
+      onNcPays: e => this.setNc({ pays: e.target.value }), onNcVille: e => this.setNc({ ville: e.target.value }),
+      onNcAdresse: e => this.setNc({ adresse: e.target.value }), onNcNotes: e => this.setNc({ notes: e.target.value }),
+      saveClient: () => this.saveClient(), cancelNewClient: () => this.setState({ screen: st.ncReturn === 'create' ? 'create' : 'clients' }),
+
+      // status sheet
+      statusOptions: ['brouillon', 'valide', 'envoye', 'accepte', 'expire', 'annule'].map(s => { const cur = (this.quotes.find(x => x.id === st.activeId) || {}).status === s;
+        return { key: s, label: this.STATUS[s].label, dot: this.STATUS[s].dot, sel: cur, selBorder: cur ? '#1b3070' : '#ece6da', onClick: () => this.setQuoteStatus(s) }; }),
+      closeStatusSheet: () => this.setState({ statusSheet: false }), sheetStop: e => e.stopPropagation(),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+ALTER TABLE "quote_line" ADD CONSTRAINT "quote_line_template_id_template_id_fk" FOREIGN KEY ("template_id") REFERENCES "public"."template"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "idx_quote_line_template_id" ON "quote_line" USING btree ("template_id");

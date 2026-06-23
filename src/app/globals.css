@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 @theme inline {
+  /* ===== shadcn semantic roles (auto-inheritance) ===== */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -17,9 +18,12 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* chart + sidebar kept (option A) — fed with DESIGN.md-coherent values */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -33,83 +37,174 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ===== Brand raw tokens (DESIGN.md UX-DR1) — direct usage ===== */
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-navy-deep: var(--brand-navy-deep);
+  --color-brand-slate: var(--brand-slate);
+  --color-brand-amber: var(--brand-amber);
+  --color-amber-deep: var(--amber-deep);
+  --color-terracotta: var(--terracotta);
+
+  /* ===== Surfaces ===== */
+  --color-app-bg: var(--app-bg);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-surface-tint-amber: var(--surface-tint-amber);
+
+  /* ===== Text ===== */
+  --font-serif: var(--font-spectral);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-text-on-dark: var(--text-on-dark);
+
+  /* ===== Status lifecycle (devis) ===== */
+  --color-status-brouillon-text: var(--status-brouillon-text);
+  --color-status-brouillon-bg: var(--status-brouillon-bg);
+  --color-status-brouillon-dot: var(--status-brouillon-dot);
+  --color-status-valide-text: var(--status-valide-text);
+  --color-status-valide-bg: var(--status-valide-bg);
+  --color-status-valide-dot: var(--status-valide-dot);
+  --color-status-envoye-text: var(--status-envoye-text);
+  --color-status-envoye-bg: var(--status-envoye-bg);
+  --color-status-envoye-dot: var(--status-envoye-dot);
+  --color-status-accepte-text: var(--status-accepte-text);
+  --color-status-accepte-bg: var(--status-accepte-bg);
+  --color-status-accepte-dot: var(--status-accepte-dot);
+  --color-status-expire-text: var(--status-expire-text);
+  --color-status-expire-bg: var(--status-expire-bg);
+  --color-status-expire-dot: var(--status-expire-dot);
+  --color-status-annule-text: var(--status-annule-text);
+  --color-status-annule-bg: var(--status-annule-bg);
+  --color-status-annule-dot: var(--status-annule-dot);
+
+  /* ===== Elevation utilities (UX-DR3) ===== */
+  --shadow-flat: var(--elevation-flat);
+  --shadow-raised: var(--elevation-raised);
+  --shadow-raised-fab: var(--elevation-raised-fab);
+  --shadow-overlay: var(--elevation-overlay);
+
+  /* ===== Radius derived (base --radius = 11px = DESIGN input/button) ===== */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* ===== Existing boilerplate animations (kept) ===== */
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-fade-up: fade-up 0.4s ease-out;
   --animate-scale-in: scale-in 0.2s ease-out;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.034 270);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.96 0.012 270);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.06 270);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  /* ===== Core palette ===== */
+  --brand-navy: #1b3070;
+  --brand-navy-deep: #152659;
+  --brand-slate: #3a4c7a;
+  --brand-amber: #f6a624;
+  --amber-deep: #7d5600; /* texte sur amber (AA) */
+  --terracotta: #b8502d; /* sunset glow hero uniquement */
+
+  /* ===== Surfaces ===== */
+  --app-bg: #f7f4ee; /* fond écran, papier chaud */
+  --surface: #ffffff; /* cartes, inputs, lignes */
+  --surface-alt: #faf8f3; /* champs inset, bandes */
+  --surface-tint-amber: #fdf3df; /* carte camion */
+
+  /* ===== Texte ===== */
+  --text-primary: #1c1a17;
+  --text-secondary: #57534e; /* AA */
+  --text-muted: #6b6259; /* AA */
+  --text-faint: #a39d92; /* décoratif uniquement — JAMAIS texte utile */
+  --text-on-dark: #faf6ef;
+
+  /* ===== Bordures / input ===== */
+  --border: #ece6da;
+  --border-input: #e3dcce;
+  --focus-ring: #1b3070;
+
+  /* ===== Radius ===== */
+  --radius-input: 11px;
+  --radius-button: 11px;
+  --radius-card: 15px;
+  --radius-dark-block: 16px;
+  --radius-sheet-top: 22px;
+  --radius-fab: 18px;
+  --radius-badge: 6px;
+  --radius-pill: 20px;
+  --radius: 11px; /* valeur de base shadcn (input/button) */
+
+  /* ===== Spacing ===== */
+  --spacing-screen-x: 20px;
+  --spacing-screen-x-login: 28px;
+  --spacing-card-pad: 16px;
+  --spacing-card-gap: 10px;
+
+  /* ===== Status (lifecycle devis) — texte / bg / dot ===== */
+  --status-brouillon-text: #615a52;
+  --status-brouillon-bg: #f2efe9;
+  --status-brouillon-dot: #a8a29e;
+  --status-valide-text: #1d4e6f;
+  --status-valide-bg: #e9eff3;
+  --status-valide-dot: #2f6e96;
+  --status-envoye-text: #964507;
+  --status-envoye-bg: #fbeedd;
+  --status-envoye-dot: #d97706;
+  --status-accepte-text: #11652f;
+  --status-accepte-bg: #e8f1ea;
+  --status-accepte-dot: #16a34a;
+  --status-expire-text: #b91c1c;
+  --status-expire-bg: #f7e8e5;
+  --status-expire-dot: #dc2626;
+  --status-annule-text: #615a52;
+  --status-annule-bg: #f0eeea;
+  --status-annule-dot: #a8a29e;
+
+  /* ===== Élévation (UX-DR3) ===== */
+  --elevation-flat: 0 1px 2px rgba(40, 30, 15, 0.03);
+  --elevation-raised: 0 4px 14px -4px rgba(27, 48, 112, 0.45);
+  --elevation-raised-fab: 0 8px 18px -5px rgba(27, 48, 112, 0.5);
+  --elevation-overlay: 0 8px 30px -10px rgba(40, 30, 15, 0.4);
+
+  /* ===== Mapping sémantique shadcn (héritage auto) ===== */
+  --background: var(--app-bg);
+  --foreground: var(--text-primary);
+  --primary: var(--brand-navy);
+  --primary-foreground: var(--text-on-dark);
+  --secondary: var(--surface-alt);
+  --secondary-foreground: var(--text-secondary);
+  --accent: var(--brand-amber);
+  --accent-foreground: var(--amber-deep);
+  --muted: var(--surface-alt);
+  --muted-foreground: var(--text-muted);
+  --destructive: var(--status-expire-text); /* #b91c1c */
+  --destructive-foreground: var(--text-on-dark);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-primary);
+  --input: var(--border-input);
+  --ring: var(--focus-ring);
+
+  /* ===== chart-* / sidebar-* (option A — valeurs cohérentes DESIGN.md) ===== */
+  --chart-1: var(--brand-navy);
+  --chart-2: var(--brand-amber);
+  --chart-3: var(--brand-slate);
+  --chart-4: var(--terracotta);
+  --chart-5: var(--brand-navy-deep);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--brand-navy);
+  --sidebar-primary-foreground: var(--text-on-dark);
+  --sidebar-accent: var(--surface-alt);
+  --sidebar-accent-foreground: var(--text-secondary);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--focus-ring);
 }
 
-.dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.02 270);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.28 0.018 270);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.05 270);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
-}
+/* DESIGN.md = light-only v1 (C4). No `.dark` block. */
 
 @keyframes fade-in {
   from {
@@ -142,6 +237,91 @@
   }
 }
 
+/* ===== Motion UX-DR21 ===== */
+@keyframes scr-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes blink-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.animate-scr-in {
+  animation: scr-in 0.4s ease-out;
+}
+
+.animate-sheet-up {
+  animation: sheet-up 0.3s ease-out;
+}
+
+.animate-toast-in {
+  animation: toast-in 0.2s ease-out;
+}
+
+.animate-blink-dot {
+  animation: blink-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-scr-in,
+  .animate-sheet-up,
+  .animate-toast-in,
+  .animate-blink-dot,
+  .animate-fade-in,
+  .animate-fade-up,
+  .animate-scale-in,
+  .animate-float {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -151,6 +331,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family:
+      var(--font-hanken-grotesk), ui-sans-serif, system-ui, -apple-system,
+      "Segoe UI", Roboto, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   :focus-visible {
@@ -171,5 +354,20 @@
       var(--accent) 0%,
       transparent 50%
     );
+  }
+  /* UX-DR19/22 — tactile targets ≥44px (iOS HIG). */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Tabular numerals for money/quantities — native Tailwind `tabular-nums`
+     utility also available; this guarantees the feature setting on demand. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  .font-serif {
+    font-family:
+      var(--font-spectral), ui-serif, Georgia, Cambria, "Times New Roman",
+      Times, serif;
   }
 }

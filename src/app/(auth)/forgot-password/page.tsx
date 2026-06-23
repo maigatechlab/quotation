@@ -14,16 +14,16 @@ export default async function ForgotPasswordPage() {
   const session = await auth.api.getSession({ headers: await headers() })
 
   if (session) {
-    redirect("/dashboard")
+    redirect("/")
   }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle>Forgot password</CardTitle>
+          <CardTitle>Mot de passe oublié ?</CardTitle>
           <CardDescription>
-            Enter your email address and we&apos;ll send you a reset link
+            Saisissez votre email pour recevoir un lien de réinitialisation.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center">
