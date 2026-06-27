@@ -87,6 +87,21 @@ export interface TemplateLocal {
   id: string;
   nom: string;
   lines: { designation: string; unitPrice: number; quantity: number }[];
+  deletedAt?: string | null;
+  companyId?: string;
+  pays: string;
+  revision: number;
+  updatedAt: string;
+  createdAt: string;
+}
+
+export interface QuoteClauseLocal {
+  id: string;
+  quoteId: string;
+  clauseId?: string;
+  titre?: string;
+  contenu: string;
+  ordre: number;
   companyId?: string;
   pays: string;
   revision: number;
@@ -106,6 +121,7 @@ export interface CompanyLocal {
   phones: string[];
   emails: string[];
   logoUrl?: string;
+  logoData?: string;
   signataireNom?: string;
   signataireFonction?: string;
   conditionsPaiementDefaut?: string;
@@ -132,6 +148,11 @@ export interface SyncOp {
   payload: unknown;
   baseRevision: number;
   queuedAt: string;
+  // Operational fields added Story 2.1
+  failed?: boolean;
+  retryCount?: number;
+  lastError?: string;
+  createdBy?: string;
 }
 
 export interface AuditEventLocal {
@@ -153,6 +174,7 @@ export class LocalDatabase extends Dexie {
   quotes!: EntityTable<QuoteLocal, "id">;
   quoteLines!: EntityTable<QuoteLineLocal, "id">;
   clauses!: EntityTable<ClauseLocal, "id">;
+  quoteClauses!: EntityTable<QuoteClauseLocal, "id">;
   templates!: EntityTable<TemplateLocal, "id">;
   company!: EntityTable<CompanyLocal, "id">;
   syncQueue!: EntityTable<SyncOp, "opId">;
@@ -161,6 +183,7 @@ export class LocalDatabase extends Dexie {
   constructor() {
     super("quotation-local");
 
+    // Version 1 — NE PAS MODIFIER, garder pour upgrade path
     this.version(1).stores({
       clients: "id, companyName, phone, city, ownerId, companyId, deletedAt, revision",
       quotes: "id, number, status, clientId, ownerId, companyId, dateDevis, revision",
@@ -170,6 +193,16 @@ export class LocalDatabase extends Dexie {
       company: "id, companyId, revision",
       syncQueue: "opId, entity, entityId, queuedAt",
       auditMirror: "id, entityType, entityId, who, synced",
+    });
+
+    // Version 2 — ajout index failed/retryCount sur syncQueue
+    this.version(2).stores({
+      syncQueue: "opId, entity, entityId, queuedAt, failed, retryCount",
+    });
+
+    // Version 3 — ajout table quoteClauses (Story 4-1)
+    this.version(3).stores({
+      quoteClauses: "id, quoteId, ordre, companyId, pays, revision",
     });
   }
 }

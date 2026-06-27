@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Exclude non-source dirs from Tailwind v4 class scanning */
+@source not "../../_bmad-output/**";
+@source not "../../Docs/**";
+
 @theme inline {
   /* ===== shadcn semantic roles (auto-inheritance) ===== */
   --color-background: var(--background);
@@ -279,6 +283,19 @@
   }
 }
 
+/* ===== Dashboard Hero — glow breathing animation (UX-DR6) ===== */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.3;
+  }
+}
+
 .animate-scr-in {
   animation: scr-in 0.4s ease-out;
 }
@@ -318,6 +335,11 @@
   .animate-fade-up,
   .animate-scale-in,
   .animate-float {
+    animation: none;
+  }
+
+  /* Stop dashboard hero breathing glow under prefers-reduced-motion */
+  .sahel-glow {
     animation: none;
   }
 }

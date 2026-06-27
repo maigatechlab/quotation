@@ -1,0 +1,1 @@
+ALTER TABLE "template" ADD COLUMN "deleted_at" timestamp;

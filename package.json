@@ -3,7 +3,7 @@
   "version": "1.1.2",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "pnpm run db:migrate && next build",
+    "build": "pnpm run db:migrate && next build --webpack",
     "build:ci": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
@@ -26,6 +26,9 @@
   "dependencies": {
     "@ai-sdk/react": "^2.0.190",
     "@better-auth/api-key": "^1.6.11",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@openrouter/ai-sdk-provider": "^1.5.4",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -57,7 +60,8 @@
     "serwist": "^9.5.11",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

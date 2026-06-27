@@ -3,15 +3,20 @@ import { eq, sql } from "drizzle-orm"
 import { db } from "./db"
 import { user as userTable } from "./schema"
 
+// NOTE: db.query.* (relational API) fails inside Better Auth plugin hooks in Next.js 16.
+// Use db.select() instead throughout this file.
+
 export const MAX_LOGIN_ATTEMPTS = 5
 const LOCKOUT_TTL_MS = 30 * 60 * 1000 // 30 minutes
 
 export async function checkAccountLockout(email: string): Promise<void> {
   const normalizedEmail = email.toLowerCase()
-  const found = await db.query.user.findFirst({
-    where: eq(userTable.email, normalizedEmail),
-    columns: { lockedAt: true, loginAttempts: true },
-  })
+  const rows = await db
+    .select({ lockedAt: userTable.lockedAt, loginAttempts: userTable.loginAttempts })
+    .from(userTable)
+    .where(eq(userTable.email, normalizedEmail))
+    .limit(1)
+  const found = rows[0]
 
   if (found?.lockedAt) {
     const elapsed = Date.now() - found.lockedAt.getTime()
