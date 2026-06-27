@@ -2,13 +2,13 @@
 story_key: 3-6-payment-terms
 epic_num: 3
 story_num: 6
-status: ready-for-dev
-baseline_commit: ""
+status: review
+baseline_commit: "f3cdc3d477c5dce39d3c32d3ced7663578779b0c"
 ---
 
 # Story 3.6 : Conditions de paiement (FR-25)
 
-**Statut :** ready-for-dev
+**Statut :** review
 
 ## Story
 
@@ -103,8 +103,8 @@ AND    pnpm build passe sans erreur
 
 ### T1 — Créer `src/components/settings/payment-terms-form.tsx`
 
-- [ ] `"use client"` première ligne
-- [ ] Imports :
+- [x] `"use client"` première ligne
+- [x] Imports :
   ```ts
   import { useState } from "react";
   import { useTranslations } from "next-intl";
@@ -113,14 +113,14 @@ AND    pnpm build passe sans erreur
   import { applyLocalMutation, triggerSync } from "@/lib/sync/outbox";
   import { useToast } from "@/hooks/use-toast";
   ```
-- [ ] Props :
+- [x] Props :
   ```ts
   interface PaymentTermsFormProps {
     company: CompanyLocal;
     userId: string;
   }
   ```
-- [ ] État local :
+- [x] État local :
   ```ts
   const t = useTranslations("parametres.conditionsPaiement");
   const { toast } = useToast();
@@ -128,7 +128,7 @@ AND    pnpm build passe sans erreur
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState("");
   ```
-- [ ] Fonction `handleSubmit()` :
+- [x] Fonction `handleSubmit()` :
   ```ts
   async function handleSubmit() {
     setIsPending(true);
@@ -155,44 +155,44 @@ AND    pnpm build passe sans erreur
     }
   }
   ```
-- [ ] Rendu : textarea + bouton Enregistrer + message d'aide + gestion erreur inline
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] Rendu : textarea + bouton Enregistrer + message d'aide + gestion erreur inline
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T2 — Créer `src/components/quote/wizard-step-conditions.tsx`
 
-- [ ] `"use client"` première ligne
-- [ ] Importer `useWizardStore` depuis `@/stores/wizard-store`
-- [ ] Importer `useLiveCompany` depuis `@/hooks/use-live-company`
-- [ ] Lire le quoteId courant depuis le wizard store
-- [ ] Pré-remplir `conditionsPaiement` depuis `QuoteLocal.conditionsPaiement` ou `CompanyLocal.conditionsPaiementDefaut` si vide
-- [ ] Textarea pour conditions de paiement (optionnel, texte libre)
-- [ ] Bouton "Précédent" → setStep(4)
-- [ ] Bouton "Terminer" → persister `conditionsPaiement` via `applyLocalMutation("quote", ...)` + `resetWizard()` + `router.push("/devis")`
-- [ ] Toast "Devis sauvegardé" après succès
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `"use client"` première ligne
+- [x] Importer `useWizardStore` depuis `@/stores/wizard-store`
+- [x] Importer `useLiveCompany` depuis `@/hooks/use-live-company`
+- [x] Lire le quoteId courant depuis le wizard store
+- [x] Pré-remplir `conditionsPaiement` depuis `QuoteLocal.conditionsPaiement` ou `CompanyLocal.conditionsPaiementDefaut` si vide
+- [x] Textarea pour conditions de paiement (optionnel, texte libre)
+- [x] Bouton "Précédent" → setStep(4)
+- [x] Bouton "Terminer" → persister `conditionsPaiement` via `applyLocalMutation("quote", ...)` + `resetWizard()` + `router.push("/devis")`
+- [x] Toast "Devis sauvegardé" après succès
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T3 — Mettre à jour `src/components/quote/quote-wizard.tsx`
 
-- [ ] Remplacer `WizardStep5Stub` par `WizardStepConditions` :
+- [x] Remplacer `WizardStep5Stub` par `WizardStepConditions` :
   ```ts
   import { WizardStepConditions } from "./wizard-step-conditions";
   ```
-- [ ] À l'étape 5, passer `userId` et `company` :
+- [x] À l'étape 5, passer `userId` et `company` :
   ```tsx
   {step === 5 && company !== undefined && (
     <WizardStepConditions userId={userId} company={company} />
   )}
   ```
-- [ ] Supprimer la fonction `WizardStep5Stub` (devenue obsolète)
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] Supprimer la fonction `WizardStep5Stub` (devenue obsolète)
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T4 — Mettre à jour `src/app/(app)/parametres/page.tsx`
 
-- [ ] Importer `PaymentTermsForm` :
+- [x] Importer `PaymentTermsForm` :
   ```ts
   import { PaymentTermsForm } from "@/components/settings/payment-terms-form";
   ```
-- [ ] Ajouter section conditions de paiement (visible Admin et Commercial, car relecture utile — écriture Admin uniquement via logique du composant) :
+- [x] Ajouter section conditions de paiement (visible Admin et Commercial, car relecture utile — écriture Admin uniquement via logique du composant) :
   ```tsx
   {company && can(role, "company.update") && (
     <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
@@ -200,11 +200,11 @@ AND    pnpm build passe sans erreur
     </div>
   )}
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T5 — Mettre à jour `src/messages/fr-NE.json`
 
-- [ ] Ajouter section `parametres.conditionsPaiement` :
+- [x] Ajouter section `parametres.conditionsPaiement` :
   ```json
   "conditionsPaiement": {
     "heading": "Conditions de paiement",
@@ -218,7 +218,7 @@ AND    pnpm build passe sans erreur
     "errorNotFound": "Impossible de charger les données société."
   }
   ```
-- [ ] Ajouter section `devis.wizard.conditions` :
+- [x] Ajouter section `devis.wizard.conditions` :
   ```json
   "conditions": {
     "heading": "Conditions",
@@ -230,18 +230,18 @@ AND    pnpm build passe sans erreur
     "successToast": "Devis sauvegardé"
   }
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T6 — Vérification finale (AC6)
 
-- [ ] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
-- [ ] `pnpm build` : passe sans erreur
-- [ ] Admin : section "Conditions de paiement" visible dans /parametres ✓
-- [ ] Admin : sauvegarder des conditions → toast + persister dans CompanyLocal ✓
-- [ ] Wizard : étape 5 affiche WizardStepConditions (plus de stub) ✓
-- [ ] Wizard étape 5 : conditions pré-remplies depuis CompanyLocal ✓
-- [ ] Wizard étape 5 : bouton "Terminer" sauvegarde le devis et redirige vers /devis ✓
-- [ ] Devis sans conditions de paiement : valide ✓
+- [x] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
+- [x] `pnpm build` : passe sans erreur
+- [x] Admin : section "Conditions de paiement" visible dans /parametres ✓
+- [x] Admin : sauvegarder des conditions → toast + persister dans CompanyLocal ✓
+- [x] Wizard : étape 5 affiche WizardStepConditions (plus de stub) ✓
+- [x] Wizard étape 5 : conditions pré-remplies depuis CompanyLocal ✓
+- [x] Wizard étape 5 : bouton "Terminer" sauvegarde le devis et redirige vers /devis ✓
+- [x] Devis sans conditions de paiement : valide ✓
 
 ---
 
@@ -372,20 +372,37 @@ pnpm build   # passe sans erreur
 
 ### Agent Model Used
 
-_à remplir_
+Claude (GLM-5.2 via claude-glm) — exécution bmad-dev-story.
 
 ### Debug Log References
 
-_à remplir_
+Aucun debug externe. Trois allers-retours de validation internes :
+1. Erreur lint `react-hooks/set-state-in-effect` sur le preload de `wizard-step-conditions.tsx` → refactor du `useEffect` pour ne plus appeler `setState` de façon synchrone (toute la logique déplacée dans une fonction `async load()`).
+2. Régression de révision non incrémentée dans `wizard-step-conditions.tsx` (le `db.quotes.put` n'incrémentait pas `revision`, contrairement au pattern établi par `signatory-config.tsx` / `company-form.tsx`) → ajout de `revision: dbQuote.revision + 1`.
+3. Erreurs de typage `exactOptionalPropertyTypes` dans les tests (`status: "brouillon"` hors union ; spread + delete sur `conditionsPaiementDefaut`) → fixtures reconstruites proprement.
 
 ### Completion Notes List
 
-_à remplir_
+- **T1 (PaymentTermsForm)** : création d'un wrapper `useLiveCompany` + inner form re-keyé par `id:revision` (pattern de `signatory-config.tsx`), pour rester synchronisé après un pull sync. Adaptation importante vs. la spec : le codebase utilise `sonner` (`toast.success`) et non un hook `useToast` — implémentation alignée sur le pattern réel. `applyLocalMutation("company", …)` utilise un payload **complet** (tous les champs CompanyLocal), pas le payload partiel suggéré par la spec, conformément au contrat établi en Story 2.3 (un payload partiel écraserait les champs gérés par d'autres stories lors du sync push). La révision est lue AVANT la mutation et incrémentée dans le `put`.
+- **T2 (WizardStepConditions)** : pré-remplit depuis `QuoteLocal.conditionsPaiement` puis, si vide, depuis `CompanyLocal.conditionsPaiementDefaut`. Persistance via `applyLocalMutation("quote", …)` avec incrémentation de `revision`. Ajout d'une entrée `AuditMirror` (`quote.conditions_update`) après la mutation, conformément à la convention de `wizard-step-services.tsx` (Story 3.5). `resetWizard()` + `router.push("/devis")` après succès.
+- **T3 (QuoteWizard)** : `WizardStep5Stub` supprimé (ainsi que les imports `useRouter` / `useTranslations` devenus inutiles), remplacé par `<WizardStepConditions userId={userId} company={company} />`. Le guard a été resserré à `company !== undefined && company !== null` car le typage de la prop exige une `CompanyLocal` non-null (la spec écrivait `company !== undefined` ce qui laissait passer `null`).
+- **T4 (ParametresPage)** : section "Conditions de paiement" ajoutée après `SignatoryConfig`, avant `TemplateManager`, gardée par `initialCompany && canEdit` (`canEdit = can(role, "company.update")` → Admin uniquement, conformément à la matrice `permissions.ts`).
+- **T5 (fr-NE.json)** : clés `parametres.conditionsPaiement` (9 clés) et `devis.wizard.conditions` (9 clés, dont `errorNoQuote`/`errorGeneric` ajoutés pour la cohérence avec les autres étapes du wizard) ajoutées.
+- **Tests** : 2 nouveaux fichiers couvrant AC1-AC5 — `payment-terms-form.test.tsx` (3 tests : pré-remplissage AC1, persistance+toast+SyncOp+triggerSync AC2, trim+vide) et `wizard-step-conditions.test.tsx` (5 tests : pré-remplissage priorité devis AC3, fallback défaut société AC3, persistance+toast+reset+redirect AC4, vide accepté AC5, Précédent sans persistance). Baseline 215 tests → **223 tests (28 fichiers)**, 0 régression.
+- **Validation finale** : `pnpm check` = 0 erreur (12 warnings pré-existants, 0 nouveau) ; `pnpm test` = 223/223 ; `pnpm build` = succès sans erreur ni warning.
 
 ### File List
 
-_à remplir_
+- `src/components/settings/payment-terms-form.tsx` (créé — formulaire conditions de paiement par défaut, wrapper useLiveCompany + inner form re-keyé, applyLocalMutation company payload complet, sonner toast)
+- `src/components/settings/payment-terms-form.test.tsx` (créé — 3 tests d'intégration : pré-remplissage AC1, persistance AC2, trim+vide)
+- `src/components/quote/wizard-step-conditions.tsx` (créé — étape 5 wizard : pré-remplissage devis→défaut société, persistance quote via applyLocalMutation avec incrémentation révision, AuditMirror, reset+redirect)
+- `src/components/quote/wizard-step-conditions.test.tsx` (créé — 5 tests d'intégration : AC3 pré-remplissage, AC4 persistance+redirect, AC5 vide, Précédent)
+- `src/components/quote/quote-wizard.tsx` (modifié — remplacement WizardStep5Stub par WizardStepConditions, suppression imports morts, guard resserré company !== null)
+- `src/app/(app)/parametres/page.tsx` (modifié — import PaymentTermsForm + section conditions de paiement après SignatoryConfig, gardée par initialCompany && canEdit)
+- `src/messages/fr-NE.json` (modifié — ajout clés parametres.conditionsPaiement + devis.wizard.conditions)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml (mis à jour)`
+- `_bmad-output/implementation-artifacts/3-6-payment-terms.md (mis à jour)`
 
 ### Change Log
 
-_à remplir_
+- 2026-06-27 : Implémentation complète Story 3.6 (FR-25 Conditions de paiement). Création de PaymentTermsForm (paramètres société, Admin) et WizardStepConditions (étape 5 wizard, remplace WizardStep5Stub). Aucune migration DB nécessaire (colonnes déjà présentes). Ajout de 8 tests d'intégration (223/223 verts). `pnpm check` 0 erreur, `pnpm build` succès. Status → review.

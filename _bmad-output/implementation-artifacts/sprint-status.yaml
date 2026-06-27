@@ -49,6 +49,8 @@
 # story 6-4 in-progress 2026-06-26
 # story 6-4 review 2026-06-26
 # story 6-5 done 2026-06-27
+# story 3-6 in-progress 2026-06-27
+# story 3-6 review 2026-06-27
 
 generated: 2026-06-21
 last_updated: 2026-06-27
@@ -120,7 +122,7 @@ development_status:
   3-3-goods-automatic-calculations: done
   3-4-service-lines-quotation-total: done
   3-5-reusable-line-templates: done
-  3-6-payment-terms: ready-for-dev
+  3-6-payment-terms: review
   3-7-standard-clauses-library: ready-for-dev
   3-8-apply-clause-to-quotation: ready-for-dev
   3-9-lifecycle-status-change: ready-for-dev

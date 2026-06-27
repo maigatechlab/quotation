@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { CompanyForm } from "@/components/settings/company-form";
 import { LogoUpload } from "@/components/settings/logo-upload";
+import { PaymentTermsForm } from "@/components/settings/payment-terms-form";
 import { SignatoryConfig } from "@/components/settings/signatory-config";
 import { TemplateManager } from "@/components/settings/template-manager";
 import { db as pgDb } from "@/lib/db";
@@ -89,6 +90,12 @@ export default async function ParametresPage() {
           initialCompany={initialCompany}
         />
       </div>
+
+      {initialCompany && canEdit && (
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
+          <PaymentTermsForm company={initialCompany} userId={userId} />
+        </div>
+      )}
 
       {can(role, "template.create") && (
         <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
