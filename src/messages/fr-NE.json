@@ -227,7 +227,18 @@
         "finishing": "Sauvegarde…",
         "successToast": "Devis sauvegardé",
         "errorNoQuote": "Devis introuvable. Recommencez depuis l'étape 1.",
-        "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+        "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
+        "clausesHeading": "Clauses contractuelles",
+        "clausesEmpty": "Aucune clause définie. Vous pouvez ajouter une clause spécifique ci-dessous.",
+        "clauseSelected": "{count, plural, one {# clause sélectionnée} other {# clauses sélectionnées}}",
+        "specificClauseLabel": "Clause spécifique (texte libre)",
+        "specificClausePlaceholder": "Rédigez une clause spécifique à ce devis…",
+        "saveAsTemplate": "Enregistrer comme modèle dans la bibliothèque",
+        "moveUp": "Déplacer vers le haut",
+        "moveDown": "Déplacer vers le bas",
+        "orderHeading": "Ordre des clauses sélectionnées",
+        "specificClauseTitle": "Clause spécifique",
+        "specificClauseChip": "Clause spécifique"
       }
     },
     "apercu": {

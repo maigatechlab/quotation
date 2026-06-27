@@ -54,6 +54,8 @@
 
 generated: 2026-06-21
 last_updated: 2026-06-27
+# story 3-8 review 2026-06-27
+# story 3-8 in-progress 2026-06-27
 # story 6-6 in-progress 2026-06-27
 # story 3-7 in-progress 2026-06-27
 # story 3-7 review 2026-06-27
@@ -126,7 +128,7 @@ development_status:
   3-5-reusable-line-templates: done
   3-6-payment-terms: review
   3-7-standard-clauses-library: review
-  3-8-apply-clause-to-quotation: ready-for-dev
+  3-8-apply-clause-to-quotation: review
   3-9-lifecycle-status-change: ready-for-dev
   3-10-search-filter-quotations: ready-for-dev
   3-11-duplicate-quotation: ready-for-dev

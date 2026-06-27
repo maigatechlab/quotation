@@ -32,6 +32,46 @@ describe("LocalDatabase", () => {
     expect(db.company).toBeDefined();
     expect(db.syncQueue).toBeDefined();
     expect(db.auditMirror).toBeDefined();
+    // QuoteClause table (Story 3.8) — associates clauses to a quote as a frozen snapshot.
+    expect(db.quoteClauses).toBeDefined();
+  });
+
+  it("persists QuoteClauseLocal snapshots with ordre and queryable by quoteId (Story 3.8 T1)", async () => {
+    await db.quoteClauses.bulkPut([
+      {
+        id: "qc-1",
+        quoteId: "quote-1",
+        clauseId: "clause-1",
+        titre: "Paiement",
+        contenu: "Paiement à réception.",
+        ordre: 0,
+        companyId: "company-1",
+        pays: "NE",
+        revision: 0,
+        updatedAt: now,
+        createdAt: now,
+      },
+      {
+        id: "qc-2",
+        quoteId: "quote-1",
+        // clause spécifique non enregistrée dans la bibliothèque
+        contenu: "Garantieantievolutive propre à ce devis.",
+        ordre: 1,
+        companyId: "company-1",
+        pays: "NE",
+        revision: 0,
+        updatedAt: now,
+        createdAt: now,
+      },
+    ]);
+
+    const rows = await db.quoteClauses.where("quoteId").equals("quote-1").sortBy("ordre");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.clauseId).toBe("clause-1");
+    expect(rows[0]?.titre).toBe("Paiement");
+    // clause spécifique : clauseId absent (pas enregistrée comme modèle)
+    expect(rows[1]?.clauseId).toBeUndefined();
+    expect(rows[1]?.contenu).toBe("Garantieantievolutive propre à ce devis.");
   });
 
   it("persists sync fields for quote lines, clauses, and templates", async () => {

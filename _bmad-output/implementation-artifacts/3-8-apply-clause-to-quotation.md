@@ -2,13 +2,13 @@
 story_key: 3-8-apply-clause-to-quotation
 epic_num: 3
 story_num: 8
-status: ready-for-dev
-baseline_commit: ""
+status: review
+baseline_commit: "10ee0a4c80aea5e47a91dc232744a78583beaeb6"
 ---
 
 # Story 3.8 : Application de clauses & clause spécifique au devis (FR-27, FR-28)
 
-**Statut :** ready-for-dev
+**Statut :** review
 
 ## Story
 
@@ -116,7 +116,7 @@ Les `QuoteClause` sont des données associées au devis. En MVP-0, elles sont st
 
 ### T1 — Mettre à jour `src/lib/local-db.ts` : ajouter QuoteClauseLocal + table Dexie
 
-- [ ] Ajouter interface après `ClauseLocal` :
+- [x] Ajouter interface après `ClauseLocal` :
   ```ts
   export interface QuoteClauseLocal {
     id: string;
@@ -127,23 +127,30 @@ Les `QuoteClause` sont des données associées au devis. En MVP-0, elles sont st
     createdAt: string;
   }
   ```
-- [ ] Ajouter à `LocalDatabase` :
+  > **Note d'implémentation :** l'interface existante dans `local-db.ts` est une variante
+  > snapshot plus riche (`titre` + `contenu` figés au moment de l'enregistrement,
+  > sans champ `contenuOverride`). Ce schéma satisfait fonctionnellement les mêmes AC
+  > (indépendance vis-à-vis de la bibliothèque = AC2, clause spécifique = AC3) et est
+  > cohérent avec le rendu PDF côté client. Conserver le schéma existant évite une
+  > migration risquée et reste dans le périmètre local-only décidé en Dev Notes.
+- [x] Ajouter à `LocalDatabase` :
   ```ts
   quoteClauses!: EntityTable<QuoteClauseLocal, "id">;
   ```
-- [ ] Ajouter version 3 du schéma Dexie :
+- [x] Ajouter version 3 du schéma Dexie :
   ```ts
   this.version(3).stores({
     quoteClauses: "id, quoteId, clauseId, ordre",
   });
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+  > Version 3 (avec index `quoteClauses`) déjà présente dans `local-db.ts`.
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T2 — Mettre à jour `src/components/quote/wizard-step-conditions.tsx`
 
-- [ ] Ajouter import `useLiveClauses` depuis `@/hooks/use-live-clauses`
-- [ ] Ajouter import `QuoteClauseLocal` depuis `@/lib/local-db`
-- [ ] Ajouter état local :
+- [x] Ajouter import `useLiveClauses` depuis `@/hooks/use-live-clauses`
+- [x] Ajouter import `QuoteClauseLocal` depuis `@/lib/local-db`
+- [x] Ajouter état local :
   ```ts
   const clauses = useLiveClauses();
   const [selectedClauseIds, setSelectedClauseIds] = useState<Set<string>>(new Set());
@@ -151,9 +158,9 @@ Les `QuoteClause` sont des données associées au devis. En MVP-0, elles sont st
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [clauseOrder, setClauseOrder] = useState<string[]>([]); // ordered list of clauseId or "__specific__"
   ```
-- [ ] Fonction `toggleClause(clauseId: string)` : ajoute/retire de `selectedClauseIds` et met à jour `clauseOrder`
-- [ ] Fonctions `moveUp(idx: number)` et `moveDown(idx: number)` sur `clauseOrder`
-- [ ] Dans `handleFinish()` (existant depuis Story 3.6) : avant `resetWizard()`, persister les QuoteClauses :
+- [x] Fonction `toggleClause(clauseId: string)` : ajoute/retire de `selectedClauseIds` et met à jour `clauseOrder`
+- [x] Fonctions `moveUp(idx: number)` et `moveDown(idx: number)` sur `clauseOrder`
+- [x] Dans `handleFinish()` (existant depuis Story 3.6) : avant `resetWizard()`, persister les QuoteClauses :
   ```ts
   // 1. Si specificClause et saveAsTemplate → créer clause dans db.clauses via applyLocalMutation
   // 2. Bulk insert dans db.quoteClauses
@@ -166,8 +173,11 @@ Les `QuoteClause` sont des données associées au devis. En MVP-0, elles sont st
   });
   await db.quoteClauses.bulkPut(quoteClauseRecords);
   ```
-- [ ] Rendu de la section clauses : groupement par catégorie, checkbox tiles (UX-DR11)
-- [ ] Checkbox tile :
+  > Adapté au schéma snapshot existant (`titre`+`contenu` figés au lieu de `contenuOverride`),
+  > conformément à la note T1. Le `clauseId` est renseigné pour les clauses standards et
+  > pour la clause spécifique quand « Enregistrer comme modèle » est coché.
+- [x] Rendu de la section clauses : groupement par catégorie, checkbox tiles (UX-DR11)
+- [x] Checkbox tile :
   ```tsx
   <button
     type="button"
@@ -183,13 +193,13 @@ Les `QuoteClause` sont des données associées au devis. En MVP-0, elles sont st
     ...
   </button>
   ```
-- [ ] Champ clause spécifique (textarea texte libre + checkbox "Enregistrer comme modèle")
-- [ ] Liste réordonnée des clauses sélectionnées avec boutons ↑ ↓
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] Champ clause spécifique (textarea texte libre + checkbox "Enregistrer comme modèle")
+- [x] Liste réordonnée des clauses sélectionnées avec boutons ↑ ↓
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T3 — Mettre à jour `src/messages/fr-NE.json`
 
-- [ ] Compléter `devis.wizard.conditions` :
+- [x] Compléter `devis.wizard.conditions` :
   ```json
   "clausesHeading": "Clauses contractuelles",
   "clausesEmpty": "Aucune clause définie. Vous pouvez ajouter une clause spécifique ci-dessous.",
@@ -201,19 +211,25 @@ Les `QuoteClause` sont des données associées au devis. En MVP-0, elles sont st
   "moveDown": "Déplacer vers le bas",
   "orderHeading": "Ordre des clauses sélectionnées"
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+  > Deux clés supplémentaires ajoutées : `specificClauseTitle` (titre utilisé quand une
+  > clause spécifique est enregistrée comme modèle) et `specificClauseChip` (libellé
+  > du jeton affiché dans la liste ordonnée pour la clause spécifique).
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T4 — Vérification finale (AC7)
 
-- [ ] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
-- [ ] `pnpm build` : passe sans erreur
-- [ ] Wizard étape 5 : section clauses visible si des clauses existent ✓
-- [ ] Multi-sélection checkbox tiles fonctionne ✓
-- [ ] Clause spécifique saisie et persistée dans db.quoteClauses ✓
-- [ ] "Enregistrer comme modèle" : clause créée dans db.clauses ✓
-- [ ] Réordonnancement ↑/↓ fonctionne ✓
-- [ ] Terminer le wizard : QuoteClauses persistées dans Dexie ✓
-- [ ] Aucune clause : devis valide sans clause ✓
+- [x] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
+  > lint : 0 erreur, 13 warnings (tous préexistants, aucun dans les fichiers de cette story)
+  > typecheck : 0 erreur (strict, `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess` respectés)
+  > tests : 242/242 passent (baseline 232 + 10 nouveaux : 9 clauses + 1 local-db quoteClauses)
+- [x] `pnpm build` : passe sans erreur (`✓ Compiled successfully`)
+- [x] Wizard étape 5 : section clauses visible si des clauses existent ✓
+- [x] Multi-sélection checkbox tiles fonctionne ✓
+- [x] Clause spécifique saisie et persistée dans db.quoteClauses ✓
+- [x] "Enregistrer comme modèle" : clause créée dans db.clauses ✓
+- [x] Réordonnancement ↑/↓ fonctionne ✓
+- [x] Terminer le wizard : QuoteClauses persistées dans Dexie ✓
+- [x] Aucune clause : devis valide sans clause ✓
 
 ---
 
@@ -364,20 +380,64 @@ pnpm build   # passe sans erreur
 
 ### Agent Model Used
 
-_à remplir_
+GLM-5.2 (claude-glm wrapper) — workflow `bmad-dev-story`.
 
 ### Debug Log References
 
-_à remplir_
+- Phase RED : 9 nouveaux tests clauses + 1 test `local-db.quoteClauses` ont
+  échoué initialement (composant sans UI clauses), validant la pertinence des tests.
+- Phase GREEN : après implémentation du composant, typecheck a échoué sous
+  `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess` (champs optionnels
+  passés explicitement à `undefined`, accès indexés non gardés). Corrigé en
+  ajoutant les champs optionnels conditionnellement et des gardes explicites
+  sur les index `order[idx]`.
 
 ### Completion Notes List
 
-_à remplir_
+- **T1 déjà réalisé** : l'interface `QuoteClauseLocal` et la table Dexie
+  `quoteClauses` (version 3) existaient déjà dans `local-db.ts` avec un schéma
+  **snapshot** plus riche que celui décrit dans la story (`titre` + `contenu`
+  figés au lieu de `contenuOverride`). Conformément aux Dev Notes (« le code est
+  la source de vérité »), j'ai conservé ce schéma, qui satisfait fonctionnellement
+  tous les AC (notamment AC2 : indépendance vis-à-vis des modifications futures de
+  la bibliothèque, puisque `titre`+`contenu` sont copiés au moment de l'enregistrement).
+  Aucune migration DB ni bump de version Dexie n'était nécessaire.
+- **T3** : 11 clés i18n ajoutées à `devis.wizard.conditions` (9 spécifiées par la
+  story + 2 utiles : `specificClauseTitle` pour le titre de la clause enregistrée
+  comme modèle, `specificClauseChip` pour le jeton dans la liste ordonnée).
+- **T2** : section « Clauses contractuelles » ajoutée à l'étape 5, avec :
+  - groupement des clauses standards par catégorie (ordre alpha) en checkbox tiles
+    multi-sélection (UX-DR11) ;
+  - champ clause spécifique (textarea + bouton « Ajouter ») avec option
+    « Enregistrer comme modèle » qui crée une clause dans `db.clauses` via
+    `applyLocalMutation("clause", ...)`;
+  - liste ordonnée des clauses sélectionnées avec boutons ↑/↓ (pas de drag & drop,
+    MVP-0) et bouton de retrait de la clause spécifique ;
+  - persistance en `bulkPut` dans `db.quoteClauses` au clic « Terminer », après la
+    mutation du devis (ordre préservé via `ordre: idx`).
+- **Sentinelle `__specific__`** : la clause spécifique est représentée par la clé
+  `"__specific__"` dans `clauseOrder` (jamais un UUID réel), conformément aux
+  Dev Notes CRITIQUE.
+- **Décision MVP-0 (Dev Notes)** : les `QuoteClauseLocal` sont local-only dans
+  Dexie ; le sync serveur via le payload `quote` est différé à une story ultérieure.
+- **Validation AC7** : `pnpm check` (lint 0 erreur, typecheck 0 erreur, 242/242
+  tests dont 10 nouveaux) + `pnpm build` (`✓ Compiled successfully`).
 
 ### File List
 
-_à remplir_
+- `src/components/quote/wizard-step-conditions.tsx` (modifié — ajout sélection clauses + clause spécifique + réordonnancement + persistance QuoteClauses)
+- `src/components/quote/wizard-step-conditions.test.tsx` (modifié — 9 nouveaux tests clauses AC1-AC6)
+- `src/lib/local-db.test.ts` (modifié — 1 nouveau test table `quoteClauses` + assertion table exposée)
+- `src/messages/fr-NE.json` (modifié — 11 clés i18n `devis.wizard.conditions` pour clauses)
+- `_bmad-output/implementation-artifacts/3-8-apply-clause-to-quotation.md` (modifié — frontmatter, tâches cochées, Dev Agent Record)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour — 3-8 in-progress → review, last_updated 2026-06-27)
+
+Aucune migration DB générée — la table `quoteClauses` et la version Dexie 3
+étaient déjà présentes (voir note T1).
 
 ### Change Log
 
-_à remplir_
+- 2026-06-27 : Implémentation complète de la story 3-8 (FR-27 + FR-28) — sélection
+  multi-clauses, clause spécifique avec option « Enregistrer comme modèle »,
+  réordonnancement ↑/↓, persistance snapshot dans `db.quoteClauses`. 10 tests
+  ajoutés (242/242 verts), lint + typecheck + build OK.
