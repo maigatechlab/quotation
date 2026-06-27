@@ -120,12 +120,12 @@ development_status:
   3-3-goods-automatic-calculations: done
   3-4-service-lines-quotation-total: done
   3-5-reusable-line-templates: done
-  3-6-payment-terms: backlog
-  3-7-standard-clauses-library: backlog
-  3-8-apply-clause-to-quotation: backlog
-  3-9-lifecycle-status-change: backlog
-  3-10-search-filter-quotations: backlog
-  3-11-duplicate-quotation: backlog
+  3-6-payment-terms: ready-for-dev
+  3-7-standard-clauses-library: ready-for-dev
+  3-8-apply-clause-to-quotation: ready-for-dev
+  3-9-lifecycle-status-change: ready-for-dev
+  3-10-search-filter-quotations: ready-for-dev
+  3-11-duplicate-quotation: ready-for-dev
   epic-3-retrospective: optional
 
   # Epic 4: PDF, validation client & partage
@@ -146,9 +146,9 @@ development_status:
 
   # Epic 6: Durcissement v1 [MVP-1]
   epic-6: in-progress
-  6-1-indexeddb-encryption-at-rest: backlog
-  6-2-tier-quota-enforcement: backlog
-  6-3-immutable-audit-trail-export: backlog
+  6-1-indexeddb-encryption-at-rest: ready-for-dev
+  6-2-tier-quota-enforcement: ready-for-dev
+  6-3-immutable-audit-trail-export: ready-for-dev
   6-4-background-sync-api: done
   6-5-route-corridor-templates-crud: done
   6-6-geo-replicated-backup-pitr: done
