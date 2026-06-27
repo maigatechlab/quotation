@@ -2,13 +2,13 @@
 story_key: 3-7-standard-clauses-library
 epic_num: 3
 story_num: 7
-status: ready-for-dev
-baseline_commit: ""
+status: review
+baseline_commit: "042b9951faaf968ef27a70fed80c329940211b32"
 ---
 
 # Story 3.7 : Bibliothèque de clauses standards (FR-26)
 
-**Statut :** ready-for-dev
+**Statut :** review
 
 ## Story
 
@@ -118,7 +118,7 @@ AND    pnpm build passe sans erreur
 
 ### T1 — Créer `src/hooks/use-live-clauses.ts`
 
-- [ ] Créer le fichier (pattern exact : `use-live-templates.ts`)
+- [x] Créer le fichier (pattern exact : `use-live-templates.ts`)
   ```ts
   "use client";
 
@@ -144,12 +144,12 @@ AND    pnpm build passe sans erreur
     return clauses;
   }
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T2 — Créer `src/components/settings/clause-manager.tsx`
 
-- [ ] `"use client"` première ligne
-- [ ] Imports :
+- [x] `"use client"` première ligne
+- [x] Imports :
   ```ts
   import { useState } from "react";
   import { useTranslations } from "next-intl";
@@ -159,13 +159,13 @@ AND    pnpm build passe sans erreur
   import { useLiveClauses } from "@/hooks/use-live-clauses";
   import { useToast } from "@/hooks/use-toast";
   ```
-- [ ] Props :
+- [x] Props :
   ```ts
   interface ClauseManagerProps {
     userId: string;
   }
   ```
-- [ ] État local :
+- [x] État local :
   ```ts
   const clauses = useLiveClauses();
   const t = useTranslations("parametres.clauses");
@@ -178,23 +178,23 @@ AND    pnpm build passe sans erreur
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, setIsPending] = useState(false);
   ```
-- [ ] Constante catégories prédéfinies : `["Paiement", "Responsabilité", "Exclusions"]`
-- [ ] Fonctions `openCreate()`, `openEdit(clause: ClauseLocal)`, validation `validateForm()`, `handleSubmit()`, `handleDelete(clause: ClauseLocal)`
-- [ ] `handleSubmit()` :
+- [x] Constante catégories prédéfinies : `["Paiement", "Responsabilité", "Exclusions"]`
+- [x] Fonctions `openCreate()`, `openEdit(clause: ClauseLocal)`, validation `validateForm()`, `handleSubmit()`, `handleDelete(clause: ClauseLocal)`
+- [x] `handleSubmit()` :
   - create → `applyLocalMutation("clause", crypto.randomUUID(), "create", { titre, contenu, categorie, pays: "NE", updatedAt, createdAt }, 0, dexieWriteFn, userId)` + `triggerSync()` + toast
   - edit → lire `dbClause.revision` avant, update, `triggerSync()` + toast
-- [ ] `handleDelete()` : lire revision avant, delete, `triggerSync()`
-- [ ] Rendu "list" : clauses groupées par catégorie, bouton "Ajouter une clause", cartes clause avec extrait contenu (80 chars), boutons Modifier/Supprimer
-- [ ] Rendu "create"/"edit" : formulaire avec champs titre + textarea contenu (compteur ≤2000 chars) + select catégorie + actions Annuler/Enregistrer
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `handleDelete()` : lire revision avant, delete, `triggerSync()`
+- [x] Rendu "list" : clauses groupées par catégorie, bouton "Ajouter une clause", cartes clause avec extrait contenu (80 chars), boutons Modifier/Supprimer
+- [x] Rendu "create"/"edit" : formulaire avec champs titre + textarea contenu (compteur ≤2000 chars) + select catégorie + actions Annuler/Enregistrer
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T3 — Mettre à jour `src/app/(app)/parametres/page.tsx`
 
-- [ ] Importer `ClauseManager` :
+- [x] Importer `ClauseManager` :
   ```ts
   import { ClauseManager } from "@/components/settings/clause-manager";
   ```
-- [ ] Ajouter section ClauseManager (admin only, après TemplateManager) :
+- [x] Ajouter section ClauseManager (admin only, après TemplateManager) :
   ```tsx
   {can(role, "clause.create") && (
     <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
@@ -202,11 +202,11 @@ AND    pnpm build passe sans erreur
     </div>
   )}
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T4 — Mettre à jour `src/messages/fr-NE.json`
 
-- [ ] Ajouter section `parametres.clauses` :
+- [x] Ajouter section `parametres.clauses` :
   ```json
   "clauses": {
     "heading": "Bibliothèque de clauses",
@@ -242,19 +242,19 @@ AND    pnpm build passe sans erreur
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
   }
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T5 — Vérification finale (AC6)
 
-- [ ] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
-- [ ] `pnpm build` : passe sans erreur
-- [ ] Admin : page /parametres affiche section "Bibliothèque de clauses" ✓
-- [ ] Admin : créer une clause avec titre + contenu + catégorie → apparaît dans la liste ✓
-- [ ] Admin : modifier une clause → changements persistés ✓
-- [ ] Admin : supprimer une clause → disparaît de la liste ✓
-- [ ] Compteur de caractères visible et bloquant au-delà de 2000 ✓
-- [ ] Clauses groupées par catégorie ✓
-- [ ] Aucune régression sur les stories précédentes ✓
+- [x] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
+- [x] `pnpm build` : passe sans erreur
+- [x] Admin : page /parametres affiche section "Bibliothèque de clauses" ✓
+- [x] Admin : créer une clause avec titre + contenu + catégorie → apparaît dans la liste ✓
+- [x] Admin : modifier une clause → changements persistés ✓
+- [x] Admin : supprimer une clause → disparaît de la liste ✓
+- [x] Compteur de caractères visible et bloquant au-delà de 2000 ✓
+- [x] Clauses groupées par catégorie ✓
+- [x] Aucune régression sur les stories précédentes ✓
 
 ---
 
@@ -432,20 +432,46 @@ pnpm build   # passe sans erreur
 
 ### Agent Model Used
 
-_à remplir_
+GLM-5.2 (claude-glm) — exécution du workflow `bmad-dev-story`.
 
 ### Debug Log References
 
-_à remplir_
+- `pnpm typecheck` — 0 erreur (T1, T2, T3, T4).
+- `pnpm lint` — 0 erreur ; 2 warnings `import/order` initialement sur `clause-manager.tsx` et `clause-manager.test.tsx` → corrigés (réordonnancement des imports, reste uniquement les warnings préexistants).
+- `pnpm test src/components/settings/clause-manager.test.tsx` — 9/9 passent après correction d'une assertion (le guard `maxLength` du DOM ne s'applique pas aux mutations programmatiques via React controlled input ; le handler JS bloque bien à 2000).
+- `pnpm test` (suite complète) — 232/232 passent (baseline 223 + 9 nouveaux, aucune régression).
+- `pnpm build` — `✓ Compiled successfully in 19.9s`, aucune erreur.
 
 ### Completion Notes List
 
-_à remplir_
+- **T1 — Hook `use-live-clauses.ts`** : créé sur le pattern `use-live-templates.ts`, signature simplifiée (`ClauseLocal[]`) conforme à la spec story (pas de filtre soft-delete — `ClauseLocal` n'a pas de `deletedAt`, les clauses sont hard-deletées).
+- **T2 — Composant `clause-manager.tsx`** :
+  - State machine `list`/`create`/`edit` calquée sur `template-manager.tsx`.
+  - Toast via `sonner` (`toast.success`) — pattern réel du projet (tous les settings components l'utilisent). La spec story mentionnait `useToast` mais ce hook n'existe pas dans le codebase ; alignement sur le pattern existant.
+  - `categorie` optionnel géré avec spread conditionnel pour respecter `exactOptionalPropertyTypes` (jamais `undefined`).
+  - Groupement par catégorie : ordre prédéfini (Paiement → Responsabilité → Exclusions), puis catégories libres, puis « Sans catégorie » en dernier.
+  - Extrait contenu tronqué à 80 chars avec ellipse.
+  - Compteur `{count}/2000` ; guard `maxLength` + handler JS qui rejette au-delà de 2000 ; couleur destructive sous le seuil des 100 derniers caractères.
+  - Catégorie en `<input list>` + `<datalist>` (saisie libre + suggestions prédéfinies + « Autre »).
+  - Delete = hard delete local + serveur (contrairement aux templates qui font du soft delete).
+- **T3 — Intégration page `/parametres`** : `ClauseManager` ajouté après `TemplateManager`, conditionné par `can(role, "clause.create")` (Admin only).
+- **T4 — i18n** : section `parametres.clauses` ajoutée à `fr-NE.json` (entre `modeles` et `societe`), avec toutes les clés spécifiées.
+- **Tests** : `clause-manager.test.tsx` couvre AC1 (affichage, groupement, extraction 80 chars, état vide), AC2 (création complète : persistance Dexie + SyncOp `create` + toast + triggerSync ; champ categorie omis quand vide ; validation titre/contenu requis ; compteur 2000), AC3 (modification : pré-remplissage + update + baseRevision lue avant + toast), AC4 (suppression : hard delete + SyncOp `delete` avec payload vide + baseRevision + disparition de la liste).
+- **AC5 (offline)** : couvert par architecture existante (outbox + sync différée via `triggerSync`) — les tests vérifient l'enregistrement correct dans `syncQueue`.
+- **AC6 (qualité)** : `pnpm check` 0 erreur, `pnpm build` OK, 232 tests verts.
+- **Note importante (écart vs instruction parent)** : la story indique explicitement « Aucune migration DB nécessaire » et exclut toute modification de `schema.ts`/`local-db.ts`/`sw-db.ts`/routes sync. Vérification faite dans le codebase : la table `clause` (Drizzle), `ClauseLocal` + store Dexie (versions 1-5), le `case "clause"` dans push/pull, et les permissions `clause.*` sont **déjà présents** (ajoutés lors du commit epic-2-5 `8160bcb`). L'instruction parent (« cette story AJOUTE une table `clause` → migration requise ») est donc erronée ; aucune migration, aucun bump de version Dexie n'étaient nécessaires. Dexie est déjà à v5 dans `local-db.ts` ET `sw-db.ts` (versions synchronisées).
 
 ### File List
 
-_à remplir_
+- `src/hooks/use-live-clauses.ts` (créé — hook liveQuery Dexie sur clauses)
+- `src/components/settings/clause-manager.tsx` (créé — CRUD clauses Admin, groupement par catégorie, compteur 2000)
+- `src/components/settings/clause-manager.test.tsx` (créé — 9 tests : affichage/groupement/extrait, création, modification, suppression, validation, compteur, categorie optionnelle)
+- `src/app/(app)/parametres/page.tsx` (modifié — import + section ClauseManager après TemplateManager, admin only)
+- `src/messages/fr-NE.json` (modifié — ajout section `parametres.clauses`)
+- `_bmad-output/implementation-artifacts/3-7-standard-clauses-library.md` (modifié — baseline_commit, cases cochées, Dev Agent Record, Status → review)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour — `3-7-standard-clauses-library` ready-for-dev → review, `last_updated: 2026-06-27`)
 
 ### Change Log
 
-_à remplir_
+- 2026-06-27 : Implémentation complète de la story 3.7 (FR-26 Bibliothèque de clauses). Hook liveQuery + composant ClauseManager (CRUD Admin) + intégration page parametres + i18n fr-NE + 9 tests vitest (232/232 verts). `pnpm check` 0 erreur, `pnpm build` OK. Statut → review. Aucune migration DB (table clause pré-existante).
+
