@@ -6,6 +6,7 @@ import { LogoUpload } from "@/components/settings/logo-upload";
 import { PaymentTermsForm } from "@/components/settings/payment-terms-form";
 import { SignatoryConfig } from "@/components/settings/signatory-config";
 import { TemplateManager } from "@/components/settings/template-manager";
+import { ClauseManager } from "@/components/settings/clause-manager";
 import { db as pgDb } from "@/lib/db";
 import type { CompanyLocal } from "@/lib/local-db";
 import { can } from "@/lib/permissions";
@@ -100,6 +101,12 @@ export default async function ParametresPage() {
       {can(role, "template.create") && (
         <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
           <TemplateManager userId={userId} />
+        </div>
+      )}
+
+      {can(role, "clause.create") && (
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
+          <ClauseManager userId={userId} />
         </div>
       )}
 
