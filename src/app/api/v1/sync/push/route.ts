@@ -14,13 +14,15 @@ import {
   clause as clauseTable,
   template as templateTable,
   company as companyTable,
+  routeTemplate as routeTemplateTable,
   syncOpLog,
 } from "@/lib/schema";
 import { clientSchema } from "@/lib/validation/client";
+import { routeTemplateSchema } from "@/lib/validation/route-template";
 
 const SyncOpSchema = z.object({
   opId: z.string().min(1),
-  entity: z.enum(["client", "quote", "quoteLine", "clause", "company", "template"]),
+  entity: z.enum(["client", "quote", "quoteLine", "clause", "company", "template", "routeTemplate"]),
   entityId: z.string().min(1),
   type: z.enum(["create", "update", "delete"]),
   payload: z.record(z.string(), z.unknown()),
@@ -51,6 +53,10 @@ function resolveEntityAction(
 ): Action {
   if (entity === "company") return "company.update";
   if (entity === "quoteLine") return "quote.update";
+  if (entity === "routeTemplate") {
+    const effectiveType = hasExisting && type === "create" ? "update" : type;
+    return `route-template.${effectiveType}` as Action;
+  }
   const effectiveType = hasExisting && type === "create" ? "update" : type;
   return `${entity}.${effectiveType}` as Action;
 }
@@ -155,6 +161,14 @@ async function fetchCurrentEntity(
         .select()
         .from(companyTable)
         .where(eq(companyTable.id, entityId))
+        .limit(1);
+      return rows[0] ? (rows[0] as Record<string, unknown>) : null;
+    }
+    case "routeTemplate": {
+      const rows = await db
+        .select()
+        .from(routeTemplateTable)
+        .where(eq(routeTemplateTable.id, entityId))
         .limit(1);
       return rows[0] ? (rows[0] as Record<string, unknown>) : null;
     }
@@ -304,6 +318,10 @@ async function persistEntityMutation(
           exchangeRate: floatN(p.exchangeRate) ?? 1,
           goodsValueFcfa: intN(p.goodsValueFcfa),
           totalFcfa: intN(p.totalFcfa) ?? 0,
+          clientAccordNom: strN(p.clientAccordNom),
+          clientAccordFonction: strN(p.clientAccordFonction),
+          clientAccordDate: dateN(p.clientAccordDate),
+          clientAccordScanUrl: strN(p.clientAccordScanUrl),
           companyId: tenantId,
           pays: strN(p.pays) ?? "NE",
           revision: newRevision,
@@ -407,6 +425,49 @@ async function persistEntityMutation(
           .insert(templateTable)
           .values({ id: op.entityId, ...templateValues, createdAt })
           .onConflictDoUpdate({ target: templateTable.id, set: templateValues });
+      }
+      break;
+    }
+
+    case "routeTemplate": {
+      if (op.type === "delete") {
+        await db
+          .update(routeTemplateTable)
+          .set({ deletedAt: now, revision: newRevision, updatedAt: now })
+          .where(eq(routeTemplateTable.id, op.entityId));
+      } else {
+        const rtValidation = routeTemplateSchema.safeParse({
+          nom: p.nom,
+          originCountry: p.originCountry,
+          originCity: p.originCity,
+          destinationCountry: p.destinationCountry,
+          destinationCity: p.destinationCity,
+          distanceKm: p.distanceKm != null ? Number(p.distanceKm) : undefined,
+          tarifFcfa: p.tarifFcfa != null ? Math.round(Number(p.tarifFcfa)) : undefined,
+        });
+        if (!rtValidation.success) {
+          throw Object.assign(new Error("route_template_payload_invalid"), {
+            validationError: rtValidation.error.flatten().fieldErrors,
+          });
+        }
+        const rtValues = {
+          nom: str(p.nom),
+          originCountry: str(p.originCountry),
+          originCity: str(p.originCity),
+          destinationCountry: str(p.destinationCountry),
+          destinationCity: str(p.destinationCity),
+          distanceKm: floatN(p.distanceKm),
+          tarifFcfa: intN(p.tarifFcfa),
+          deletedAt: null,
+          companyId: tenantId,
+          pays: strN(p.pays) ?? "NE",
+          revision: newRevision,
+          updatedAt: now,
+        };
+        await db
+          .insert(routeTemplateTable)
+          .values({ id: op.entityId, ...rtValues, createdAt })
+          .onConflictDoUpdate({ target: routeTemplateTable.id, set: rtValues });
       }
       break;
     }
@@ -595,6 +656,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       }
       if (err instanceof Error && err.message === "template_payload_invalid") {
         return apiError("VALIDATION_FAILED", "Données modèle invalides.", HTTP_STATUS.UNPROCESSABLE);
+      }
+      if (err instanceof Error && err.message === "route_template_payload_invalid") {
+        return apiError("VALIDATION_FAILED", "Données modèle de route invalides.", HTTP_STATUS.UNPROCESSABLE);
       }
       if (err instanceof Error && err.message === "client_has_quotes") {
         return apiError("VALIDATION_FAILED", "Ce client possède des devis et ne peut pas être supprimé.", HTTP_STATUS.UNPROCESSABLE);

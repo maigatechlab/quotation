@@ -1,5 +1,45 @@
 # Deferred Work
 
+## Deferred from: code review de 6-5-route-corridor-templates-crud (2026-06-27)
+
+- **Contraintes DB manquantes sur `route_template`** [`drizzle/0010_chilly_iron_man.sql`] — Pas de FK ni NOT NULL sur `company_id`, `pays` nullable. Pattern pré-existant sur toutes les tables tenant-scoped. Ajouter contraintes dans une migration dédiée post-MVP.
+- **`wizard-step-goods.tsx` seed useEffect([], []) non réactif** [`src/components/quote/wizard-step-goods.tsx:50`] — Ne re-seed pas `unitPrice` si user revient étape route et change de template, ni si `tarifFcfa=0`. Vérifier cycle de vie composant wizard (remount ?) ; si stay-mounted, ajouter deps `[quoteId]` et check `q?.unitPrice !== undefined`.
+- **`useLiveRouteTemplates` absorbe silencieusement les erreurs Dexie** [`src/hooks/use-live-route-templates.ts:26`] — Pattern pré-existant. Exposer un état `error` distinct de "liste vide" pour diagnostic.
+- **Cast `as unknown as EntityTable` dans conflict.ts et outbox.ts** [`src/lib/sync/conflict.ts:23`, `src/lib/sync/outbox.ts:26`] — Pattern pré-existant toutes entités. Typer correctement ou remplacer par une interface générique dans une passe transversale.
+- **Delete op sur entité inexistante → "applied" sans lignes affectées** [`src/app/api/v1/sync/push/route.ts`] — Pattern pré-existant. Vérifier `rowCount > 0` avant de logger "applied" dans syncOpLog.
+- **Pull transaction + localCrypto.encrypt async → risque abort IDB** [`src/lib/sync/pull.ts:57`] — Pré-existant toutes entités. Extraire l'encrypt en dehors de la transaction ou utiliser SubtleCrypto synchrone.
+- **delete+create même batch → 409 sur le create** [`src/app/api/v1/sync/push/route.ts`] — Faible probabilité MVP-1. Gérer dans le conflict resolver : si 409 sur create et entity soft-deleted server, re-créer avec un nouvel opId.
+- **Chips statiques → dynamiques flash UX** [`src/components/quote/wizard-step-route.tsx`] — Utiliser le flag `loaded` de `useLiveRouteTemplates` pour ne pas afficher les chips statiques si Dexie est en cours de chargement (spinner ou absence de chips).
+- **Curseur pull gt au lieu de gte** [`src/app/api/v1/sync/pull/route.ts:85`] — Pré-existant toutes entités. Changer en `gte` ou utiliser un curseur opaque (last-seen ID) pour éviter la race.
+- **`useLiveRouteTemplates` `.filter()` scan complet** [`src/hooks/use-live-route-templates.ts:19`] — Utiliser `db.routeTemplates.where("deletedAt").equals(undefined).toArray()` (ou compound index) pour éviter le scan sur grand volume.
+
+## Deferred from: code review de 4-5-record-client-agreement (2026-06-26)
+
+- **Journal `quoteStatusLogs` local-only, jamais synchronisé serveur** [`src/components/quote/client-agreement-sheet.tsx:143`] — Aucune entité `quoteStatusLog` dans `SyncOpEntity`, aucune table serveur. Perdu au vidage cache / changement d'appareil. Différé à Story 3-9 (machine d'état lifecycle) — local-only conforme à l'intention "préfigure 3-9".
+- **Guard serveur de transition de statut absent** [`src/app/api/v1/sync/push/route.ts`] — `quoteStatusVal` accepte `accepted` depuis n'importe quel statut antérieur ; Dev Notes imposaient le guard "client ET serveur". Différé à Story 3-9 — appartient au state machine lifecycle ; users authentifiés de confiance. Implémenter `accepted` exige `current = sent` lors de la story 3-9.
+- **`clientAccordDate` parsé en UTC vs `maxDate` local** [`src/components/quote/client-agreement-sheet.tsx:125`] — `new Date("YYYY-MM-DD")` = UTC midnight comparé à un `maxDate` local → off-by-one en fuseau négatif. Non déclenchable en zone AES (UTC+0/+1). Normaliser en comparaison date-parts si extension hors AES.
+- **Écriture quote + statusLog non atomique** [`src/components/quote/client-agreement-sheet.tsx:131-150`] — `db.quotes.put` et `db.quoteStatusLogs.put` sont 2 writes Dexie séparés ; crash entre les deux = devis `accepted` sans log. Envelopper dans `db.transaction` post-MVP.
+- **`crypto.randomUUID` indéfini en contexte non sécurisé** [`src/components/quote/client-agreement-sheet.tsx:144`] — HTTP LAN (déploiement on-prem possible) → throw masqué en `errorGeneric`. Pattern pré-existant (outbox.ts). Polyfill si déploiement HTTP confirmé.
+
+## Deferred from: code review de 6-4-background-sync-api (2026-06-27)
+
+- **Clé i18n `sync.backgroundSyncComplete` sans consommateur** [`src/messages/fr-NE.json`] — Toast optionnel per spec AC3, non implémenté. Supprimer ou implémenter le toast post-MVP.
+- **Pas de `pullDelta` dans `directSyncFromSW()`** [`src/app/sw.ts`] — SW path push-only ; `pull.ts` explicitement hors scope story 6-4. Évaluer si la fraîcheur des données est un problème post-MVP.
+- **`vi.resetModules()` fragile avec import statique** [`src/lib/sync/outbox.test.ts`] — Fonctionne aujourd'hui car `navigator` est lu au runtime. À corriger si le module cache des refs au module scope.
+- **N instances `useSyncStatus` → N syncs par TRIGGER_SYNC** [`src/hooks/use-sync-status.ts`] — Architectural ; improbable en pratique (montage unique en layout). Protéger via module-level guard si usage multi-instance confirmé.
+- **Fuite Promise dans `registerBackgroundSync()` si SW stalled** [`src/lib/sync/outbox.ts:44-58`] — Fire-and-forget, aucun impact utilisateur. Ajouter `Promise.race` avec timeout si SW install stall devient un pattern connu.
+- **Session expirée en mode app fermée** [`src/app/sw.ts:directSyncFromSW`] — 401 → return silencieux → ops bloquées sans notification. Session 7 jours = acceptable MVP. Considérer BroadcastChannel "session expirée" post-MVP.
+- **`liveQuery` cross-contexte SW→page non réactive** [`src/app/sw.ts:directSyncFromSW`] — Writes SW via instance Dexie séparée ne triggent pas liveQuery page. `pendingCount` stale jusqu'au prochain focus/interaction. Comportement conforme spec AC3 "au prochain focus".
+
+## Deferred from: code review de 4-4-export-share-pdf (2026-06-27)
+
+- **Floating-point spurious extra page dans PDF multi-pages** [`src/lib/pdf-share.ts`] — Pattern identique dans `pdf-generator.ts` Story 4.1. `heightLeft` calculé avec flottants peut produire une page presque vide. Corriger post-MVP en ajoutant `if (heightLeft > 0.1)` comme guard.
+- **Dexie live update pendant traversée html2canvas** [`src/components/pdf/quote-preview.tsx`] — Si une sync en arrière-plan écrit pendant la capture, le rendu peut être partiel. Architectural concern pour tous les PDF stories. Mitiger post-MVP avec snapshot local avant capture.
+- **`useCORS: true` peut faire un appel réseau si logo cross-origin** [`src/lib/pdf-share.ts`] — Même paramètre accepté dans `pdf-generator.ts` Story 4.1. Si logo stocké en remote non-caché, viole AC1 offline. Résolution post-MVP : stocker logo en base64 dans Dexie.
+- **iPad desktop mode reçoit guidance desktop au lieu de mobile** [`src/lib/pdf-share.ts`] — iPadOS 13+ en mode desktop envoie UA Mac. Regex ne matche pas. Faible impact sur cible principale (Niger/Mali/BF = Chrome Android). Mitiger avec `maxTouchPoints > 0` check post-MVP.
+- **`isCompanyLoading` dans `disabled` non listé dans AC5** [`src/components/pdf/quote-preview.tsx`] — Introduit en Story 4.2 comme guard de sécurité (boutons désactivés si société pas encore chargée depuis Dexie). Comportement intentionnel et sûr, hors périmètre Story 4.4.
+- **`NotAllowedError` (gesture timeout) affiche message `errorFallback` trompeur** [`src/components/pdf/quote-preview.tsx`] — Sur appareils lents, `html2canvas` peut prendre 3–8 s, consumant le user gesture token. `navigator.share` lève `NotAllowedError` → fallback download + "Partage impossible". Fonctionnel mais misleading. Post-MVP : détecter `NotAllowedError` spécifiquement et adapter le message.
+
 ## Deferred from: code review de 3-5-reusable-line-templates (2026-06-26)
 
 - **`isPending` partagé bloque toutes actions liste pendant un delete** [`src/components/settings/template-manager.tsx`] — Pattern commun codebase (CompanyForm, etc.). UX intentionnelle. Refacto isPending par-action post-MVP.
@@ -54,3 +94,14 @@
 - **`getNextLocalSeq` non atomique** [`src/lib/sync/numbering.ts:12`] — localStorage synchrone protège le thread principal ; Web Workers hors scope MVP.
 - **Race processQueue snapshot + délai retry** [`src/lib/sync/outbox.ts`] — Mitigé par le fix du flag syncInProgress (P9). Réévaluer si concurrence multi-tab est supportée.
 - **Cursor race entre deux `triggerSync` concurrents** [`src/lib/sync/outbox.ts:82`] — Mitigé par le fix P9. Les puts Dexie sont idempotents donc l'impact est limité au bandwidth.
+
+## Deferred from: code review of 4-2-preview-before-generation (2026-06-27)
+
+- **Risques pagination/canvas PDF long** [`src/components/pdf/pdf-generator.ts:35`] — pre-existing Story 4.1 scope. Les devis longs peuvent être coupés entre lignes/blocs ou atteindre les limites canvas; à traiter dans une passe pagination PDF dédiée.
+- **Partage PDF duplique la logique de capture non paginée** [`src/lib/pdf-share.ts:57`] — Story 4.4 scope. Réutiliser le futur moteur paginé pour éviter une divergence téléchargement/partage.
+- **Sélection de société non liée au devis si plusieurs lignes Dexie existent** [`src/hooks/use-live-company.ts:13`] — data model/sync scope. Prévoir une sélection par `quote.companyId` quand plusieurs sociétés locales deviennent possibles.
+- **Logo distant `logoUrl` dépend du CORS html2canvas** [`src/components/pdf/pdf-template.tsx:89`] — pre-existing Story 4.1 scope. Favoriser `logoData` ou convertir le logo distant en data URL validée avant capture.
+
+## Deferred from: code review of 4-3-client-signature-zone-pdf.md (2026-06-27)
+
+- La generation du nom de fichier PDF caste `clientSnapshot.companyName` en string sans garde runtime [src/components/pdf/quote-preview.tsx:93]. Hors perimetre Story 4.3; a traiter avec les changements d'export/partage.

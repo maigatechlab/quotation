@@ -12,6 +12,7 @@ import {
   clause as clauseTable,
   template as templateTable,
   company as companyTable,
+  routeTemplate as routeTemplateTable,
 } from "@/lib/schema";
 
 const EMPTY_PAYLOAD = {
@@ -20,6 +21,7 @@ const EMPTY_PAYLOAD = {
   quoteLines: [],
   clauses: [],
   templates: [],
+  routeTemplates: [],
   company: null,
 } as const;
 
@@ -58,7 +60,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     return apiError("VALIDATION_FAILED", "Paramètre since invalide.", HTTP_STATUS.BAD_REQUEST);
   }
 
-  const [clients, quotes, quoteLines, clauses, templates, companies] = await Promise.all([
+  const [clients, quotes, quoteLines, clauses, templates, routeTemplates, companies] = await Promise.all([
     db
       .select()
       .from(clientTable)
@@ -85,6 +87,12 @@ export async function GET(req: Request): Promise<NextResponse> {
       ),
     db
       .select()
+      .from(routeTemplateTable)
+      .where(
+        and(gt(routeTemplateTable.updatedAt, since), eq(routeTemplateTable.companyId, userCompanyId))
+      ),
+    db
+      .select()
       .from(companyTable)
       .where(and(eq(companyTable.id, userCompanyId), gt(companyTable.updatedAt, since))),
   ]);
@@ -99,6 +107,7 @@ export async function GET(req: Request): Promise<NextResponse> {
       quoteLines,
       clauses,
       templates,
+      routeTemplates,
       company: companies[0] ?? null,
     },
   });

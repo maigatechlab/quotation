@@ -2,13 +2,13 @@
 story_key: 5-3-amount-metrics
 epic_num: 5
 story_num: 3
-status: review
+status: done
 baseline_commit: "95c49335d0c4abaf532babe2b8d49643c32e7782"
 ---
 
 # Story 5.3 : Métriques de montants (FR-42)
 
-**Statut :** ready-for-dev
+**Statut :** done
 
 ## Story
 
@@ -356,30 +356,44 @@ pnpm build   # passe sans erreur
 - [UX-DR2] — `tabular-nums` obligatoire sur tous les montants, Spectral pour numéraux
 - [UX-DR6] — Hero card navy — intégrer dans la card existante
 
----
+### Review Findings
 
+Aucun finding bloquant.
+
+- [x] [Review][Approve] Story 5.3 conforme aux AC : `amountTotal` est calculé dans `computeStats()` depuis Dexie local, limité aux statuts `accepted` + `sent`, filtré par la période partagée de `DashboardHero`, et rendu via `formatFcfa()` avec `font-serif` + `tabular-nums`.
+- [x] [Review][Verify] `pnpm check` passe : lint 0 erreur (8 warnings existants), typecheck OK, 214 tests OK.
+- [x] [Review][Verify] `pnpm build` passe : migrations Drizzle appliquées, compilation Next/Serwist OK, 27 pages générées.
+
+---
 ## Dev Agent Record
 
 ### Agent Model Used
 
-_À remplir par le dev agent_
+Codex GPT-5
 
 ### Debug Log References
 
-_À remplir par le dev agent_
+- Revue ciblée sur les AC Story 5.3 dans `src/hooks/use-dashboard-stats.ts`, `src/components/dashboard/dashboard-hero.tsx`, `src/messages/fr-NE.json`.
+- Vérifié que l'agrégat est offline-first via `liveQuery(() => db.quotes.toArray())` et qu'aucun appel API n'est introduit.
+- Vérifié que `formatFcfa(stats.amountTotal)` est utilisé, sans formatter monétaire recréé.
+- `pnpm check` : 0 erreur, 8 warnings lint existants, 214 tests passés.
+- `pnpm build` : succès complet.
 
 ### Completion Notes List
 
-_À remplir par le dev agent_
+- `amountTotal` est présent dans `DashboardStats`, calculé dans la boucle pure `computeStats()`, initialisé à `0`, et additionne uniquement `accepted` + `sent`.
+- La métrique montant est intégrée dans la hero card navy sous les compteurs, avec label `TOTAL DEVISÉ`, sous-label `Acceptés + Envoyés`, skeleton de chargement, Spectral et `tabular-nums`.
+- La période reste une seule source de vérité dans `DashboardHero`; la métrique suit le filtre `7j / 30j / 90j / Tout`.
+- Aucune correction code nécessaire après revue.
 
 ### File List
 
-- `src/hooks/use-dashboard-stats.ts` (à modifier — ajouter amountTotal)
-- `src/components/dashboard/dashboard-hero.tsx` (à modifier — ajouter section montant)
-- `src/messages/fr-NE.json` (à modifier — ajouter clés amountLabel + amountSublabel)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour)
+- `src/hooks/use-dashboard-stats.ts` (modifié — ajout `amountTotal`)
+- `src/components/dashboard/dashboard-hero.tsx` (modifié — ajout section montant)
+- `src/messages/fr-NE.json` (modifié — ajout clés `amountLabel` + `amountSublabel`)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour : `review` -> `done`)
 - `_bmad-output/implementation-artifacts/5-3-amount-metrics.md` (ce fichier)
 
 ### Change Log
 
-_À remplir par le dev agent_
+- 2026-06-26 : Code review Story 5.3 approuvée. Aucun finding bloquant. pnpm check et pnpm build verts. Story passée à done.

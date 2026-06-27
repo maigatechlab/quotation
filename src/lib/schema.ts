@@ -207,6 +207,11 @@ export const quote = pgTable(
     exchangeRate: real("exchange_rate").default(1),
     goodsValueFcfa: integer("goods_value_fcfa"),
     totalFcfa: integer("total_fcfa").notNull().default(0),
+    // Accord client (FR-30) — rempli lors de la transition Envoyé → Accepté
+    clientAccordNom: text("client_accord_nom"),
+    clientAccordFonction: text("client_accord_fonction"),
+    clientAccordDate: timestamp("client_accord_date"),
+    clientAccordScanUrl: text("client_accord_scan_url"),
     companyId: uuid("company_id"),
     pays: text("pays").default("NE"),
     revision: integer("revision").notNull().default(0),
@@ -329,6 +334,33 @@ export const quoteStatusLog = pgTable(
   (t) => [
     index("idx_quote_status_log_quote_id").on(t.quoteId),
     index("idx_quote_status_log_changed_by").on(t.changedBy),
+  ]
+);
+
+export const routeTemplate = pgTable(
+  "route_template",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    nom: text("nom").notNull(),
+    originCountry: text("origin_country").notNull(),
+    originCity: text("origin_city").notNull(),
+    destinationCountry: text("destination_country").notNull(),
+    destinationCity: text("destination_city").notNull(),
+    distanceKm: real("distance_km"),
+    tarifFcfa: integer("tarif_fcfa"),
+    deletedAt: timestamp("deleted_at"),
+    companyId: uuid("company_id"),
+    pays: text("pays").default("NE"),
+    revision: integer("revision").notNull().default(0),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => /* @__PURE__ */ new Date()),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("idx_route_template_company_id").on(t.companyId),
+    index("idx_route_template_deleted_at").on(t.deletedAt),
   ]
 );
 

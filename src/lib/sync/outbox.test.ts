@@ -269,7 +269,7 @@ describe("registerBackgroundSync (Story 6-4 / FR-37 MVP-1)", () => {
     await expect(registerBackgroundSync()).resolves.toBeUndefined();
   });
 
-  it("is idempotent — registering twice with the same tag coalesces", async () => {
+  it("forwards multiple calls with the same tag to the platform (platform coalesces)", async () => {
     const register = vi.fn().mockResolvedValue(undefined);
     const sw = {
       ready: Promise.resolve({ sync: { register } }),
@@ -282,7 +282,8 @@ describe("registerBackgroundSync (Story 6-4 / FR-37 MVP-1)", () => {
     });
     const { registerBackgroundSync } = await import("./outbox");
     await Promise.all([registerBackgroundSync(), registerBackgroundSync()]);
-    // The tag is identical — the platform coalesces; we simply forward both calls.
+    // We forward both calls with the same tag — the Background Sync spec guarantees
+    // at most one pending sync event per tag (platform-level deduplication).
     expect(register).toHaveBeenCalledWith("quotation-sync");
     expect(register).toHaveBeenCalledTimes(2);
   });

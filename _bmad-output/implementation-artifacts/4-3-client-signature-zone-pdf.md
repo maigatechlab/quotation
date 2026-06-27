@@ -2,13 +2,13 @@
 story_key: 4-3-client-signature-zone-pdf
 epic_num: 4
 story_num: 3
-status: review
+status: done
 baseline_commit: "95c49335d0c4abaf532babe2b8d49643c32e7782"
 ---
 
 # Story 4.3 : Zone de signature client sur le PDF (FR-29)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -293,6 +293,14 @@ en **deux colonnes** (signataire société + zone client).
 
 ---
 
+### Review Findings
+
+- [x] [Review][Patch] Champs client sans ligne de saisie manuelle visible - AC1/AC2 demandent des champs `Nom et prenom`, `Fonction` et `Date` avec ligne de saisie manuelle. Le rendu actuel affiche seulement le libelle puis `contactName` ou une chaine vide, donc les champs vides n'ont aucune ligne/underscore visible a remplir sur papier. [src/components/pdf/pdf-template.tsx:400]
+- [x] [Review][Patch] `clientSnapshot` est caste sans garde de forme runtime - `QuoteLocal.clientSnapshot` est `unknown`; si une donnee sync/importee contient `contactName` avec une valeur non string, React peut tenter de rendre un objet/tableau et casser l'apercu/PDF au lieu de revenir a vide. [src/components/pdf/pdf-template.tsx:32]
+- [x] [Review][Patch] Le bloc signatures peut etre coupe par la pagination image - `pageBreakInside` / `breakInside` n'est pas honore par le generateur actuel, qui capture un canvas complet puis le decoupe en tranches A4; un devis long peut couper les rectangles signature/cachet entre deux pages. [src/components/pdf/pdf-generator.ts:35]
+- [x] [Review][Defer] La generation du nom de fichier PDF caste `clientSnapshot.companyName` en string sans garde runtime [src/components/pdf/quote-preview.tsx:93] - deferred, hors perimetre Story 4.3; ce fichier appartient aux changements d'export/partage.
+
+---
 ## Dev Notes
 
 ### CRITIQUE — Modifier PdfTemplate uniquement (une seule source de vérité)

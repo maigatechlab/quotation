@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { PdfTemplate } from "@/components/pdf/pdf-template";
+import { ClientAgreementSheet } from "@/components/quote/client-agreement-sheet";
 import { useLiveCompany } from "@/hooks/use-live-company";
 import { useLiveQuote } from "@/hooks/use-live-quote";
 import type { Role } from "@/lib/permissions";
@@ -14,13 +15,30 @@ interface QuotePreviewProps {
   role: Role;
 }
 
-export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePreviewProps) {
+function sanitizePdfFilenamePart(value: string): string {
+  const sanitized = value
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return (sanitized || "document").slice(0, 120);
+}
+
+function buildQuotePdfFilename(quoteNumber: string, clientName: string): string {
+  const safeQuoteNumber = sanitizePdfFilenamePart(quoteNumber).slice(0, 48);
+  const safeClientName = sanitizePdfFilenamePart(clientName).slice(0, 80);
+
+  return `Devis-${safeQuoteNumber}-${safeClientName}.pdf`;
+}
+export function QuotePreview({ quoteId, userId, role: _role }: QuotePreviewProps) {
   const router = useRouter();
   const t = useTranslations("devis");
   const { quote, lines, clauses } = useLiveQuote(quoteId);
-  // useLiveCompany returns CompanyLocal | undefined | null
-  // Coalesce undefined → null so PdfTemplate always receives CompanyLocal | null
-  const company = useLiveCompany() ?? null;
+  // useLiveCompany returns CompanyLocal | undefined | null.
+  // Keep undefined distinct so PDF actions wait for the company lookup to settle.
+  const companyResult = useLiveCompany();
+  const isCompanyLoading = companyResult === undefined;
+  const company = companyResult ?? null;
   const [isGenerating, setIsGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
 
@@ -28,15 +46,9 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
   const [isSharing, setIsSharing] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
   const [shareGuidance, setShareGuidance] = useState<string | null>(null);
-  // Détection capacité share — uniquement côté client (SSR-safe via useEffect)
-  const [shareSupported, setShareSupported] = useState(false);
 
-  useEffect(() => {
-    // canShareFiles() utilise des APIs browser — doit être dans useEffect (SSR-safe)
-    import("@/lib/pdf-share").then(({ canShareFiles: check }) => {
-      setShareSupported(check());
-    });
-  }, []);
+  // Agreement sheet state (Story 4.5)
+  const [isAgreementSheetOpen, setIsAgreementSheetOpen] = useState(false);
 
   // Loading state — quote undefined = still fetching from Dexie
   if (quote === undefined) {
@@ -69,16 +81,17 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
   }
 
   async function handleGenerate() {
-    if (!quote) return;
+    if (!quote || isCompanyLoading || isGenerating || isSharing) return;
     setIsGenerating(true);
     setGenError(null);
     try {
       const snapshot = quote.clientSnapshot as Record<string, unknown> | null;
       const clientName = (snapshot?.companyName as string | undefined) ?? "Client";
-      const filename = `Devis-${quote.number}-${clientName}.pdf`;
+      const filename = buildQuotePdfFilename(quote.number, clientName);
       const { generateQuotePdf } = await import("@/components/pdf/pdf-generator");
       await generateQuotePdf("pdf-template-container", filename);
-    } catch {
+    } catch (err) {
+      console.error("[QuotePreview] PDF generation failed:", err);
       setGenError(t("pdf.errorGeneric"));
     } finally {
       setIsGenerating(false);
@@ -86,22 +99,22 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
   }
 
   async function handleShare() {
-    if (!quote) return;
+    if (!quote || isCompanyLoading || isSharing || isGenerating) return;
     setIsSharing(true);
     setShareError(null);
     setShareGuidance(null);
     try {
       const snapshot = quote.clientSnapshot as Record<string, unknown> | null;
       const clientName = (snapshot?.companyName as string) ?? "Client";
-      const filename = `Devis-${quote.number}-${clientName}.pdf`;
+      const filename = buildQuotePdfFilename(quote.number, clientName);
       const title = `Devis ${quote.number}`;
 
-      const { generatePdfBlob, downloadPdfBlob, sharePdfBlob, isMobilePlatform } =
+      const { generatePdfBlob, downloadPdfBlob, sharePdfBlob, isMobilePlatform, canShareFiles } =
         await import("@/lib/pdf-share");
 
       const blob = await generatePdfBlob("pdf-template-container");
 
-      if (shareSupported) {
+      if (canShareFiles()) {
         try {
           await sharePdfBlob(blob, filename, title);
           // Succès — la feuille de partage s'est ouverte
@@ -111,6 +124,7 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
             return;
           }
           // Erreur réelle → fallback download + message
+          console.error("[QuotePreview] Web Share failed:", err);
           downloadPdfBlob(blob, filename);
           setShareError(t("pdf.share.errorFallback"));
         }
@@ -122,7 +136,8 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
           mobile ? t("pdf.share.guidanceMobile") : t("pdf.share.guidanceDesktop")
         );
       }
-    } catch {
+    } catch (err) {
+      console.error("[QuotePreview] PDF share failed:", err);
       setShareError(t("pdf.share.errorGeneric"));
     } finally {
       setIsSharing(false);
@@ -152,7 +167,6 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
           left: "-9999px",
           top: 0,
           width: "794px", // A4 portrait @96dpi — obligatoire
-          zIndex: -1,
         }}
       >
         <PdfTemplate quote={quote} lines={lines} company={company} clauses={clauses} />
@@ -189,7 +203,7 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
           <button
             type="button"
             onClick={handleGenerate}
-            disabled={isGenerating || isSharing}
+            disabled={isCompanyLoading || isGenerating || isSharing}
             className="h-11 flex-1 rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep disabled:opacity-60"
           >
             {isGenerating ? t("pdf.generating") : t("pdf.generate")}
@@ -198,13 +212,33 @@ export function QuotePreview({ quoteId, userId: _userId, role: _role }: QuotePre
           <button
             type="button"
             onClick={handleShare}
-            disabled={isGenerating || isSharing}
+            disabled={isCompanyLoading || isGenerating || isSharing}
             className="h-11 flex-1 rounded-xl border border-brand-amber bg-amber-50 text-sm font-semibold text-amber-700 hover:bg-amber-100 disabled:opacity-60"
           >
             {isSharing ? t("pdf.share.sharing") : t("pdf.share.label")}
           </button>
+          {/* Bouton Enregistrer l'accord — vert, uniquement si statut "Envoyé" (AC6) */}
+          {quote.status === "sent" && (
+            <button
+              type="button"
+              onClick={() => setIsAgreementSheetOpen(true)}
+              disabled={isGenerating || isSharing}
+              className="h-11 flex-1 rounded-xl bg-green-600 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+            >
+              {t("accord.openSheet")}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Bottom sheet accord client (Story 4.5) */}
+      <ClientAgreementSheet
+        quoteId={quoteId}
+        quote={quote}
+        userId={userId}
+        isOpen={isAgreementSheetOpen}
+        onClose={() => setIsAgreementSheetOpen(false)}
+      />
     </div>
   );
 }

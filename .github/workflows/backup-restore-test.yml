@@ -1,0 +1,189 @@
+name: Weekly Backup Restore Test
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Chaque dimanche à 02h00 UTC
+  workflow_dispatch:       # Déclenchable manuellement
+
+jobs:
+  restore-test:
+    name: Test PITR Restore
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test database connectivity (primary)
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: |
+          echo "Testing primary DB connectivity..."
+          node -e "
+            const { Client } = require('pg');
+            const client = new Client({ connectionString: process.env.POSTGRES_URL });
+            client.connect()
+              .then(() => client.query('SELECT 1'))
+              .then(() => { console.log('Primary DB: OK'); client.end(); })
+              .catch(e => { console.error('Primary DB: FAILED', e.message); process.exit(1); });
+          "
+
+      # Creates a real PITR restore branch from 1 hour ago, verifies schema, then deletes it.
+      # NEON_API_KEY and NEON_PROJECT_ID are required — missing secrets fail the workflow.
+      - name: PITR Restore — Create branch from timestamp
+        id: create-restore-branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          set -uo pipefail
+
+          if [ -z "${NEON_API_KEY:-}" ] || [ -z "${NEON_PROJECT_ID:-}" ]; then
+            echo "::error::NEON_API_KEY and NEON_PROJECT_ID are required for PITR restore test."
+            echo "::error::Add these secrets in GitHub Settings → Secrets → Actions."
+            exit 1
+          fi
+
+          RESTORE_POINT=$(date -u -d '1 hour ago' '+%Y-%m-%dT%H:%M:%SZ')
+          echo "Creating PITR restore branch from: $RESTORE_POINT"
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"branch\":{\"parent_timestamp\":\"$RESTORE_POINT\"},\"endpoints\":[{\"type\":\"read_write\"}]}" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          if [ "$HTTP_CODE" != "201" ]; then
+            echo "::error::Neon API branch creation failed (HTTP $HTTP_CODE): $BODY"
+            exit 1
+          fi
+
+          BRANCH_ID=$(echo "$BODY" | jq -r '.branch.id')
+          ENDPOINT_ID=$(echo "$BODY" | jq -r '.endpoints[0].id')
+          ENDPOINT_HOST=$(echo "$BODY" | jq -r '.endpoints[0].host')
+
+          echo "Restore branch created: $BRANCH_ID"
+          echo "Endpoint: $ENDPOINT_HOST"
+
+          # Persist for cleanup step
+          echo "$BRANCH_ID" > /tmp/restore_branch_id
+
+          # Export for next steps
+          echo "branch_id=$BRANCH_ID" >> "$GITHUB_OUTPUT"
+          echo "endpoint_id=$ENDPOINT_ID" >> "$GITHUB_OUTPUT"
+          echo "endpoint_host=$ENDPOINT_HOST" >> "$GITHUB_OUTPUT"
+
+      - name: PITR Restore — Wait for endpoint to be active
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          set -uo pipefail
+
+          ENDPOINT_ID="${{ steps.create-restore-branch.outputs.endpoint_id }}"
+
+          for i in $(seq 1 18); do
+            STATE=$(curl -sf \
+              -H "Authorization: Bearer $NEON_API_KEY" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/endpoints/$ENDPOINT_ID" \
+              | jq -r '.endpoint.current_state')
+            echo "Endpoint state: $STATE (attempt $i/18)"
+            if [ "$STATE" = "active" ]; then
+              echo "Endpoint is active."
+              exit 0
+            fi
+            sleep 5
+          done
+
+          echo "::error::Restore endpoint not active after 90s"
+          exit 1
+
+      - name: PITR Restore — Verify schema on restored branch
+        env:
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+          ENDPOINT_HOST: ${{ steps.create-restore-branch.outputs.endpoint_host }}
+        run: |
+          set -uo pipefail
+
+          # Swap hostname in POSTGRES_URL to point at the restore branch endpoint
+          export RESTORE_URL=$(node -e "
+            const u = new URL(process.env.POSTGRES_URL);
+            u.hostname = process.env.ENDPOINT_HOST;
+            console.log(u.toString());
+          ")
+
+          echo "Verifying schema on restore branch..."
+          node -e "
+            const { Client } = require('pg');
+            const client = new Client({
+              connectionString: process.env.RESTORE_URL,
+              ssl: { rejectUnauthorized: false },
+              connectionTimeoutMillis: 10000,
+            });
+            client.connect()
+              .then(() => Promise.all([
+                client.query('SELECT 1 as ping'),
+                client.query('SELECT COUNT(*) AS cnt FROM \"user\"'),
+                client.query('SELECT COUNT(*) AS cnt FROM quote'),
+              ]))
+              .then(([, users, quotes]) => {
+                console.log('Restore branch schema: OK');
+                console.log('  users:', users.rows[0].cnt);
+                console.log('  quotes:', quotes.rows[0].cnt);
+                return client.end();
+              })
+              .catch(e => { console.error('Restore branch: FAILED', e.message); process.exit(1); });
+          "
+
+      # Always runs to prevent branch leak, even when earlier steps fail
+      - name: PITR Restore — Delete restore branch
+        if: always()
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+        run: |
+          BRANCH_ID=$(cat /tmp/restore_branch_id 2>/dev/null || echo "")
+          if [ -n "$BRANCH_ID" ] && [ -n "${NEON_API_KEY:-}" ] && [ -n "${NEON_PROJECT_ID:-}" ]; then
+            echo "Deleting restore branch: $BRANCH_ID"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+              -H "Authorization: Bearer $NEON_API_KEY" \
+              "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches/$BRANCH_ID")
+            echo "Delete response: HTTP $STATUS"
+            if [ "$STATUS" -lt 200 ] || [ "$STATUS" -ge 300 ]; then
+              echo "::error::Failed to delete restore branch $BRANCH_ID (HTTP $STATUS). Branch may leak — delete manually in Neon console."
+              exit 1
+            fi
+            echo "Restore branch deleted successfully."
+          else
+            echo "No branch to delete (ID not found or secrets missing)"
+          fi
+
+      - name: Log restore test result
+        run: |
+          echo "Restore test completed at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "::notice::Weekly backup restore test PASSED"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "RESTORE TEST FAILED at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          echo "::error::Weekly backup restore test FAILED. Check Neon console and PITR configuration."
+          echo "Required secrets: NEON_API_KEY, NEON_PROJECT_ID, POSTGRES_URL"

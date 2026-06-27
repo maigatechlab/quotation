@@ -2,13 +2,13 @@
 story_key: 4-2-preview-before-generation
 epic_num: 4
 story_num: 2
-status: review
+status: done
 baseline_commit: "95c49335d0c4abaf532babe2b8d49643c32e7782"
 ---
 
 # Story 4.2 : Aperçu avant génération (FR-32)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -342,6 +342,16 @@ const hideNav =
 - [x] Bouton "Générer le PDF" → génération + téléchargement ✓
 - [x] Devis inexistant → message + bouton retour ✓
 
+### Review Findings
+
+- [x] [Review][Patch] Rule amber 3px au lieu de 2px [src/components/pdf/pdf-template.tsx:134] — AC1 demande une rule amber 2px entre l'en-tête et le corps, mais `PdfTemplate` rend `height: "3px"`.
+- [x] [Review][Patch] Génération possible avant chargement des informations société [src/components/pdf/quote-preview.tsx:23] — `useLiveCompany() ?? null` transforme l'état de chargement `undefined` en `null`; si l'utilisateur clique immédiatement sur Générer/Partager, le PDF peut contenir "Société non configurée" puis la preview se corrige après chargement.
+- [x] [Review][Patch] Nom de fichier PDF non assaini [src/components/pdf/quote-preview.tsx:78] — `quote.number` et `clientName` sont injectés directement dans le nom de fichier; des caractères comme `/`, `\`, `:`, `?`, `*` ou des contrôles peuvent casser le téléchargement/partage.
+- [x] [Review][Patch] Regex preview trop large pour masquer la bottom nav [src/components/nav/bottom-nav-wrapper.tsx:9] — le pattern n'est pas ancré en fin de route et masque aussi `/devis/{id}/...`, alors qu'AC5 cible uniquement la page d'aperçu `/devis/[id]`.
+- [x] [Review][Defer] Risques pagination/canvas PDF long [src/components/pdf/pdf-generator.ts:35] — deferred, pre-existing Story 4.1 scope
+- [x] [Review][Defer] Partage PDF duplique la logique de capture non paginée [src/lib/pdf-share.ts:57] — deferred, Story 4.4 scope
+- [x] [Review][Defer] Sélection de société non liée au devis si plusieurs lignes Dexie existent [src/hooks/use-live-company.ts:13] — deferred, pre-existing data model/sync scope
+- [x] [Review][Defer] Logo distant `logoUrl` peut échouer à la capture html2canvas sans CORS [src/components/pdf/pdf-template.tsx:89] — deferred, pre-existing Story 4.1 scope
 ---
 
 ## Dev Notes

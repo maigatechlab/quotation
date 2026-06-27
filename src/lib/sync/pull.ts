@@ -9,6 +9,7 @@ import type {
   ClauseLocal,
   TemplateLocal,
   CompanyLocal,
+  RouteTemplateLocal,
 } from "@/lib/local-db";
 
 export interface PullResult {
@@ -24,6 +25,7 @@ interface PullResponse {
     quoteLines?: QuoteLineLocal[];
     clauses?: ClauseLocal[];
     templates?: TemplateLocal[];
+    routeTemplates?: RouteTemplateLocal[];
     company?: CompanyLocal | null;
   };
 }
@@ -46,6 +48,7 @@ export async function pullDelta(cursor: string): Promise<PullResult> {
     quoteLines = [],
     clauses = [],
     templates = [],
+    routeTemplates = [],
     company,
   } = data.entities;
 
@@ -54,7 +57,7 @@ export async function pullDelta(cursor: string): Promise<PullResult> {
   // P8: wrap all entity puts in a single transaction — atomic on interrupted pull
   await db.transaction(
     "rw",
-    [db.clients, db.quotes, db.quoteLines, db.clauses, db.templates, db.company],
+    [db.clients, db.quotes, db.quoteLines, db.clauses, db.templates, db.routeTemplates, db.company],
     async () => {
       for (const item of clients) {
         const encrypted = (await localCrypto.encrypt(item)) as ClientLocal;
@@ -86,6 +89,16 @@ export async function pullDelta(cursor: string): Promise<PullResult> {
         } else {
           const encrypted = (await localCrypto.encrypt(item)) as TemplateLocal;
           await db.templates.put(encrypted);
+        }
+        updatedCount++;
+      }
+
+      for (const item of routeTemplates) {
+        if (item.deletedAt) {
+          await db.routeTemplates.delete(item.id);
+        } else {
+          const encrypted = (await localCrypto.encrypt(item)) as RouteTemplateLocal;
+          await db.routeTemplates.put(encrypted);
         }
         updatedCount++;
       }
