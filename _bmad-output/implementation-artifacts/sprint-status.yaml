@@ -6,7 +6,7 @@
 # story 4-4 ready-for-dev 2026-06-25
 # story 4-3 ready-for-dev 2026-06-25
 # story 6-5 ready-for-dev 2026-06-25
-# story 6-4 ready-for-dev 2026-06-25
+# story 6-4 review 2026-06-26
 # story 5-3 ready-for-dev 2026-06-25
 # story 5-2 ready-for-dev 2026-06-25
 # story 5-1 ready-for-dev 2026-06-25
@@ -43,6 +43,8 @@
 # story 1-4 created 2026-06-22
 # story 4-2 review 2026-06-26
 # story 5-2 in-progress 2026-06-26
+# story 6-4 in-progress 2026-06-26
+# story 6-4 review 2026-06-26
 
 generated: 2026-06-21
 last_updated: 2026-06-26
@@ -142,7 +144,7 @@ development_status:
   6-1-indexeddb-encryption-at-rest: backlog
   6-2-tier-quota-enforcement: backlog
   6-3-immutable-audit-trail-export: backlog
-  6-4-background-sync-api: ready-for-dev
+  6-4-background-sync-api: review
   6-5-route-corridor-templates-crud: ready-for-dev
   6-6-geo-replicated-backup-pitr: ready-for-dev
   epic-6-retrospective: optional

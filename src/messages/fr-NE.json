@@ -95,6 +95,10 @@
   "offline": {
     "banner": "Hors ligne · {count} devis en attente"
   },
+  "sync": {
+    "backgroundSyncComplete": "Synchronisation effectuée en arrière-plan",
+    "pendingOps": "{count} opération(s) en attente de synchronisation"
+  },
   "pwa": {
     "installTitle": "Installer l'application",
     "installDescription": "Installer Quotation Logistique sur votre appareil",

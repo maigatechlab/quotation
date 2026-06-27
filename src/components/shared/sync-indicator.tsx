@@ -1,13 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { CheckCircle, Upload, Loader2, WifiOff } from "lucide-react";
 import { useSyncStatus } from "@/hooks/use-sync-status";
 import { cn } from "@/lib/utils";
 
+// SSR-safe mount detection without setState-in-effect.
+// subscribe is a no-op (we never need to re-render on its callback);
+// getSnapshot returns false on server and true on client after hydration.
+const emptySubscribe = () => () => {};
+const getMounted = () => true;
+
 export function SyncIndicator() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    getMounted,
+    () => false, // server snapshot — false until hydration
+  );
 
   const { pendingCount, isSyncing, isOnline } = useSyncStatus();
 
