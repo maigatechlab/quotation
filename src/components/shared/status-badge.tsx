@@ -41,15 +41,17 @@ const STATUS_CONFIG: Record<QuoteStatus, StatusConfig> = {
     label: "Accepté",
   },
   expired: {
-    dot: "bg-[var(--status-expire-dot)]",
-    bg: "bg-[var(--status-expire-bg)]",
-    text: "text-[var(--status-expire-text)]",
+    // AC6 : expired = orange/terracotta (--terracotta = #b8502d)
+    dot: "bg-[var(--terracotta)]",
+    bg: "bg-[var(--terracotta)]/10",
+    text: "text-[var(--terracotta)]",
     label: "Expiré",
   },
   cancelled: {
-    dot: "bg-[var(--status-annule-dot)]",
-    bg: "bg-[var(--status-annule-bg)]",
-    text: "text-[var(--status-annule-text)]",
+    // AC6 : cancelled = rouge (--status-expire-* = rouge, tokens dédiés à cet usage)
+    dot: "bg-[var(--status-expire-dot)]",
+    bg: "bg-[var(--status-expire-bg)]",
+    text: "text-[var(--status-expire-text)]",
     label: "Annulé",
   },
 };

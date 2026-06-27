@@ -112,7 +112,7 @@ export function RecentQuotesList() {
                   client: getClientName(quote),
                 })}
               >
-                {/* Colonne gauche : numéro + client */}
+                {/* Colonne gauche : numéro + client + date (mobile) */}
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-serif text-sm font-semibold tabular-nums text-text-primary">
                     {quote.number}
@@ -120,9 +120,13 @@ export function RecentQuotesList() {
                   <p className="truncate text-xs text-text-muted">
                     {getClientName(quote)}
                   </p>
+                  {/* Date visible sur mobile (AC1) — masquée sm+ où elle passe en colonne centre */}
+                  <p className="text-xs tabular-nums text-text-muted sm:hidden">
+                    {formatDate(quote.dateDevis ?? quote.createdAt)}
+                  </p>
                 </div>
 
-                {/* Colonne centre : date */}
+                {/* Colonne centre : date (sm+) */}
                 <p className="hidden text-xs tabular-nums text-text-muted sm:block">
                   {formatDate(quote.dateDevis ?? quote.createdAt)}
                 </p>

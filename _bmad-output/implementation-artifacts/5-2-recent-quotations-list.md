@@ -2,13 +2,13 @@
 story_key: 5-2-recent-quotations-list
 epic_num: 5
 story_num: 2
-status: review
+status: done
 baseline_commit: "95c49335d0c4abaf532babe2b8d49643c32e7782"
 ---
 
 # Story 5.2 : Liste des devis récents (FR-41)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -589,6 +589,8 @@ claude-sonnet-4-6
 - Story 5.1 déjà implémentée : `DashboardHero` existe dans `src/components/dashboard/dashboard-hero.tsx` et le linter a automatiquement ajouté son import dans page.tsx
 - `fr-NE.json` avait déjà les clés `dashboard.*` de Story 5.1 → `recentQuotes` ajouté comme sous-section de `dashboard`
 - Choix documenté : draft + totalFcfa === 0 → affiche "—" pour UX plus propre
+- Revue finale : AC1 corrige avec date visible mobile + sm+, AC6 corrige avec expired=terracotta et cancelled=red.
+- Verification finale : pnpm check vert (lint 0 erreur, typecheck, 206 tests) et pnpm build vert (migrate, compile, 27 pages).
 
 ### Completion Notes List
 
@@ -596,7 +598,7 @@ claude-sonnet-4-6
 - T2 : `RecentQuotesList` créé avec hook `useRecentQuotes` inline utilisant `liveQuery` Dexie. Tri JS par `dateDevis ?? createdAt` DESC, slice(0, 10). États skeleton (3 rows), vide (CTA), et liste implémentés. Liens pointent vers `/devis/${id}` (404 acceptable jusqu'à Epic 4). Aria-label sur chaque ligne.
 - T3 : `page.tsx` mis à jour pour inclure `DashboardHero` (Story 5.1) + `RecentQuotesList`. Structure correcte avec gap-6 et pb-6.
 - T4 : `fr-NE.json` mis à jour, `dashboard.recentQuotes` ajouté dans la clé `dashboard` existante de Story 5.1.
-- T5 : `pnpm check` → 0 erreurs, 206 tests passent, typecheck propre.
+- T5 : pnpm check -> 0 erreurs, 206 tests passent, typecheck propre. pnpm build complet -> migration, compilation et 27 pages generees sans erreur.
 
 ### File List
 
@@ -604,9 +606,10 @@ claude-sonnet-4-6
 - `src/components/dashboard/recent-quotes-list.tsx` (créé)
 - `src/app/(app)/page.tsx` (modifié)
 - `src/messages/fr-NE.json` (modifié)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour : in-progress → review)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis a jour : review -> done)
 - `_bmad-output/implementation-artifacts/5-2-recent-quotations-list.md` (ce fichier)
 
 ### Change Log
 
 - 2026-06-26 : Implémentation Story 5.2 — Liste des devis récents. Créé `StatusBadge` (composant partagé réutilisable avec CSS lifecycle tokens), `RecentQuotesList` (liveQuery Dexie, tri par dateDevis DESC, skeleton/vide/liste), mis à jour `page.tsx` (DashboardHero + RecentQuotesList), ajouté `dashboard.recentQuotes` dans `fr-NE.json`. pnpm check : 0 erreurs, 206 tests ✓.
+- 2026-06-26 : Revue finale appliquee - date visible sur mobile, mapping statut conforme AC6, pnpm check vert et pnpm build complet vert. Story passee a done.

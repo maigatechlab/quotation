@@ -42,7 +42,7 @@
 # story 1-3 created 2026-06-22
 # story 1-4 created 2026-06-22
 # story 4-2 review 2026-06-26
-# story 5-2 in-progress 2026-06-26
+# story 5-2 done 2026-06-26
 # story 6-4 in-progress 2026-06-26
 # story 6-4 review 2026-06-26
 
@@ -135,7 +135,7 @@ development_status:
   # Epic 5: Tableau de bord
   epic-5: in-progress
   5-1-synthetic-activity-view: review
-  5-2-recent-quotations-list: review
+  5-2-recent-quotations-list: done
   5-3-amount-metrics: review
   epic-5-retrospective: optional
 
