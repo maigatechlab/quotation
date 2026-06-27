@@ -116,12 +116,18 @@ export function DashboardHero() {
       </div>
 
       {/* Grille des compteurs par statut */}
-      <div className="relative z-10 mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="relative z-10 mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <StatCounter
           label={t("statusDraft")}
           value={stats.draft}
           isLoading={stats.isLoading}
           dotClass="bg-text-on-dark/40"
+        />
+        <StatCounter
+          label={t("statusValidated")}
+          value={stats.validated}
+          isLoading={stats.isLoading}
+          dotClass="bg-blue-400"
         />
         <StatCounter
           label={t("statusSent")}

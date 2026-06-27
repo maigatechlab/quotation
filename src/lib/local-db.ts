@@ -48,6 +48,11 @@ export interface QuoteLocal {
   exchangeRate?: number;
   goodsValueFcfa?: number;
   totalFcfa: number;
+  // Accord client (FR-30) — rempli lors de la transition Envoyé → Accepté
+  clientAccordNom?: string;
+  clientAccordFonction?: string;
+  clientAccordDate?: string;
+  clientAccordScanUrl?: string;
   companyId?: string;
   pays: string;
   revision: number;
@@ -132,13 +137,40 @@ export interface CompanyLocal {
   createdAt: string;
 }
 
+export interface QuoteStatusLogLocal {
+  id: string;
+  quoteId: string;
+  fromStatus: string;
+  toStatus: string;
+  changedBy: string;
+  changedAt: string;
+}
+
+export interface RouteTemplateLocal {
+  id: string;
+  nom: string;
+  originCountry: string;
+  originCity: string;
+  destinationCountry: string;
+  destinationCity: string;
+  distanceKm?: number;
+  tarifFcfa?: number;
+  deletedAt?: string;
+  companyId?: string;
+  pays: string;
+  revision: number;
+  updatedAt: string;
+  createdAt: string;
+}
+
 export type SyncOpEntity =
   | "client"
   | "quote"
   | "quoteLine"
   | "clause"
   | "company"
-  | "template";
+  | "template"
+  | "routeTemplate";
 
 export interface SyncOp {
   opId: string;
@@ -179,6 +211,8 @@ export class LocalDatabase extends Dexie {
   company!: EntityTable<CompanyLocal, "id">;
   syncQueue!: EntityTable<SyncOp, "opId">;
   auditMirror!: EntityTable<AuditEventLocal, "id">;
+  quoteStatusLogs!: EntityTable<QuoteStatusLogLocal, "id">;
+  routeTemplates!: EntityTable<RouteTemplateLocal, "id">;
 
   constructor() {
     super("quotation-local");
@@ -203,6 +237,17 @@ export class LocalDatabase extends Dexie {
     // Version 3 — ajout table quoteClauses (Story 4-1)
     this.version(3).stores({
       quoteClauses: "id, quoteId, ordre, companyId, pays, revision",
+    });
+
+    // Version 4 — ajout table quoteStatusLogs (Story 4-5, préfigure Story 3-9)
+    // Les champs optionnels de QuoteLocal (clientAccord*) ne nécessitent pas de migration Dexie
+    this.version(4).stores({
+      quoteStatusLogs: "id, quoteId, changedAt",
+    });
+
+    // Version 5 — ajout table routeTemplates (Story 6-5)
+    this.version(5).stores({
+      routeTemplates: "id, nom, companyId, pays, deletedAt, revision",
     });
   }
 }

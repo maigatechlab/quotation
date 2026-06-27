@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useLiveRouteTemplates } from "@/hooks/use-live-route-templates";
 import { db } from "@/lib/local-db";
-import type { QuoteLocal } from "@/lib/local-db";
+import type { QuoteLocal, RouteTemplateLocal } from "@/lib/local-db";
 import { applyLocalMutation, triggerSync } from "@/lib/sync/outbox";
 import { useWizardStore } from "@/stores/wizard-store";
 
@@ -64,7 +65,11 @@ export function WizardStepRoute({ userId }: WizardStepRouteProps) {
   const t = useTranslations("devis.wizard.trajet");
   const tW = useTranslations("devis.wizard");
   const { quoteId, setStep } = useWizardStore();
+  const { templates } = useLiveRouteTemplates();
+  const showDynamicChips = templates.length > 0;
   const [selectedCorridorIdx, setSelectedCorridorIdx] = useState<number | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [templateUnitPrice, setTemplateUnitPrice] = useState<number | null>(null);
   const [originCountry, setOriginCountry] = useState("NE");
   const [originCity, setOriginCity] = useState("");
   const [destinationCountry, setDestinationCountry] = useState("NE");
@@ -80,6 +85,19 @@ export function WizardStepRoute({ userId }: WizardStepRouteProps) {
     setDestinationCountry(corridor.destinationCountry);
     setDestinationCity(corridor.destinationCity);
     setSelectedCorridorIdx(idx);
+    setSelectedTemplateId(null);
+    setTemplateUnitPrice(null);
+    setErrors({});
+  }
+
+  function applyTemplate(tmpl: RouteTemplateLocal) {
+    setOriginCountry(tmpl.originCountry);
+    setOriginCity(tmpl.originCity);
+    setDestinationCountry(tmpl.destinationCountry);
+    setDestinationCity(tmpl.destinationCity);
+    setSelectedTemplateId(tmpl.id);
+    setSelectedCorridorIdx(null);
+    setTemplateUnitPrice(tmpl.tarifFcfa ?? null);
     setErrors({});
   }
 
@@ -87,22 +105,30 @@ export function WizardStepRoute({ userId }: WizardStepRouteProps) {
     setOriginCountry(code);
     setOriginCity("");
     setSelectedCorridorIdx(null);
+    setSelectedTemplateId(null);
+    setTemplateUnitPrice(null);
   }
 
   function handleDestinationCountryChange(code: string) {
     setDestinationCountry(code);
     setDestinationCity("");
     setSelectedCorridorIdx(null);
+    setSelectedTemplateId(null);
+    setTemplateUnitPrice(null);
   }
 
   function handleOriginCityChange(v: string) {
     setOriginCity(v);
     setSelectedCorridorIdx(null);
+    setSelectedTemplateId(null);
+    setTemplateUnitPrice(null);
   }
 
   function handleDestinationCityChange(v: string) {
     setDestinationCity(v);
     setSelectedCorridorIdx(null);
+    setSelectedTemplateId(null);
+    setTemplateUnitPrice(null);
   }
 
   async function handleNext() {
@@ -125,6 +151,7 @@ export function WizardStepRoute({ userId }: WizardStepRouteProps) {
       if (!current) throw new Error("Devis introuvable dans Dexie");
       const now = new Date().toISOString();
 
+      const unitPriceOverride = templateUnitPrice !== null ? { unitPrice: templateUnitPrice } : {};
       const updatedQuote: QuoteLocal = {
         ...current,
         originCountry,
@@ -132,6 +159,7 @@ export function WizardStepRoute({ userId }: WizardStepRouteProps) {
         destinationCountry,
         destinationCity: destinationCity.trim(),
         updatedAt: now,
+        ...unitPriceOverride,
       };
       const payload: Record<string, unknown> = {
         ...current,
@@ -140,6 +168,7 @@ export function WizardStepRoute({ userId }: WizardStepRouteProps) {
         destinationCountry,
         destinationCity: destinationCity.trim(),
         updatedAt: now,
+        ...unitPriceOverride,
       };
       await applyLocalMutation(
         "quote",
@@ -191,27 +220,43 @@ export function WizardStepRoute({ userId }: WizardStepRouteProps) {
         {t("heading")}
       </h2>
 
-      {/* Corridors chips */}
+      {/* Corridors chips — dynamiques si modèles Dexie, sinon presets statiques */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
           {t("corridors")}
         </p>
         <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
-          {CORRIDORS.map((corridor, idx) => (
-            <button
-              key={corridor.label}
-              type="button"
-              aria-pressed={selectedCorridorIdx === idx}
-              onClick={() => handleCorridorSelect(idx)}
-              className={
-                selectedCorridorIdx === idx
-                  ? "shrink-0 rounded-[20px] bg-brand-navy px-4 py-2 text-sm font-medium text-text-on-dark"
-                  : "shrink-0 rounded-[20px] border border-border-input bg-surface px-4 py-2 text-sm font-medium text-text-secondary"
-              }
-            >
-              {corridor.label}
-            </button>
-          ))}
+          {showDynamicChips
+            ? templates.map((tmpl) => (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  aria-pressed={selectedTemplateId === tmpl.id}
+                  onClick={() => applyTemplate(tmpl)}
+                  className={
+                    selectedTemplateId === tmpl.id
+                      ? "shrink-0 rounded-[20px] bg-brand-navy px-4 py-2 text-sm font-medium text-text-on-dark"
+                      : "shrink-0 rounded-[20px] border border-border-input bg-surface px-4 py-2 text-sm font-medium text-text-secondary"
+                  }
+                >
+                  {tmpl.nom}
+                </button>
+              ))
+            : CORRIDORS.map((corridor, idx) => (
+                <button
+                  key={corridor.label}
+                  type="button"
+                  aria-pressed={selectedCorridorIdx === idx}
+                  onClick={() => handleCorridorSelect(idx)}
+                  className={
+                    selectedCorridorIdx === idx
+                      ? "shrink-0 rounded-[20px] bg-brand-navy px-4 py-2 text-sm font-medium text-text-on-dark"
+                      : "shrink-0 rounded-[20px] border border-border-input bg-surface px-4 py-2 text-sm font-medium text-text-secondary"
+                  }
+                >
+                  {corridor.label}
+                </button>
+              ))}
         </div>
       </div>
 

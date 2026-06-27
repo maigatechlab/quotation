@@ -25,9 +25,9 @@ function mockSession(companyId: string | null = CID) {
   });
 }
 
-// Six selects execute in parallel (clients, quotes, quoteLines, clauses, templates, company).
+// Seven selects execute in parallel (clients, quotes, quoteLines, clauses, templates, routeTemplates, company).
 // select().from().where() — where() is terminal (no .limit() in pull route).
-function mockAllSelects(rowsPerTable: unknown[][] = [[], [], [], [], [], []]) {
+function mockAllSelects(rowsPerTable: unknown[][] = [[], [], [], [], [], [], []]) {
   let idx = 0;
   vi.mocked(db.select).mockImplementation(() => ({
     from: vi.fn().mockReturnThis(),
@@ -72,6 +72,7 @@ describe("GET /api/v1/sync/pull", () => {
       [],       // quoteLines
       [],       // clauses
       [],       // templates
+      [],       // routeTemplates
       [{ id: CID, raisonSociale: "Ma Société" }], // company
     ]);
 
@@ -93,8 +94,8 @@ describe("GET /api/v1/sync/pull", () => {
     expect((body.entities.clients[0]! as Record<string, unknown>).companyId).toBe(CID);
     expect(body.entities.company).toMatchObject({ id: CID });
     expect(typeof body.cursor).toBe("string");
-    // All 6 selects must have been called (one per entity table)
-    expect(db.select).toHaveBeenCalledTimes(6);
+    // All 7 selects must have been called (one per entity table)
+    expect(db.select).toHaveBeenCalledTimes(7);
   });
 
   it("returns null company when no company row updated since cursor", async () => {

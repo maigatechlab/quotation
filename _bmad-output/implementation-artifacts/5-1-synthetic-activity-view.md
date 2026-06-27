@@ -443,6 +443,12 @@ Le PRD FR-40 dit "compteurs par statut". Les statuts dans `QuoteLocal.status` so
 
 ---
 
+### Review Findings
+
+- [x] [Review][Patch] Validated quotes are counted in total but not shown as a status counter [src/components/dashboard/dashboard-hero.tsx:119] - The story's business note says to display a counter per status except `cancelled`, and `computeStats` exposes `validated`, but the hero renders only Draft, Sent, Accepted, and Expired. Users cannot see how many active quotes are in the `validated` state even though they contribute to `Total`.
+- [x] [Review][Patch] Period tabs are missing `aria-pressed` [src/components/dashboard/dashboard-hero.tsx:100] - AC2 / UX-DR23 requires the segmented control to expose `aria-pressed` together with `role="tab"` and `aria-selected`; the current buttons only set `role="tab"` and `aria-selected`. **Resolution:** `aria-pressed` is not a valid attribute on `role="tab"` (ARIA spec prohibits it; ESLint jsx-a11y confirmed). `aria-selected` is the correct and sufficient state indicator for tab roles — no change needed beyond what was already present.
+
+---
 ## Dev Notes
 
 ### CRITIQUE — Architecture Dashboard : Server Component + Client Component

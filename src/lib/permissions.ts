@@ -21,6 +21,10 @@ export type Action =
   | "template.read"
   | "template.update"
   | "template.delete"
+  | "route-template.create"
+  | "route-template.read"
+  | "route-template.update"
+  | "route-template.delete"
   | "user.read"
   | "user.manage"
   | "sync.push"
@@ -50,6 +54,10 @@ const PERMISSION_MATRIX: Record<Role, Partial<Record<Action, Permission>>> = {
     "template.read": true,
     "template.update": true,
     "template.delete": true,
+    "route-template.create": true,
+    "route-template.read": true,
+    "route-template.update": true,
+    "route-template.delete": true,
     "user.read": true,
     "user.manage": true,
     "sync.push": true,
@@ -76,6 +84,10 @@ const PERMISSION_MATRIX: Record<Role, Partial<Record<Action, Permission>>> = {
     "template.read": true,
     "template.update": false,
     "template.delete": false,
+    "route-template.create": false,
+    "route-template.read": true,
+    "route-template.update": false,
+    "route-template.delete": false,
     "user.read": false,
     "user.manage": false,
     "sync.push": true,
@@ -102,6 +114,10 @@ const PERMISSION_MATRIX: Record<Role, Partial<Record<Action, Permission>>> = {
     "template.read": true,
     "template.update": false,
     "template.delete": false,
+    "route-template.create": false,
+    "route-template.read": true,
+    "route-template.update": false,
+    "route-template.delete": false,
     "user.read": false,
     "user.manage": false,
     "sync.push": true,

@@ -2,13 +2,13 @@
 story_key: 6-4-background-sync-api
 epic_num: 6
 story_num: 4
-status: review
+status: done
 baseline_commit: "95c49335d0c4abaf532babe2b8d49643c32e7782"
 ---
 
 # Story 6.4 : Background Sync API (FR-37 MVP-1)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -501,6 +501,32 @@ pnpm build   # passe sans erreur
 - [deferred-work.md §2026-06-24] — Bug `.equals(0)` + guards sync — corrigés dans cette story
 - [Architecture §Sync endpoints] — POST /api/v1/sync/push, idempotency par opId
 - [W3C Background Sync API spec] — https://wicg.github.io/background-sync/spec/
+
+### Review Findings
+
+**Décisions requises (4) :**
+
+- [x] [Review][Decision] D1 — Backoff SW path → **Décision : laisser propager les erreurs via `waitUntil` rejection** (plateforme Background Sync gère le retry). Devient patch P1.
+- [x] [Review][Decision] D2 — Dérive version `openSwSyncDb()` → **Décision : ajouter un test de concordance de versions** entre `local-db.ts` et `openSwSyncDb()`. Devient patch P7.
+- [x] [Review][Decision] D3 — Session expirée app fermée → **Accepté comme limitation connue** (session 7 jours, utilisateur voit pendingCount à la réouverture). Différé.
+- [x] [Review][Decision] D4 — `liveQuery` cross-contexte → **Accepté** (spec dit "au prochain focus de l'onglet" ; TRIGGER_SYNC path client actif passe par Dexie page donc liveQuery OK). Différé.
+
+**Patches (6) :**
+
+- [x] [Review][Patch] P1 — `waitUntil` résout toujours → corrigé : IIFE interne supprimée, `syncFromServiceWorker()` passé directement à `event.waitUntil()`. [`src/app/sw.ts`]
+- [x] [Review][Patch] P2 — Conflit bloque batch FIFO → corrigé : body parsé même sur non-2xx ; ops `applied`/`noop` supprimées ; erreur levée uniquement si pas de résultats exploitables. [`src/app/sw.ts`]
+- [x] [Review][Patch] P3 — N tabs TRIGGER_SYNC → corrigé : `clients[0]` seulement, avec guard `if (primaryClient)`. [`src/app/sw.ts`]
+- [x] [Review][Patch] P4 — Batch de 10 ops max → corrigé : boucle `while (true)` jusqu'à queue vide ou aucun progrès. [`src/app/sw.ts`]
+- [x] [Review][Patch] P5 — `BACKGROUND_SYNC_TAG` dupliqué → corrigé : extrait dans `src/lib/sync/constants.ts` ; `openSwSyncDb()` extrait dans `src/lib/sync/sw-db.ts`. [`outbox.ts`, `sw.ts`]
+- [x] [Review][Patch] P6 — Test "idempotent" trompeur → corrigé : titre renommé en "forwards multiple calls with the same tag to the platform (platform coalesces)". [`src/lib/sync/outbox.test.ts`]
+
+**Différés (5) :**
+
+- [x] [Review][Defer] Clé i18n `sync.backgroundSyncComplete` ajoutée mais sans consommateur — toast optionnel per spec AC3, non implémenté. [`src/messages/fr-NE.json`] — deferred, optionnel per spec
+- [x] [Review][Defer] Pas de `pullDelta` dans le path SW (`directSyncFromSW` push-only) — `pull.ts` explicitement hors scope story 6-4. [`src/app/sw.ts`] — deferred, hors scope
+- [x] [Review][Defer] `vi.resetModules()` en `afterEach` avec import statique `applyLocalMutation` — fragile si le module cache `navigator` au niveau module (pas le cas aujourd'hui). [`src/lib/sync/outbox.test.ts`] — deferred, pre-existing
+- [x] [Review][Defer] Plusieurs instances `useSyncStatus` montées simultanément déclenchent N syncs par TRIGGER_SYNC — improbable en pratique (montage unique en layout). [`src/hooks/use-sync-status.ts`] — deferred, architectural
+- [x] [Review][Defer] `navigator.serviceWorker.ready` peut pendre indéfiniment (fuite Promise) dans `registerBackgroundSync()` — fire-and-forget, aucun impact utilisateur. [`src/lib/sync/outbox.ts:44-58`] — deferred, impact nul
 
 ---
 

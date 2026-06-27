@@ -1,4 +1,4 @@
-import Dexie, { type Table } from "dexie";
+import { type Table } from "dexie";
 import {
   Serwist,
   CacheFirst,
@@ -6,6 +6,8 @@ import {
   NetworkOnly,
   ExpirationPlugin,
 } from "serwist";
+import { BACKGROUND_SYNC_TAG } from "../lib/sync/constants";
+import { openSwSyncDb } from "../lib/sync/sw-db";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 
 declare global {
@@ -65,8 +67,6 @@ interface SwPushResponse {
   results: SwPushOpResult[];
 }
 
-// Background Sync tag — must match the tag registered by outbox.registerBackgroundSync().
-const BACKGROUND_SYNC_TAG = "quotation-sync";
 // Max ops pushed per SW-initiated batch to keep the fetch payload bounded.
 const SW_SYNC_BATCH_SIZE = 10;
 
@@ -155,79 +155,63 @@ serwist.addEventListeners();
 // via a dedicated Dexie instance bound to the same IndexedDB database.
 
 /**
- * Open a SW-side Dexie handle bound to the SAME IndexedDB database the client
- * uses (`quotation-local`). We declare only the syncQueue table — we never
- * touch entity tables from the SW to keep the surface minimal and avoid
- * diverging from the client's schema versions.
- *
- * The version chain mirrors local-db.ts (versions 1→3) so Dexie can open the
- * existing database without an upgrade race.
- */
-function openSwSyncDb(): Dexie {
-  const swDb = new Dexie("quotation-local");
-  // Mirror the schema declarations from src/lib/local-db.ts — only syncQueue
-  // is needed in the SW. The full version history is preserved so Dexie does
-  // not attempt to re-upgrade an already-migrated database.
-  swDb.version(1).stores({
-    clients: "id, companyName, phone, city, ownerId, companyId, deletedAt, revision",
-    quotes: "id, number, status, clientId, ownerId, companyId, dateDevis, revision",
-    quoteLines: "id, quoteId, ordre, companyId, pays, revision",
-    clauses: "id, categorie, companyId, pays, revision",
-    templates: "id, nom, companyId, pays, revision",
-    company: "id, companyId, revision",
-    syncQueue: "opId, entity, entityId, queuedAt",
-    auditMirror: "id, entityType, entityId, who, synced",
-  });
-  swDb.version(2).stores({
-    syncQueue: "opId, entity, entityId, queuedAt, failed, retryCount",
-  });
-  swDb.version(3).stores({
-    quoteClauses: "id, quoteId, ordre, companyId, pays, revision",
-  });
-  return swDb;
-}
-
-/**
  * Push the pending sync queue directly from the Service Worker via fetch.
  * The session cookie (Better Auth) is sent automatically with same-origin
- * requests, so authenticated pushes work even with no page open. If the
- * session has expired the server returns 401 — the sync event will not be
- * retried indefinitely (lastChance handling is delegated to the platform).
+ * requests, so authenticated pushes work even with no page open.
+ *
+ * P2: parses the response body even on non-2xx — a 409 conflict response may
+ * identify ops to skip. Throws only when no usable results are available so
+ * that waitUntil rejects and the platform schedules a retry.
+ *
+ * P4: loops until the pending queue is drained (original code processed one
+ * batch of SW_SYNC_BATCH_SIZE ops only).
  */
 async function directSyncFromSW(): Promise<void> {
   const swDb = openSwSyncDb();
   try {
     await swDb.open();
     const syncQueue = swDb.table("syncQueue") as Table<SwSyncOp, string>;
-    // Only ops not marked permanently failed — FIFO by queuedAt.
-    const pendingOps = await syncQueue
-      .filter((op) => !op.failed)
-      .sortBy("queuedAt");
-    if (pendingOps.length === 0) return;
 
-    const batch = pendingOps.slice(0, SW_SYNC_BATCH_SIZE);
-    const res = await fetch("/api/v1/sync/push", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ops: batch }),
-    });
+    while (true) {
+      // Only ops not marked permanently failed — FIFO by queuedAt.
+      const pendingOps = await syncQueue.filter((op) => !op.failed).sortBy("queuedAt");
+      if (pendingOps.length === 0) break;
 
-    if (!res.ok) {
-      // Non-OK: the platform will re-fire the sync event (subject to its own
-      // retry policy). Marking ops as failed is the responsibility of the
-      // push pipeline (push.ts backoff) — we intentionally do not mutate
-      // op state from the SW to avoid divergence with the client.
-      return;
-    }
+      const batch = pendingOps.slice(0, SW_SYNC_BATCH_SIZE);
+      const res = await fetch("/api/v1/sync/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ops: batch }),
+      });
 
-    const body = (await res.json()) as SwPushResponse;
-    for (const r of body.results) {
-      // Delete successfully applied / no-op ops from the queue.
-      // Conflicts and failures are left for the client to handle on next focus
-      // (conflict resolution may require UI that only the client can render).
-      if (r.status === "applied" || r.status === "noop") {
-        await syncQueue.delete(r.opId);
+      // P2: attempt to parse results even on non-OK responses (e.g. 409 conflict).
+      let body: SwPushResponse | null = null;
+      try {
+        body = (await res.json()) as SwPushResponse;
+      } catch {
+        // Non-JSON or already-consumed body
       }
+
+      let deletedCount = 0;
+      if (body?.results) {
+        for (const r of body.results) {
+          // Remove ops the server has processed; leave conflicts/failures for client UI.
+          if (r.status === "applied" || r.status === "noop") {
+            await syncQueue.delete(r.opId);
+            deletedCount++;
+          }
+        }
+      }
+
+      if (!res.ok && !body?.results) {
+        // Genuine server/network failure with no usable results.
+        // Throw so waitUntil rejects and the platform schedules a retry.
+        throw new Error(`SW sync push failed: HTTP ${res.status}`);
+      }
+
+      // Stop if queue is drained or no progress was made (all batch ops are conflicts/failed —
+      // client UI must resolve them; continuing would loop indefinitely).
+      if (pendingOps.length <= SW_SYNC_BATCH_SIZE || deletedCount === 0) break;
     }
   } finally {
     swDb.close();
@@ -237,23 +221,19 @@ async function directSyncFromSW(): Promise<void> {
 /**
  * Coordinate the background sync replay.
  *
- * Strategy (Dev Notes §"Le SW ne peut PAS utiliser use client modules tels quels") :
- *  1. If at least one window client is active, delegate via postMessage so the
- *     client runs its full push+pull pipeline (preferred — avoids client-only
- *     imports in the SW and reuses conflict resolution UI).
- *  2. Otherwise (app fully closed), run directSyncFromSW() which pushes the
- *     queued ops via fetch directly from the SW.
+ * P3: delegates to the FIRST active window client only (original code broadcast
+ * to all N clients, causing N concurrent pushes on the same outbox).
  */
 async function syncFromServiceWorker(): Promise<void> {
   const clients = await self.clients.matchAll({
     type: "window",
     includeUncontrolled: false,
   });
-  if (clients.length > 0) {
-    // Delegate to an active client — it has the full sync pipeline available.
-    for (const client of clients) {
-      client.postMessage({ type: "TRIGGER_SYNC" });
-    }
+  // P3: send to first active client only — it has the full sync pipeline available.
+  // Sending to all N clients triggers N concurrent pushes (each tab has its own guard).
+  const primaryClient = clients[0];
+  if (primaryClient) {
+    primaryClient.postMessage({ type: "TRIGGER_SYNC" });
     return;
   }
   // No active client — run the push directly from the SW.
@@ -262,16 +242,9 @@ async function syncFromServiceWorker(): Promise<void> {
 
 self.addEventListener("sync", (event: SwSyncEvent) => {
   if (event.tag !== BACKGROUND_SYNC_TAG) return;
-  // waitUntil() keeps the SW alive long enough to flush the queue. If this
-  // rejects, the platform retries the sync event (up to lastChance).
-  event.waitUntil(
-    (async () => {
-      try {
-        await syncFromServiceWorker();
-      } catch {
-        // Swallow — the platform will re-fire the sync event. Idempotence by
-        // opId guarantees no double-application when retry eventually succeeds.
-      }
-    })()
-  );
+  // P1: waitUntil() receives the promise directly — no inner try/catch.
+  // If syncFromServiceWorker() rejects, waitUntil rejects and the platform
+  // retries the sync event (up to lastChance). Idempotence by opId guarantees
+  // no double-application when the retry eventually succeeds.
+  event.waitUntil(syncFromServiceWorker());
 });

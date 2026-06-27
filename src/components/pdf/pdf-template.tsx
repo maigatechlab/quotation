@@ -28,13 +28,48 @@ function fmtDate(iso?: string): string {
   }
 }
 
+function safeString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function getClientSnapshot(value: unknown): {
+  companyName: string;
+  contactName: string;
+  phone: string;
+  city: string;
+} {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { companyName: "", contactName: "", phone: "", city: "" };
+  }
+
+  const snapshot = value as Record<string, unknown>;
+
+  return {
+    companyName: safeString(snapshot.companyName),
+    contactName: safeString(snapshot.contactName),
+    phone: safeString(snapshot.phone),
+    city: safeString(snapshot.city),
+  };
+}
+
+function ManualLine({ value = "", width = "150px" }: { value?: string; width?: string }) {
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        minWidth: width,
+        borderBottom: `1px solid ${TEXT_SECONDARY}`,
+        lineHeight: 1.2,
+        paddingLeft: value ? "4px" : 0,
+      }}
+    >
+      {value || "\u00a0"}
+    </span>
+  );
+}
+
 export function PdfTemplate({ quote, lines, company, clauses }: PdfTemplateProps) {
-  const snapshot = quote.clientSnapshot as {
-    companyName?: string;
-    contactName?: string;
-    phone?: string;
-    city?: string;
-  } | null;
+  const snapshot = getClientSnapshot(quote.clientSnapshot);
 
   const totalFcfa = formatFcfa(quote.totalFcfa);
   const today = new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(new Date());
@@ -131,7 +166,7 @@ export function PdfTemplate({ quote, lines, company, clauses }: PdfTemplateProps
       </div>
 
       {/* RULE AMBER */}
-      <div style={{ height: "3px", background: AMBER, margin: 0 }} />
+      <div style={{ height: "2px", background: AMBER, margin: 0 }} />
 
       {/* BODY */}
       <div style={{ padding: "24px 57px" }}>
@@ -170,10 +205,10 @@ export function PdfTemplate({ quote, lines, company, clauses }: PdfTemplateProps
             <div style={{ fontFamily: SERIF, fontWeight: 700, marginBottom: "6px", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: NAVY }}>
               Client
             </div>
-            <div style={{ fontWeight: 600 }}>{snapshot?.companyName ?? "—"}</div>
-            {snapshot?.contactName && <div style={{ color: TEXT_SECONDARY }}>{snapshot.contactName}</div>}
-            {snapshot?.phone && <div style={{ color: TEXT_SECONDARY }}>{snapshot.phone}</div>}
-            {snapshot?.city && <div style={{ color: TEXT_SECONDARY }}>{snapshot.city}</div>}
+            <div style={{ fontWeight: 600 }}>{snapshot.companyName || "—"}</div>
+            {snapshot.contactName && <div style={{ color: TEXT_SECONDARY }}>{snapshot.contactName}</div>}
+            {snapshot.phone && <div style={{ color: TEXT_SECONDARY }}>{snapshot.phone}</div>}
+            {snapshot.city && <div style={{ color: TEXT_SECONDARY }}>{snapshot.city}</div>}
           </div>
         </div>
 
@@ -314,7 +349,7 @@ export function PdfTemplate({ quote, lines, company, clauses }: PdfTemplateProps
         )}
 
         {/* ─── Section signatures ─── */}
-        <div style={{
+        <div data-pdf-avoid-break="true" style={{
           display: "flex",
           flexDirection: "row",
           gap: "16px",
@@ -399,13 +434,13 @@ export function PdfTemplate({ quote, lines, company, clauses }: PdfTemplateProps
             </div>
             <div style={{ fontSize: "11px", color: TEXT_PRIMARY, marginBottom: "6px", fontFamily: SANS }}>
               <strong>Nom et prénom :</strong>{" "}
-              {snapshot?.contactName ?? ""}
+              <ManualLine value={snapshot.contactName} />
             </div>
             <div style={{ fontSize: "11px", color: TEXT_PRIMARY, marginBottom: "6px", fontFamily: SANS }}>
-              <strong>Fonction :</strong> {""}
+              <strong>Fonction :</strong> <ManualLine />
             </div>
             <div style={{ fontSize: "11px", color: TEXT_PRIMARY, marginBottom: "16px", fontFamily: SANS }}>
-              <strong>Date :</strong> {""}
+              <strong>Date :</strong> <ManualLine width="170px" />
             </div>
             {/* Espace signature 50×20mm = 189×76px */}
             <div style={{ marginBottom: "8px" }}>

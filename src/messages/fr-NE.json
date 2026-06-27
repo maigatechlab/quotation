@@ -265,10 +265,49 @@
         "sharing": "Partage en cours…",
         "errorGeneric": "Erreur lors du partage. Veuillez réessayer.",
         "errorFallback": "Partage impossible — PDF téléchargé à la place.",
-        "guidanceMobile": "PDF enregistré — joignez-le depuis WhatsApp ou votre application email.",
-        "guidanceDesktop": "PDF téléchargé — joignez-le depuis votre client email."
+        "guidanceMobile": "PDF enregistré — joignez-le depuis WhatsApp / votre email.",
+        "guidanceDesktop": "PDF téléchargé dans vos téléchargements — joignez-le depuis votre client email."
       }
+    },
+    "accord": {
+      "openSheet": "Enregistrer l'accord",
+      "sheetTitle": "Enregistrement de l'accord client",
+      "nomLabel": "Nom et prénom du client",
+      "nomPlaceholder": "Ex. Amadou Maiga",
+      "fonctionLabel": "Fonction",
+      "fonctionPlaceholder": "Ex. Directeur général",
+      "dateLabel": "Date d'accord",
+      "scanLabel": "Scan de signature (optionnel)",
+      "scanHint": "JPG ou PNG, max 5 Mo",
+      "scanButton": "Choisir un fichier",
+      "submitButton": "Enregistrer l'accord",
+      "cancelButton": "Annuler",
+      "successToast": "Accord enregistré — Devis Accepté",
+      "errorNomRequired": "Le nom du client est requis.",
+      "errorDateFuture": "La date d'accord ne peut pas dépasser aujourd'hui + 7 jours.",
+      "errorScanUpload": "Erreur lors de l'envoi du scan. L'accord sera enregistré sans scan.",
+      "errorGeneric": "Erreur lors de l'enregistrement. Veuillez réessayer.",
+      "statusNotSent": "L'accord ne peut être enregistré que pour un devis au statut \"Envoyé\"."
     }
+  },
+  "routeTemplates": {
+    "pageTitle": "Modèles de routes",
+    "addButton": "Ajouter un modèle",
+    "editButton": "Modifier",
+    "deleteButton": "Supprimer",
+    "deleteConfirm": "Supprimer ce modèle de route ?",
+    "emptyState": "Aucun modèle de route. Créez-en un pour accélérer la saisie de vos devis.",
+    "proGate": "Fonctionnalité disponible en tier Pro. Contactez-nous pour upgrader.",
+    "formNom": "Nom du corridor",
+    "formOriginCountry": "Pays de départ",
+    "formOriginCity": "Ville de départ",
+    "formDestinationCountry": "Pays d'arrivée",
+    "formDestinationCity": "Ville d'arrivée",
+    "formDistanceKm": "Distance (km)",
+    "formTarifFcfa": "Tarif prédéfini (FCFA)",
+    "saveButton": "Enregistrer",
+    "cancelButton": "Annuler",
+    "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
   },
   "parametres": {
     "title": "Paramètres",

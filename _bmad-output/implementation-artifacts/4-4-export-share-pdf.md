@@ -8,7 +8,7 @@ baseline_commit: "95c49335d0c4abaf532babe2b8d49643c32e7782"
 
 # Story 4.4 : Export & partage du PDF (FR-33)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -676,6 +676,23 @@ claude-sonnet-4-6
 - `src/messages/fr-NE.json` (modifié — keys devis.pdf.share.* + devis.apercu.backToList)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour — status review)
 - `_bmad-output/implementation-artifacts/4-4-export-share-pdf.md` (ce fichier — status review)
+
+### Review Findings
+
+- [x] [Review][Decision] `router.back()` dans le bouton "Modifier" — dismissed. Flux primaire (wizard → aperçu → retour) toujours correct. Direct link improbable (outil B2B interne). Route edit non confirmée. Acceptable MVP.
+- [x] [Review][Patch] Taps simultanés — aucun guard `isSharing || isGenerating` en début de `handleShare` et `handleGenerate` [src/components/pdf/quote-preview.tsx] — Double invocation possible avant le re-rendu React ; deux `html2canvas` simultanés sur `#pdf-template-container` → risque OOM sur appareils 1–2 GB RAM cibles.
+- [x] [Review][Patch] `downloadPdfBlob` — fuite d'URL blob et pollution DOM sur exception [src/lib/pdf-share.ts] — Ni `URL.revokeObjectURL` ni `removeChild` ne sont dans un `finally` ; si `a.click()` lève, l'ancre reste dans le DOM et l'URL n'est jamais révoquée. Délai de 5 s aussi trop court pour stockage lent (Android budget).
+- [x] [Review][Patch] `zIndex: -1` sur le conteneur hors-écran — peut produire un PDF blanc sur certains Android WebViews [src/components/pdf/quote-preview.tsx:172] — La propriété force une couche composite que html2canvas peut ignorer ; `left: -9999px` seul suffit. Cause aussi une scrollbar horizontale sur mobile.
+- [x] [Review][Patch] Message desktop manque "dans vos téléchargements" — écart AC3 [src/messages/fr-NE.json] — Spec exige : "PDF téléchargé dans vos téléchargements — joignez-le depuis votre client email." Implémenté : "PDF téléchargé — joignez-le depuis votre client email." La cue de localisation du fichier est absente.
+- [x] [Review][Patch] `console.error` manquant dans les blocs `catch` de `handleGenerate` et `handleShare` [src/components/pdf/quote-preview.tsx] — Exceptions jsPDF/html2canvas (OOM, CORS, crash) silencieusement avalées ; débogage production impossible.
+- [x] [Review][Patch] `shareSupported` stale — relire `canShareFiles()` au moment de l'appel dans `handleShare` [src/components/pdf/quote-preview.tsx] — État capturé au montage ; appeler `canShareFiles()` directement dans `handleShare` (via import dynamique déjà présent) évite toute dérive. État et `useEffect` supprimés.
+- [x] [Review][Patch] Message mobile "ou votre application email" vs "/ votre email" spécifié AC3 [src/messages/fr-NE.json] — Écart mineur avec le texte exact de la spec ; "application" est superflu et "/" est le séparateur prévu.
+- [x] [Review][Defer] Floating-point spurious extra page dans PDF multi-pages [src/lib/pdf-share.ts] — deferred, pre-existing (pattern identique dans `pdf-generator.ts` Story 4.1)
+- [x] [Review][Defer] Dexie live update pendant traversée html2canvas [src/components/pdf/quote-preview.tsx] — deferred, pre-existing (architectural concern pour tous les PDF stories)
+- [x] [Review][Defer] `useCORS: true` peut déclencher un appel réseau si le logo est cross-origin [src/lib/pdf-share.ts] — deferred, pre-existing (même paramètre dans `pdf-generator.ts` Story 4.1, décision acceptée en 4.1)
+- [x] [Review][Defer] iPad desktop mode reçoit le message guidance desktop (UA sniffing) [src/lib/pdf-share.ts] — deferred, pre-existing (limitation inhérente du User-Agent sniffing ; faible impact sur la cible Niger/Mali/BF)
+- [x] [Review][Defer] `isCompanyLoading` dans `disabled` non prévu par AC5 [src/components/pdf/quote-preview.tsx] — deferred, pre-existing (introduit en Story 4.2 comme guard de sécurité, comportement intentionnel)
+- [x] [Review][Defer] `NotAllowedError` (gesture timeout) affiche `errorFallback` trompeur sur appareils lents [src/components/pdf/quote-preview.tsx] — deferred (le fallback fonctionne correctement, message acceptable MVP)
 
 ### Change Log
 

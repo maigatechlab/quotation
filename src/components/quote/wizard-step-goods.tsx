@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import {
   computeCamions,
@@ -45,6 +45,14 @@ export function WizardStepGoods({ userId }: WizardStepGoodsProps) {
   const [exchangeRate, setExchangeRate] = useState("1");
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [isPending, setIsPending] = useState(false);
+
+  // Seed unitPrice from Dexie quote if pre-filled by route template selection (step 2)
+  useEffect(() => {
+    if (!quoteId) return;
+    db.quotes.get(quoteId).then((q) => {
+      if (q?.unitPrice) setUnitPrice(String(q.unitPrice));
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Live-derived calculations — inline in render body, no useEffect needed
   const parsedTonnage = parseFloat(tonnage);

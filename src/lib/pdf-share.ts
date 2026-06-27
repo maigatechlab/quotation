@@ -73,14 +73,20 @@ export async function generatePdfBlob(containerId: string): Promise<Blob> {
  */
 export function downloadPdfBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a); // nécessaire sur Firefox
-  a.click();
-  document.body.removeChild(a);
-  // Libérer la mémoire après un court délai
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  try {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a); // nécessaire sur Firefox
+    try {
+      a.click();
+    } finally {
+      document.body.removeChild(a);
+    }
+  } finally {
+    // Délai 30 s — garantit que les stockages lents (eMMC Android budget) ont terminé
+    setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  }
 }
 
 /**

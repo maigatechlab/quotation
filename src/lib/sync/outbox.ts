@@ -2,15 +2,11 @@
 
 import { db } from "@/lib/local-db";
 import type { SyncOp, SyncOpEntity } from "@/lib/local-db";
+import { BACKGROUND_SYNC_TAG } from "@/lib/sync/constants";
 import type { PushResult } from "@/lib/sync/push";
 import type { EntityTable } from "dexie";
 
 export type SyncMutationResult = SyncOp;
-
-// Background Sync tag — must match the tag registered in sw.ts sync listener.
-// Using a single tag is idempotent: register() called multiple times with the
-// same tag results in at most one pending sync event (W3C Background Sync spec).
-const BACKGROUND_SYNC_TAG = "quotation-sync";
 
 function getEntityTable(
   entity: SyncOpEntity
@@ -28,6 +24,8 @@ function getEntityTable(
       return db.templates as unknown as EntityTable<Record<string, unknown>, string>;
     case "company":
       return db.company as unknown as EntityTable<Record<string, unknown>, string>;
+    case "routeTemplate":
+      return db.routeTemplates as unknown as EntityTable<Record<string, unknown>, string>;
   }
 }
 

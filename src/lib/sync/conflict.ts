@@ -21,6 +21,8 @@ function getEntityTable(
       return db.templates as unknown as EntityTable<Record<string, unknown>, string>;
     case "company":
       return db.company as unknown as EntityTable<Record<string, unknown>, string>;
+    case "routeTemplate":
+      return db.routeTemplates as unknown as EntityTable<Record<string, unknown>, string>;
   }
 }
 
