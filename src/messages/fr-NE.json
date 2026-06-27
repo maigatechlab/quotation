@@ -217,6 +217,17 @@
         "saving": "Enregistrement…",
         "errorNoQuote": "Devis introuvable. Recommencez depuis l'étape 1.",
         "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+      },
+      "conditions": {
+        "heading": "Conditions",
+        "label": "Conditions de paiement",
+        "placeholder": "Ex : Paiement à 30 jours fin de mois.",
+        "helpText": "Ces conditions s'afficheront sur le devis PDF. Laissez vide si non applicable.",
+        "finish": "Terminer et sauvegarder",
+        "finishing": "Sauvegarde…",
+        "successToast": "Devis sauvegardé",
+        "errorNoQuote": "Devis introuvable. Recommencez depuis l'étape 1.",
+        "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
       }
     },
     "apercu": {
@@ -311,6 +322,17 @@
   },
   "parametres": {
     "title": "Paramètres",
+    "conditionsPaiement": {
+      "heading": "Conditions de paiement",
+      "description": "Ces conditions seront pré-remplies sur chaque nouveau devis (modifiables au cas par cas).",
+      "label": "Conditions de paiement par défaut",
+      "placeholder": "Ex : Paiement à 30 jours fin de mois. Tout retard entraîne une pénalité de 1,5% par mois.",
+      "save": "Enregistrer les conditions",
+      "saving": "Enregistrement…",
+      "successToast": "Conditions de paiement mises à jour",
+      "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
+      "errorNotFound": "Impossible de charger les données société."
+    },
     "modeles": {
       "heading": "Modèles de prestations",
       "addTemplate": "Ajouter un modèle",

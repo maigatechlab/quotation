@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { useLiveCompany } from "@/hooks/use-live-company";
 import { useWizardStore } from "@/stores/wizard-store";
 import { WizardStepClient } from "./wizard-step-client";
+import { WizardStepConditions } from "./wizard-step-conditions";
 import { WizardStepGoods } from "./wizard-step-goods";
 import { WizardStepRoute } from "./wizard-step-route";
 import { WizardStepServices } from "./wizard-step-services";
@@ -15,44 +14,6 @@ const TOTAL_STEPS = 5;
 
 interface QuoteWizardProps {
   userId: string;
-}
-
-function WizardStep5Stub() {
-  const router = useRouter();
-  const { setStep, resetWizard } = useWizardStore();
-  const tW = useTranslations("devis.wizard");
-
-  function handleFinish() {
-    resetWizard();
-    router.push("/devis");
-  }
-
-  return (
-    <div className="space-y-6 px-5 pb-6">
-      <div className="rounded-xl border border-border bg-surface p-6 text-center">
-        <p className="text-sm text-text-secondary">
-          {tW("stubStep", { step: 5, label: "Conditions" })}
-        </p>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => setStep(4)}
-          className="h-11 flex-1 rounded-xl border border-border text-sm font-medium text-text-secondary hover:bg-surface"
-        >
-          {tW("previous")}
-        </button>
-        <button
-          type="button"
-          onClick={handleFinish}
-          className="h-11 flex-1 rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
-        >
-          {tW("finish")}
-        </button>
-      </div>
-    </div>
-  );
 }
 
 export function QuoteWizard({ userId }: QuoteWizardProps) {
@@ -138,7 +99,14 @@ export function QuoteWizard({ userId }: QuoteWizardProps) {
       {step === 2 && <WizardStepRoute userId={userId} />}
       {step === 3 && <WizardStepGoods userId={userId} />}
       {step === 4 && <WizardStepServices userId={userId} />}
-      {step === 5 && <WizardStep5Stub />}
+      {step === 5 && company !== undefined && company !== null && (
+        <WizardStepConditions userId={userId} company={company} />
+      )}
+      {step === 5 && (company === undefined || company === null) && (
+        <div className="px-5 py-4">
+          <div className="h-10 animate-pulse rounded-xl bg-border" />
+        </div>
+      )}
     </div>
   );
 }
