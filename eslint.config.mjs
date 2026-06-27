@@ -1,4 +1,4 @@
-﻿import nextConfig from "eslint-config-next/core-web-vitals";
+import nextConfig from "eslint-config-next/core-web-vitals";
 
 const config = [
   {
@@ -17,6 +17,7 @@ const config = [
       "_bmad-output/**",
       ".agent/**",
       ".claude/skills/**",
+      ".claude/worktrees/**",
     ],
   },
   ...nextConfig,

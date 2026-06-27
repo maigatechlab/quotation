@@ -22,7 +22,9 @@ export type Action =
   | "template.update"
   | "template.delete"
   | "user.read"
-  | "user.manage";
+  | "user.manage"
+  | "sync.push"
+  | "sync.pull";
 
 type Permission = boolean | "own";
 
@@ -50,6 +52,8 @@ const PERMISSION_MATRIX: Record<Role, Partial<Record<Action, Permission>>> = {
     "template.delete": true,
     "user.read": true,
     "user.manage": true,
+    "sync.push": true,
+    "sync.pull": true,
   },
   commercial: {
     "quote.create": true,
@@ -74,6 +78,8 @@ const PERMISSION_MATRIX: Record<Role, Partial<Record<Action, Permission>>> = {
     "template.delete": false,
     "user.read": false,
     "user.manage": false,
+    "sync.push": true,
+    "sync.pull": true,
   },
   operateur: {
     "quote.create": false,
@@ -98,6 +104,8 @@ const PERMISSION_MATRIX: Record<Role, Partial<Record<Action, Permission>>> = {
     "template.delete": false,
     "user.read": false,
     "user.manage": false,
+    "sync.push": true,
+    "sync.pull": true,
   },
 };
 

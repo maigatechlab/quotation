@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { BottomNav } from "@/components/nav/bottom-nav";
+import { BottomNavWrapper } from "@/components/nav/bottom-nav-wrapper";
 import { OfflineBanner } from "@/components/offline-banner";
+import { SyncIndicator } from "@/components/shared/sync-indicator";
 import { auth } from "@/lib/auth";
 
 export default async function AppLayout({
@@ -21,7 +22,10 @@ export default async function AppLayout({
       <main id="main-content" className="flex-1 pb-[74px]">
         {children}
       </main>
-      <BottomNav />
+      <div className="fixed bottom-[74px] right-2 z-30">
+        <SyncIndicator />
+      </div>
+      <BottomNavWrapper />
     </div>
   );
 }

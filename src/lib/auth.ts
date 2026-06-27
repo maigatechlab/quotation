@@ -18,8 +18,9 @@ const accountLockoutPlugin = {
         async handler(context: Record<string, unknown>) {
           const body = context["body"] as Record<string, unknown> | undefined
           const email = typeof body?.["email"] === "string" ? body["email"] : undefined
-          if (!email) return
+          if (!email) return {}
           await checkAccountLockout(email)
+          return {}
         },
       },
     ],
@@ -31,18 +32,13 @@ const accountLockoutPlugin = {
         async handler(context: Record<string, unknown>) {
           const body = context["body"] as Record<string, unknown> | undefined
           const email = typeof body?.["email"] === "string" ? body["email"] : undefined
-          if (!email) return
+          if (!email) return {}
 
-          const ctx = context["context"] as Record<string, unknown> | undefined
-          const returned = ctx?.["returned"]
-
-          // Only record when we can positively determine the outcome.
-          // Ambiguous shape (no statusCode) -> skip to avoid false resets.
-          if (returned === null || returned === undefined || typeof returned !== "object") return
-          const statusCode = (returned as Record<string, unknown>)["statusCode"]
-          if (typeof statusCode !== "number") return
-
-          await recordLoginAttempt(email, statusCode < 400)
+          const returnStatus = context["returnStatus"] as number | undefined
+          if (typeof returnStatus === "number") {
+            await recordLoginAttempt(email, returnStatus < 400)
+          }
+          return {}
         },
       },
     ],

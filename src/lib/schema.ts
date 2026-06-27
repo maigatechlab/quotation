@@ -48,6 +48,7 @@ export const user = pgTable(
     // Account lockout — Better Auth v1.6 has no built-in maxLoginAttempts
     loginAttempts: integer("login_attempts").notNull().default(0),
     lockedAt: timestamp("locked_at"),
+    companyId: uuid("company_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -232,6 +233,7 @@ export const template = pgTable(
     lines: jsonb("lines")
       .$type<{ designation: string; unitPrice: number; quantity: number }[]>()
       .default([]),
+    deletedAt: timestamp("deleted_at"),
     companyId: uuid("company_id"),
     pays: text("pays").default("NE"),
     revision: integer("revision").notNull().default(0),
@@ -328,6 +330,20 @@ export const quoteStatusLog = pgTable(
     index("idx_quote_status_log_quote_id").on(t.quoteId),
     index("idx_quote_status_log_changed_by").on(t.changedBy),
   ]
+);
+
+// Idempotency log for server-side sync ops
+export const syncOpLog = pgTable(
+  "sync_op_log",
+  {
+    opId: text("op_id").primaryKey(),
+    entity: text("entity").notNull(),
+    entityId: text("entity_id").notNull(),
+    type: text("type").notNull(),
+    result: text("result").notNull(), // "applied" | "conflict" | "noop"
+    processedAt: timestamp("processed_at").defaultNow().notNull(),
+  },
+  (t) => [index("idx_sync_op_log_entity").on(t.entity, t.entityId)]
 );
 
 // append-only — no revision, no updatedAt

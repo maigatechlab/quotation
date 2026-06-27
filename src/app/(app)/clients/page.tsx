@@ -1,13 +1,28 @@
-export default function ClientsPage() {
+import { redirect } from "next/navigation";
+import { ClientList } from "@/components/client/client-list";
+import { can } from "@/lib/permissions";
+import { getSessionWithRole } from "@/lib/session";
+
+export default async function ClientsPage() {
+  const result = await getSessionWithRole();
+  if (!result) redirect("/login");
+
+  const { session, role } = result;
+  const canCreate = can(role, "client.create");
+  const canEdit = can(role, "client.update");
+  const canDelete = can(role, "client.delete");
+
+  const userId = (session.user as Record<string, unknown>).id as string;
+
   return (
-    <div className="flex flex-col px-5 pt-8">
+    <div className="flex flex-col px-5 pt-8 pb-10">
       <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Clients</p>
-      <h1 className="mt-1 font-serif text-2xl font-semibold text-text-primary">
-        Mes clients
-      </h1>
-      <p className="mt-6 rounded-xl border border-border bg-surface p-4 text-sm text-text-secondary">
-        La liste des clients sera disponible prochainement.
-      </p>
+      <ClientList
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        userId={userId}
+      />
     </div>
   );
 }
