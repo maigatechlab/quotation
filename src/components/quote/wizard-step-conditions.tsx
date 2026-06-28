@@ -99,8 +99,7 @@ export function WizardStepConditions({ userId, company }: WizardStepConditionsPr
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quoteId]);
+  }, [quoteId, company.conditionsPaiementDefaut]);
 
   // --- Helpers clauses -----------------------------------------------------
 
@@ -268,8 +267,14 @@ export function WizardStepConditions({ userId, company }: WizardStepConditionsPr
       // 2. Bulk insert des QuoteClauseLocal — snapshot figé au moment de l'enreg.
       // exactOptionalPropertyTypes : les champs optionnels ne sont jamais passés
       // explicitement à `undefined` ; on les ajoute conditionnellement.
-      if (clauseOrder.length > 0) {
-        const records: QuoteClauseLocal[] = clauseOrder.map((key, idx) => {
+      // Always clear existing snapshots first to prevent accumulation on re-save.
+      await db.quoteClauses.where("quoteId").equals(quoteId).delete();
+      // Exclude SPECIFIC_CLAUSE_KEY when the specific clause textarea was left empty.
+      const effectiveOrder = clauseOrder.filter(
+        (key) => key !== SPECIFIC_CLAUSE_KEY || specificClause.trim() !== "",
+      );
+      if (effectiveOrder.length > 0) {
+        const records: QuoteClauseLocal[] = effectiveOrder.map((key, idx) => {
           const base = {
             id: crypto.randomUUID(),
             quoteId,
@@ -313,6 +318,7 @@ export function WizardStepConditions({ userId, company }: WizardStepConditionsPr
         });
         await db.quoteClauses.bulkPut(records);
       }
+
 
       // AuditMirror AFTER applyLocalMutation (convention établie Story 3.5).
       await db.auditMirror.add({
@@ -392,7 +398,7 @@ export function WizardStepConditions({ userId, company }: WizardStepConditionsPr
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                   {items.map((clause) => {
                     const isSelected = selectedClauseIds.has(clause.id);
-                    const excerpt = clause.contenu.slice(0, 80);
+                    const excerpt = clause.contenu.length > 80 ? `${clause.contenu.slice(0, 80)}…` : clause.contenu;
                     return (
                       <button
                         key={clause.id}

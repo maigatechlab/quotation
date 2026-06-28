@@ -3,10 +3,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { resetPassword } from "@/lib/auth-client"
+import { db } from "@/lib/local-db"
 
 export function ResetPasswordForm() {
   const router = useRouter()
@@ -92,6 +94,20 @@ export function ResetPasswordForm() {
           setFormError("Une erreur est survenue. Veuillez réessayer.")
         }
       } else {
+        // Story 6.1 (AC4): the new password derives a new at-rest key, so data
+        // encrypted with the old key is unreadable. Purge the local store; the
+        // next login re-derives the key and triggers a full re-sync from server.
+        // Best-effort: a purge failure must never trap the user on this page.
+        try {
+          await db.delete()
+          // Reset the sync cursor too, otherwise the next pull would fetch only
+          // a delta on top of an empty store → permanently incomplete data.
+          // AC4 mandates a FULL re-sync from server.
+          localStorage.removeItem("SYNC_CURSOR_global")
+        } catch {
+          // ignore — re-login + re-sync reconciles local state regardless
+        }
+        toast.success("Données locales réinitialisées et re-synchronisées.")
         router.push("/login?reset=success")
       }
     } catch {

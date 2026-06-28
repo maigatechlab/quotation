@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { markOnline } from "@/hooks/use-offline-session"
 import { getSession, signIn, signOut } from "@/lib/auth-client"
+import { useCrypto } from "@/lib/crypto/crypto-context"
 import { type Role } from "@/lib/permissions"
 import { cn } from "@/lib/utils"
 
@@ -26,6 +27,7 @@ const ROLE_LABELS: Record<Role, string> = {
 
 export function LoginForm() {
   const router = useRouter()
+  const { initCrypto, clearCrypto } = useCrypto()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [selectedRole, setSelectedRole] = useState<Role>("commercial")
@@ -38,12 +40,18 @@ export function LoginForm() {
     setIsPending(true)
 
     try {
+      // Derive the at-rest encryption key from the password BEFORE auth — the
+      // plaintext password is only available here in the form (Better Auth never
+      // returns it). Story 6.1 (AC3).
+      await initCrypto(password)
+
       const result = await signIn.email({
         email,
         password,
       })
 
       if (result.error) {
+        clearCrypto() // auth failed — discard the derived key
         const code = result.error.code ?? ""
         if (code === "ACCOUNT_LOCKED" || code === "TOO_MANY_REQUESTS") {
           setError(
@@ -58,6 +66,7 @@ export function LoginForm() {
 
         if (actualRole !== selectedRole) {
           await signOut({ fetchOptions: { onSuccess: () => {} } });
+          clearCrypto();
           setError(`Rôle incorrect. Votre rôle est ${ROLE_LABELS[actualRole]}.`);
           setIsPending(false);
           return;
@@ -68,6 +77,7 @@ export function LoginForm() {
         router.refresh();
       }
     } catch {
+      clearCrypto()
       setError("Une erreur est survenue. Veuillez réessayer.")
     } finally {
       setIsPending(false)

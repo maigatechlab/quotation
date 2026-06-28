@@ -153,6 +153,7 @@ export function ClientAgreementSheet({
         toStatus: "accepted",
         changedBy: userId,
         changedAt: now,
+        note: null,
       });
 
       void triggerSync();

@@ -5,6 +5,7 @@ import { SessionGuard } from "@/components/auth/session-guard";
 import { RegisterSW } from "@/components/pwa/register-sw";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { CryptoProvider } from "@/lib/crypto/crypto-context";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -88,7 +89,7 @@ export default async function RootLayout({
           >
             <RegisterSW />
             <SessionGuard />
-            {children}
+            <CryptoProvider>{children}</CryptoProvider>
             <Toaster richColors position="top-right" />
           </ThemeProvider>
         </NextIntlClientProvider>

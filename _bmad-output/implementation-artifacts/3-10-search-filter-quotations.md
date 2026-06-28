@@ -2,13 +2,13 @@
 story_key: 3-10-search-filter-quotations
 epic_num: 3
 story_num: 10
-status: ready-for-dev
-baseline_commit: ""
+status: done
+baseline_commit: "928801976efab1a6dc09efbd6128036b6ef21af3"
 ---
 
 # Story 3.10 : Recherche & filtrage des devis (FR-16)
 
-**Statut :** ready-for-dev
+**Statut :** done
 
 ## Story
 
@@ -133,18 +133,18 @@ AND    pnpm build passe sans erreur
 
 ### T1 — Créer `src/components/quote/quote-list-item.tsx`
 
-- [ ] `"use client"` première ligne
-- [ ] Props : `{ quote: QuoteLocal; onClick: () => void }`
-- [ ] Importer `StatusBadge` depuis `@/components/quote/status-badge` (créé Story 3.9)
-- [ ] Afficher : numéro (Spectral, tabular-nums), client (snapshot.companyName ?? "—"), date (Intl.DateTimeFormat fr-FR), statut badge, montant FCFA (formatagelocalisé via money.ts ou Intl)
-- [ ] Cible tactile ≥44px de hauteur (UX-DR22)
-- [ ] Élément cliquable (`button` ou `div role="button"`) déclenchant `onClick`
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `"use client"` première ligne
+- [x] Props : `{ quote: QuoteLocal; onClick: () => void }`
+- [x] Importer `StatusBadge` depuis `@/components/quote/status-badge` (créé Story 3.9)
+- [x] Afficher : numéro (Spectral, tabular-nums), client (snapshot.companyName ?? "—"), date (Intl.DateTimeFormat fr-FR), statut badge, montant FCFA (formatagelocalisé via money.ts ou Intl)
+- [x] Cible tactile ≥44px de hauteur (UX-DR22)
+- [x] Élément cliquable (`button` ou `div role="button"`) déclenchant `onClick`
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T2 — Créer `src/components/quote/quote-list.tsx`
 
-- [ ] `"use client"` première ligne
-- [ ] Imports :
+- [x] `"use client"` première ligne
+- [x] Imports :
   ```ts
   import { useState, useMemo } from "react";
   import { useRouter } from "next/navigation";
@@ -153,8 +153,8 @@ AND    pnpm build passe sans erreur
   import type { QuoteLocal } from "@/lib/local-db";
   import { QuoteListItem } from "./quote-list-item";
   ```
-- [ ] Props : `{ userId: string }`
-- [ ] État local :
+- [x] Props : `{ userId: string }`
+- [x] État local :
   ```ts
   const { quotes } = useLiveQuotes();
   const [search, setSearch] = useState("");
@@ -163,112 +163,49 @@ AND    pnpm build passe sans erreur
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 25;
   ```
-- [ ] `useMemo` pour filtrer + paginer :
-  ```ts
-  const filtered = useMemo(() => {
-    const term = search.toLowerCase().trim();
-    const now = Date.now();
-    const periodMs = periodFilter === "all" ? null : periodFilter * 24 * 60 * 60 * 1000;
-
-    return quotes.filter(q => {
-      // Texte
-      if (term) {
-        const clientName = (q.clientSnapshot as Record<string, unknown>)?.companyName ?? "";
-        const inNumber = q.number.toLowerCase().includes(term);
-        const inClient = String(clientName).toLowerCase().includes(term);
-        const inRef = (q.reference ?? "").toLowerCase().includes(term);
-        const inObjet = (q.objet ?? "").toLowerCase().includes(term);
-        if (!inNumber && !inClient && !inRef && !inObjet) return false;
-      }
-      // Statut
-      if (statusFilter !== "all" && q.status !== statusFilter) return false;
-      // Période
-      if (periodMs) {
-        const created = new Date(q.createdAt).getTime();
-        if (now - created > periodMs) return false;
-      }
-      return true;
-    });
-  }, [quotes, search, statusFilter, periodFilter]);
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  ```
-- [ ] Réinitialiser `page` à 1 quand `search` / `statusFilter` / `periodFilter` change (useEffect)
-- [ ] Rendu : champ recherche + chips statut + chips période + liste QuoteListItem + pagination + états vides
-- [ ] Chips statut (UX-DR9, single-select) : "Tous", "Brouillon", "Validé", "Envoyé", "Accepté", "Expiré", "Annulé"
-- [ ] Chips période : "7j", "30j", "90j", "Tout"
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `useMemo` pour filtrer + paginer (avec eslint-disable purity pour Date.now)
+- [x] Réinitialiser `page` à 1 quand `search` / `statusFilter` / `periodFilter` change (pattern "derived state", pas useEffect)
+- [x] Rendu : champ recherche + chips statut + chips période + liste QuoteListItem + pagination + états vides
+- [x] Chips statut (UX-DR9, single-select) : "Tous", "Brouillon", "Validé", "Envoyé", "Accepté", "Expiré", "Annulé"
+- [x] Chips période : "7j", "30j", "90j", "Tout"
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T3 — Mettre à jour `src/app/(app)/devis/page.tsx`
 
-- [ ] Transformer en Server Component avec auth :
-  ```ts
-  import { redirect } from "next/navigation";
-  import { getSessionWithRole } from "@/lib/session";
-  import { QuoteList } from "@/components/quote/quote-list";
-
-  export default async function DevisPage() {
-    const result = await getSessionWithRole();
-    if (!result) redirect("/login");
-    const { session } = result;
-    const userId = (session.user as Record<string, unknown>).id as string;
-
-    return (
-      <div className="flex flex-col px-5 pt-8 pb-24">
-        <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Devis</p>
-        <h1 className="mt-1 font-serif text-2xl font-semibold text-text-primary">Mes devis</h1>
-        <div className="mt-6">
-          <QuoteList userId={userId} />
-        </div>
-      </div>
-    );
-  }
-  ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] Transformer en Server Component avec auth
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T4 — Mettre à jour `src/messages/fr-NE.json`
 
-- [ ] Ajouter section `devis.list` :
-  ```json
-  "list": {
-    "empty": "Aucun devis. Créez votre premier devis.",
-    "emptyFiltered": "Aucun devis ne correspond à votre recherche.",
-    "clearFilters": "Effacer les filtres",
-    "createFirst": "Créer un devis",
-    "searchPlaceholder": "Numéro, client, référence…",
-    "filterAll": "Tous",
-    "period7": "7 jours",
-    "period30": "30 jours",
-    "period90": "90 jours",
-    "periodAll": "Tout",
-    "pagination": "Page {page} sur {total}",
-    "paginationCount": "{count, plural, one {# devis} other {# devis}}",
-    "prevPage": "Page précédente",
-    "nextPage": "Page suivante",
-    "amount": "{amount} FCFA",
-    "noClient": "Client non assigné"
-  }
-  ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] Ajouter section `devis.list` (16 clés)
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T5 — Vérification finale (AC9)
 
-- [ ] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
-- [ ] `pnpm build` : passe sans erreur
-- [ ] /devis affiche la liste des devis (remplacement du placeholder) ✓
-- [ ] Recherche texte : filtrage live sur numéro, client, référence ✓
-- [ ] Filtre statut : single-select chips ✓
-- [ ] Filtre période : 7j/30j/90j/Tout ✓
-- [ ] Filtres combinables ✓
-- [ ] Pagination : 25 par page, navigation ✓
-- [ ] Tap sur un devis → /devis/[id] ✓
-- [ ] État vide (sans devis) : CTA créer ✓
-- [ ] État vide (filtres) : bouton effacer filtres ✓
-- [ ] Fonctionnel offline ✓
+- [x] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓ (0 erreurs, 269 tests)
+- [x] `pnpm build` : passe sans erreur
+- [x] /devis affiche la liste des devis (remplacement du placeholder) ✓
+- [x] Recherche texte : filtrage live sur numéro, client, référence ✓
+- [x] Filtre statut : single-select chips ✓
+- [x] Filtre période : 7j/30j/90j/Tout ✓
+- [x] Filtres combinables ✓
+- [x] Pagination : 25 par page, navigation ✓
+- [x] Tap sur un devis → /devis/[id] ✓
+- [x] État vide (sans devis) : CTA créer ✓
+- [x] État vide (filtres) : bouton effacer filtres ✓
+- [x] Fonctionnel offline ✓
 
 ---
 
+### Review Findings
+
+- [x] [Review][Patch] `useLiveQuotes` sorts on non-indexed Dexie field `createdAt` - `db.quotes.orderBy("createdAt").reverse().toArray()` can fail because the `quotes` store does not index `createdAt`; the error is swallowed and `/devis` can show the empty state even when local quotes exist. [src/hooks/use-live-quotes.ts:12]
+- [x] [Review][Patch] Period filtering uses `createdAt` instead of `dateDevis` - AC4 requires filtering on `dateDevis`, but `QuoteList` computes the period with `new Date(q.createdAt)`, so quotes can be included/excluded incorrectly when business date differs from creation date. [src/components/quote/quote-list.tsx:77]
+- [x] [Review][Patch] `userId` is ignored by the quote list - `DevisPage` passes the authenticated user, but `QuoteList({ userId: _userId })` calls `useLiveQuotes()` without owner filtering; on shared devices or restored offline data, "Mes devis" can show another local user's quotes. [src/components/quote/quote-list.tsx:38]
+- [x] [Review][Patch] Stored page can remain out of range after a live update - when `filtered.length` shrinks via liveQuery without a filter change, `safePage` is clamped but state `page` remains too high; "Page precedente" can appear to do nothing for several clicks. [src/components/quote/quote-list.tsx:85]
+- [x] [Review][Patch] Pagination counter does not satisfy AC6 - AC6 requires `{total} devis - page {n}/{total_pages}` visible; the render hides page info when there is only one page and the translation says `Page {page} sur {total}`. [src/components/quote/quote-list.tsx:201]
+- [x] [Review][Patch] Filter labels bypass the added i18n keys - `filterAll`, `period7`, `period30`, `period90`, `periodAll` are added in `fr-NE.json`, but `QuoteList` uses hardcoded strings (`"Tous"`, `"7 j"`, `"Tout"`), making those keys dead and preventing centralized copy changes. [src/components/quote/quote-list.tsx:16]
+- [x] [Review][Defer] `StatusBadge` crashes on an unknown/future status [src/components/quote/status-badge.tsx:42] - deferred, pre-existing
 ## Dev Notes
 
 ### CRITIQUE — filtrage côté client Dexie (pas d'API serveur)
@@ -414,20 +351,37 @@ pnpm build   # passe sans erreur
 
 ### Agent Model Used
 
-_à remplir_
+claude-sonnet-4-6
 
 ### Debug Log References
 
-_à remplir_
+- Lint error `react-hooks/set-state-in-effect` → résolu via pattern "derived state" React (setState en render, pas en effect)
+- Lint error `react-hooks/purity` (Date.now) → supprimé avec `eslint-disable-next-line react-hooks/purity` + commentaire explicatif
+- Lint warning `aria-pressed` sur `role="tab"` → changé en `role="group"` + `aria-pressed` sur boutons individuels
 
 ### Completion Notes List
 
-_à remplir_
+- Créé `QuoteListItem` : button tactile (min-h-44px), numéro Spectral tabular-nums, client snapshot, date fr-FR, StatusBadge, montant FCFA via Intl
+- Créé `QuoteList` : recherche live, chips statut (7 valeurs), chips période (4 valeurs), filtres combinables, pagination 25/page, états vides, FAB amber fixe, tous offline (Dexie liveQuery)
+- Mis à jour `devis/page.tsx` : Server Component avec auth guard, passe userId à QuoteList
+- Ajouté 16 clés `devis.list` dans fr-NE.json
+- `pnpm check` : 0 erreur, 269 tests ✓ ; `pnpm build` : ✓
 
+### Review Resolution Notes
+
+- 2026-06-28 : Code review patches applied - fixed Dexie quote loading sort, owner filtering, dateDevis period filtering, bounded pagination, AC6 counter display, and i18n filter labels. `pnpm check` passed (0 errors, 269 tests); `pnpm build` passed.
 ### File List
 
-_à remplir_
+- `src/components/quote/quote-list-item.tsx` — CRÉÉ
+- `src/components/quote/quote-list.tsx` — CRÉÉ
+- `src/app/(app)/devis/page.tsx` — MODIFIÉ
+- `src/messages/fr-NE.json` — MODIFIÉ
 
 ### Change Log
+- 2026-06-28 : Code review patches applied - fixed Dexie quote loading sort, owner filtering, dateDevis period filtering, bounded pagination, AC6 counter display, and i18n filter labels. `pnpm check` passed (0 errors, 269 tests); `pnpm build` passed.
+- 2026-06-27 : Implémentation Story 3-10 — recherche & filtrage des devis (FR-16). Composants QuoteListItem + QuoteList créés, page /devis remplacée, clés i18n ajoutées.
 
-_à remplir_
+### Review Findings (retroactively discovered during 3-11 code review — 2026-06-27)
+
+- [x] [Review][Patch] `QuoteListItem` displays `quote.createdAt` as date while period filter in `QuoteList` uses `dateDevis ?? createdAt` — user sees card date that doesn't explain why quote appears/disappears in period filter. [`src/components/quote/quote-list-item.tsx:44`] → Corrigé : `dateDevis ?? createdAt`.
+- [x] [Review][Defer] `Date.now()` inside `useMemo` (quote-list.tsx:52) — non-deterministic but negligible staleness for date filter; eslint-disable documented.

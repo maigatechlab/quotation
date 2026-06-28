@@ -38,6 +38,7 @@ export function ClauseManager({ userId }: ClauseManagerProps) {
   const [categorie, setCategorie] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPending, setIsPending] = useState(false);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
 
   function openCreate() {
     setTitre("");
@@ -134,13 +135,19 @@ export function ClauseManager({ userId }: ClauseManagerProps) {
           },
           dbClause.revision,
           async () => {
-            await db.clauses.put({
+            const putRecord: ClauseLocal = {
               ...dbClause,
               titre: trimmedTitre,
               contenu: trimmedContenu,
-              ...(trimmedCategorie ? { categorie: trimmedCategorie } : {}),
               updatedAt: now,
-            });
+              revision: dbClause.revision + 1,
+            };
+            if (trimmedCategorie) {
+              putRecord.categorie = trimmedCategorie;
+            } else {
+              delete putRecord.categorie;
+            }
+            await db.clauses.put(putRecord);
           },
           userId,
         );
@@ -265,14 +272,38 @@ export function ClauseManager({ userId }: ClauseManagerProps) {
                         >
                           {t("edit")}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(clause)}
-                          disabled={isPending}
-                          className="h-8 rounded-lg px-3 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
-                        >
-                          {t("delete")}
-                        </button>
+                        {confirmingDeleteId === clause.id ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmingDeleteId(null)}
+                              disabled={isPending}
+                              className="h-8 rounded-lg border border-border px-3 text-xs font-medium text-text-secondary hover:bg-surface-alt disabled:opacity-60"
+                            >
+                              {t("cancel")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void handleDelete(clause);
+                                setConfirmingDeleteId(null);
+                              }}
+                              disabled={isPending}
+                              className="h-8 rounded-lg px-3 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+                            >
+                              {t("delete")}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingDeleteId(clause.id)}
+                            disabled={isPending}
+                            className="h-8 rounded-lg px-3 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-60"
+                          >
+                            {t("delete")}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
