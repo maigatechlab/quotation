@@ -53,7 +53,11 @@
 # story 3-6 review 2026-06-27
 
 generated: 2026-06-21
-last_updated: 2026-06-27
+last_updated: 2026-06-28
+# story 6-2 done 2026-06-28 (code review opus-4-8: 8 patches + D1 appliqués, 334/334 tests)
+# story 6-2 back to in-progress 2026-06-28 (code review: 1 decision_needed, 8 patch)
+# story 6-2 in-progress 2026-06-28
+# story 6-2 review 2026-06-28
 # story 6-1 in-progress 2026-06-27
 # story 6-1 review 2026-06-27
 # story 6-1 done 2026-06-27
@@ -162,7 +166,7 @@ development_status:
   # Epic 6: Durcissement v1 [MVP-1]
   epic-6: in-progress
   6-1-indexeddb-encryption-at-rest: done
-  6-2-tier-quota-enforcement: ready-for-dev
+  6-2-tier-quota-enforcement: done
   6-3-immutable-audit-trail-export: ready-for-dev
   6-4-background-sync-api: done
   6-5-route-corridor-templates-crud: done

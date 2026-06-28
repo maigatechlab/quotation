@@ -29,6 +29,22 @@ import { db } from "@/lib/db";
 const CID_A = "cid-aaaaaaaa-0000-0000-0000-000000000000";
 const CID_B = "cid-bbbbbbbb-0000-0000-0000-000000000000";
 
+// Minimal "ok" subscription row returned by getOrCreateSubscription in applyOp
+const MOCK_SUB = {
+  id: "sub-1",
+  companyId: CID_A,
+  tier: "starter",
+  quotaStatus: "ok",
+  quotaUsedQuotes: 0,
+  quotaUsedUsers: 0,
+  quotaResetAt: new Date(Date.now() + 30 * 86_400_000),
+  graceExpiresAt: null,
+  exceededAt: null,
+  notified80pct: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 function mockSession(role = "admin", companyId: string | null = CID_A) {
   vi.mocked(auth.api.getSession).mockResolvedValue({
     user: { id: "uid-1", role, companyId } as never,
@@ -48,9 +64,10 @@ function mockSelectOnce(rows: unknown[]) {
 // Universal insert mock — handles both .values() await and .values().onConflictDoUpdate() await
 function mockAllInserts() {
   const onConflictDoUpdate = vi.fn().mockResolvedValue([]);
+  const onConflictDoNothing = vi.fn().mockResolvedValue(undefined);
   vi.mocked(db.insert).mockImplementation(() => ({
     values: vi.fn().mockImplementation(() =>
-      Object.assign(Promise.resolve([]), { onConflictDoUpdate })
+      Object.assign(Promise.resolve([]), { onConflictDoUpdate, onConflictDoNothing })
     ),
   } as never));
 }
@@ -163,7 +180,8 @@ describe("POST /api/v1/sync/push", () => {
     mockSession("admin", CID_A);
     mockSelectOnce([]); // idempotency → not seen
     mockSelectOnce([]); // entity doesn't exist yet
-    mockAllInserts();
+    mockAllInserts(); // handles getOrCreateSubscription insert + later inserts
+    mockSelectOnce([MOCK_SUB]); // getOrCreateSubscription → ok, no readonly block
 
     const res = await POST(makeReq());
     expect(res.status).toBe(200);
@@ -205,6 +223,8 @@ describe("POST /api/v1/sync/push", () => {
     const deleteOp = { ...BASE_OP, type: "delete", baseRevision: 1 };
     mockSelectOnce([]); // idempotency → op not seen
     mockSelectOnce([{ id: BASE_OP.entityId, companyId: CID_A, ownerId: "uid-1", revision: 1 }]); // fetchCurrentEntity
+    mockAllInserts(); // getOrCreateSubscription insert
+    mockSelectOnce([MOCK_SUB]); // getOrCreateSubscription → ok, no readonly block
     mockSelectOnce([{ id: "quote-1", clientId: BASE_OP.entityId }]); // linked quote exists
     const res = await POST(makeReq([deleteOp]));
     expect(res.status).toBe(422);
@@ -218,9 +238,10 @@ describe("POST /api/v1/sync/push", () => {
     const deleteOp = { ...BASE_OP, type: "delete", baseRevision: 1 };
     mockSelectOnce([]); // idempotency → op not seen
     mockSelectOnce([{ id: BASE_OP.entityId, companyId: CID_A, ownerId: "uid-1", revision: 1 }]); // fetchCurrentEntity
+    mockAllInserts(); // getOrCreateSubscription insert + syncOpLog insert
+    mockSelectOnce([MOCK_SUB]); // getOrCreateSubscription → ok, no readonly block
     mockSelectOnce([]); // no linked quotes
     mockUpdateOnce(); // soft delete update
-    mockAllInserts(); // syncOpLog insert
     const res = await POST(makeReq([deleteOp]));
     expect(res.status).toBe(200);
     const body = await res.json() as { results: Array<{ status: string }> };

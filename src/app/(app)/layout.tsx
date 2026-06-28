@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { BottomNavWrapper } from "@/components/nav/bottom-nav-wrapper";
 import { OfflineBanner } from "@/components/offline-banner";
+import { QuotaBanner } from "@/components/shared/quota-banner";
 import { SyncIndicator } from "@/components/shared/sync-indicator";
 import { auth } from "@/lib/auth";
 
@@ -19,6 +20,7 @@ export default async function AppLayout({
   return (
     <div className="flex flex-col min-h-dvh">
       <OfflineBanner />
+      <QuotaBanner />
       <main id="main-content" className="flex-1 pb-[74px]">
         {children}
       </main>

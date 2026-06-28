@@ -392,6 +392,15 @@
     "cancelButton": "Annuler",
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
   },
+  "quota": {
+    "warning": "Vous avez utilisé {used}/{limit} devis ce mois",
+    "upgrade": "Passer à Pro",
+    "exceeded": "Quota dépassé — Mode lecture seule dans {days} jours",
+    "readonly": "Mode lecture seule actif — Quota dépassé",
+    "upgradeNow": "Mettre à niveau maintenant",
+    "errorQuotaExceeded": "Quota atteint. Mettez votre compte à niveau pour continuer.",
+    "errorReadonly": "Compte en mode lecture seule. Contactez l'administrateur."
+  },
   "parametres": {
     "title": "Paramètres",
     "conditionsPaiement": {
