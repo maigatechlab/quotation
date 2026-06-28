@@ -1,14 +1,17 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { apiError, HTTP_STATUS } from "@/lib/api/envelope";
 import { createAuditEvent, emitAuditEvent } from "@/lib/audit";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { can, PermissionError, requirePermission, type Action, type Role } from "@/lib/permissions";
+import { checkQuota, getOrCreateSubscription, incrementQuotaUsed } from "@/lib/quota/quota-check";
+import { notifyQuota80Percent } from "@/lib/quota/quota-notify";
 import {
   client as clientTable,
+  companySubscription,
   quote as quoteTable,
   quoteLine as quoteLineTable,
   clause as clauseTable,
@@ -566,7 +569,69 @@ async function applyOp(
 
   const newRevision = serverRevision + 1;
 
+  // Block all mutations in readonly mode; transition exceeded→readonly when grace expires (P1/AC5)
+  const quotaSub = await getOrCreateSubscription(userCompanyId, db);
+  const quotaNow = new Date();
+  const graceExpired =
+    quotaSub.quotaStatus === "exceeded" &&
+    quotaSub.graceExpiresAt !== null &&
+    quotaSub.graceExpiresAt < quotaNow;
+  if (graceExpired) {
+    await db
+      .update(companySubscription)
+      .set({ quotaStatus: "readonly", updatedAt: quotaNow })
+      .where(
+        and(
+          eq(companySubscription.companyId, userCompanyId),
+          eq(companySubscription.quotaStatus, "exceeded")
+        )
+      );
+  }
+  if (quotaSub.quotaStatus === "readonly" || graceExpired) {
+    await db.insert(syncOpLog).values({
+      opId: op.opId,
+      entity: op.entity,
+      entityId: op.entityId,
+      type: op.type,
+      result: "conflict",
+    });
+    return { opId: op.opId, status: "conflict", entity: { error: "READONLY_MODE" } };
+  }
+
+  // Quota check for quote.create (new entity only, not updates)
+  let quotaWarn80pct = false;
+  let quotaUsed = 0;
+  let quotaLimit: number | null = null;
+  if (op.entity === "quote" && op.type === "create" && currentEntity === null) {
+    const quotaResult = await checkQuota(userCompanyId, "quote.create", db);
+    if (!quotaResult.allowed) {
+      await db.insert(syncOpLog).values({
+        opId: op.opId,
+        entity: op.entity,
+        entityId: op.entityId,
+        type: op.type,
+        result: "conflict",
+      });
+      return {
+        opId: op.opId,
+        status: "conflict",
+        entity: { error: quotaResult.reason },
+      };
+    }
+    quotaWarn80pct = quotaResult.warn80pct;
+    quotaUsed = quotaResult.used;
+    quotaLimit = quotaResult.limit;
+  }
+
   await persistEntityMutation(op, newRevision, userCompanyId, userId, currentEntity);
+
+  // Increment quota AFTER successful mutation
+  if (op.entity === "quote" && op.type === "create" && currentEntity === null) {
+    await incrementQuotaUsed(userCompanyId, "quote.create", db);
+    if (quotaWarn80pct && quotaLimit !== null) {
+      void notifyQuota80Percent(userCompanyId, quotaUsed + 1, quotaLimit, db);
+    }
+  }
 
   await db.insert(syncOpLog).values({
     opId: op.opId,

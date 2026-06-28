@@ -11,6 +11,13 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
+// ---------------------------------------------------------------------------
+// Subscription / Quota enums
+// ---------------------------------------------------------------------------
+
+export const tierEnum = pgEnum("tier", ["starter", "pro", "entreprise"]);
+export const quotaStatusEnum = pgEnum("quota_status", ["ok", "warning", "exceeded", "readonly"]);
+
 // IMPORTANT! ID fields should ALWAYS use UUID types, EXCEPT the BetterAuth tables.
 
 // ---------------------------------------------------------------------------
@@ -376,6 +383,32 @@ export const syncOpLog = pgTable(
     processedAt: timestamp("processed_at").defaultNow().notNull(),
   },
   (t) => [index("idx_sync_op_log_entity").on(t.entity, t.entityId)]
+);
+
+// ---------------------------------------------------------------------------
+// Subscription table — 1 per company, tracks tier + quota usage
+// ---------------------------------------------------------------------------
+
+export const companySubscription = pgTable(
+  "company_subscription",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    companyId: uuid("company_id").notNull().unique(),
+    tier: tierEnum("tier").notNull().default("starter"),
+    quotaStatus: quotaStatusEnum("quota_status").notNull().default("ok"),
+    quotaUsedQuotes: integer("quota_used_quotes").notNull().default(0),
+    quotaUsedUsers: integer("quota_used_users").notNull().default(0),
+    quotaResetAt: timestamp("quota_reset_at").notNull(),
+    graceExpiresAt: timestamp("grace_expires_at"),
+    exceededAt: timestamp("exceeded_at"),
+    notified80pct: boolean("notified_80pct").notNull().default(false),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (t) => [index("idx_company_sub_company_id").on(t.companyId)]
 );
 
 // append-only — no revision, no updatedAt

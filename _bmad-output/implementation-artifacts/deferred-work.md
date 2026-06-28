@@ -1,5 +1,13 @@
 # Deferred Work
 
+## Deferred from: code review de 6-2-tier-quota-enforcement (2026-06-28)
+
+- **Gating route templates pro/entreprise absent** [`src/lib/quota/quota-config.ts`] — `routeTemplatesAllowed` défini dans la matrice mais jamais consommé. Story 6.5 scope par définition spec.
+- **Transition exceeded→readonly lazy** [`src/lib/quota/quota-check.ts:86`] — Transition uniquement au prochain appel `checkQuota` (pas de background job). Acceptable MVP ; évaluer cron ou lazy-on-access pour v2.
+- **Notification 80% re-émise si sendEmail échoue** [`src/lib/quota/quota-notify.ts`] — `notified80pct` non settée si l'email throw ; prochaine création retente. Best-effort intentionnel, acceptable.
+- **QuotaBanner utilise `<a>` au lieu de Next.js `<Link>`** [`src/components/shared/quota-banner.tsx`] — Full reload sur navigation vers /parametres. Uniformiser lors d'une passe transversale navigation.
+- **Race sur double reset mensuel dans `maybeResetQuota`** [`src/lib/quota/quota-check.ts:54`] — Deux requêtes concurrentes au rollover mensuel peuvent zérer le compteur deux fois. Rare ; fix : ajouter `WHERE quota_reset_at <= now` dans le UPDATE. Différé MVP.
+
 ## Deferred from: code review de 6-1-indexeddb-encryption-at-rest (2026-06-27)
 
 - **Refresh perd la clé en mémoire** [`src/lib/crypto/crypto-context.tsx`] — Conforme AC3 (clé mémoire-seule), mais un hard refresh (F5) avec session Better Auth persistante affiche les champs classifiés vides jusqu'à reconnexion. Candidat v2 : écran de déverrouillage / clé enveloppée éphémère re-dérivée sans re-login.
