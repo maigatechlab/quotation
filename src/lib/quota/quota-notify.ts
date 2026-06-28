@@ -29,6 +29,7 @@ export async function notifyQuota80Percent(
 
     await emitAuditEvent(
       createAuditEvent({
+        companyId,
         who: "system",
         what: "quota.warning_80pct",
         where: "quota-notify",

@@ -54,6 +54,9 @@
 
 generated: 2026-06-21
 last_updated: 2026-06-28
+# story 6-3 in-progress 2026-06-28
+# story 6-3 review 2026-06-28
+# story 6-3 done 2026-06-28 (code review: 4 findings fixed — immutable tenant scope, logout cookie regex, CSV BOM, double-escape)
 # story 6-2 done 2026-06-28 (code review opus-4-8: 8 patches + D1 appliqués, 334/334 tests)
 # story 6-2 back to in-progress 2026-06-28 (code review: 1 decision_needed, 8 patch)
 # story 6-2 in-progress 2026-06-28
@@ -167,7 +170,7 @@ development_status:
   epic-6: in-progress
   6-1-indexeddb-encryption-at-rest: done
   6-2-tier-quota-enforcement: done
-  6-3-immutable-audit-trail-export: ready-for-dev
+  6-3-immutable-audit-trail-export: done
   6-4-background-sync-api: done
   6-5-route-corridor-templates-crud: done
   6-6-geo-replicated-backup-pitr: done

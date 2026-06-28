@@ -403,6 +403,17 @@
   },
   "parametres": {
     "title": "Paramètres",
+    "audit": {
+      "heading": "Audit & Conformité",
+      "description": "Exportez le journal d'audit pour vos obligations de conformité (rétention 7 ans).",
+      "from": "Date de début",
+      "to": "Date de fin",
+      "downloadJson": "Télécharger JSON",
+      "downloadCsv": "Télécharger CSV",
+      "exporting": "Préparation de l'export…",
+      "exported": "Journal d'audit téléchargé.",
+      "errorExport": "Erreur lors de l'export. Veuillez réessayer."
+    },
     "conditionsPaiement": {
       "heading": "Conditions de paiement",
       "description": "Ces conditions seront pré-remplies sur chaque nouveau devis (modifiables au cas par cas).",

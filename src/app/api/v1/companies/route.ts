@@ -152,6 +152,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   await emitAuditEvent(
     createAuditEvent({
+      companyId: newId,
       who: userId,
       what: "company.created",
       where: "api/v1/companies",

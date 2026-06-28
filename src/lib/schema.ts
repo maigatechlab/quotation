@@ -416,6 +416,7 @@ export const auditEvent = pgTable(
   "audit_event",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    companyId: text("company_id"),
     who: text("who").notNull(),
     what: text("what").notNull(),
     when: timestamp("when").defaultNow().notNull(),
@@ -429,5 +430,7 @@ export const auditEvent = pgTable(
   (t) => [
     index("idx_audit_event_entity").on(t.entityType, t.entityId),
     index("idx_audit_event_who").on(t.who),
+    index("idx_audit_event_when").on(t.when),
+    index("idx_audit_event_company").on(t.companyId),
   ]
 );
