@@ -2,13 +2,13 @@
 story_key: 6-3-immutable-audit-trail-export
 epic_num: 6
 story_num: 3
-status: ready-for-dev
+status: done
 baseline_commit: "95c49335d0c4abaf532babe2b8d49643c32e7782"
 ---
 
 # Story 6.3 : Audit trail immutable & export (NFR-O1)
 
-**Statut :** ready-for-dev
+**Statut :** done
 
 ## Story
 
@@ -151,7 +151,7 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
 
 ### T1 — Migration : trigger immutabilité + index
 
-- [ ] Créer la migration SQL **à la main** (pas via Drizzle schema change pour les triggers) :
+- [x] Créer la migration SQL **à la main** (pas via Drizzle schema change pour les triggers) :
   Créer le fichier `drizzle/XXXX_audit_immutable_trigger.sql` OU ajouter le trigger dans la migration générée
 
   **Option retenue : migration SQL custom via Drizzle `sql` template** :
@@ -178,7 +178,7 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
   CREATE INDEX IF NOT EXISTS idx_audit_event_when ON audit_event ("when");
   ```
 
-- [ ] Ajouter l'index `idx_audit_event_when` dans `src/lib/schema.ts` pour la cohérence de type Drizzle :
+- [x] Ajouter l'index `idx_audit_event_when` dans `src/lib/schema.ts` pour la cohérence de type Drizzle :
   ```ts
   export const auditEvent = pgTable("audit_event", {
     // ... champs existants inchangés
@@ -189,15 +189,15 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
   ]);
   ```
 
-- [ ] Enregistrer la migration dans `drizzle/meta/_journal.json` manuellement ou via `pnpm db:generate` + éditer le SQL généré pour ajouter le trigger
+- [x] Enregistrer la migration dans `drizzle/meta/_journal.json` manuellement ou via `pnpm db:generate` + éditer le SQL généré pour ajouter le trigger
 
-- [ ] Exécuter `pnpm db:migrate`
+- [x] Exécuter `pnpm db:migrate`
 
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T2 — Créer `src/app/api/v1/audit/export/route.ts`
 
-- [ ] Handler GET authentifié, admin uniquement :
+- [x] Handler GET authentifié, admin uniquement :
   ```ts
   import { headers } from "next/headers";
   import { NextResponse } from "next/server";
@@ -253,7 +253,7 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
   }
   ```
 
-- [ ] Implémenter `buildCsv(events)` :
+- [x] Implémenter `buildCsv(events)` :
   ```ts
   function buildCsv(events: typeof auditEvent.$inferSelect[]): string {
     const HEADERS = ["id","who","what","when","where","entityType","entityId","before","after","createdAt"];
@@ -269,15 +269,15 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
   }
   ```
 
-- [ ] Implémenter `getUserIdsForCompany(companyId, db)` : `SELECT id FROM user WHERE company_id = $1`
+- [x] Implémenter `getUserIdsForCompany(companyId, db)` : `SELECT id FROM user WHERE company_id = $1`
 
-- [ ] **Cas edge :** companyId null → retourner 400
+- [x] **Cas edge :** companyId null → retourner 400
 
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T3 — Mettre à jour `src/lib/audit.ts`
 
-- [ ] Ajouter les fonctions spécialisées login/logout :
+- [x] Ajouter les fonctions spécialisées login/logout :
   ```ts
   export async function emitLoginAudit(params: {
     userId: string;
@@ -304,13 +304,13 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
     }));
   }
   ```
-- [ ] Exporter les nouvelles fonctions
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] Exporter les nouvelles fonctions
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T4 — Tracer login/logout dans `src/lib/auth.ts`
 
-- [ ] Localiser la configuration Better Auth (hooks `onSuccess` du signIn/signOut)
-- [ ] Ajouter le hook d'audit login dans Better Auth :
+- [x] Localiser la configuration Better Auth (hooks `onSuccess` du signIn/signOut)
+- [x] Ajouter le hook d'audit login dans Better Auth :
   ```ts
   // Dans la configuration Better Auth
   hooks: {
@@ -344,13 +344,13 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
     ],
   },
   ```
-- [ ] **Alternative si Better Auth hooks ne supportent pas ce pattern :** créer une route middleware API `/api/auth/login-hook` ou wraper le handler auth
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] **Alternative si Better Auth hooks ne supportent pas ce pattern :** créer une route middleware API `/api/auth/login-hook` ou wraper le handler auth
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T5 — Créer `src/components/settings/audit-export.tsx`
 
-- [ ] `"use client"` première ligne
-- [ ] Composant `AuditExport` avec formulaire de téléchargement :
+- [x] `"use client"` première ligne
+- [x] Composant `AuditExport` avec formulaire de téléchargement :
   ```tsx
   export function AuditExport() {
     const t = useTranslations("parametres.audit");
@@ -412,12 +412,12 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
     );
   }
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T6 — Mettre à jour `src/app/(app)/parametres/page.tsx`
 
-- [ ] Importer `AuditExport`
-- [ ] Ajouter la section "Audit & Conformité" (visible admin uniquement) après les autres sections :
+- [x] Importer `AuditExport`
+- [x] Ajouter la section "Audit & Conformité" (visible admin uniquement) après les autres sections :
   ```tsx
   {can(role, "user.manage") && (
     <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
@@ -425,11 +425,11 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
     </div>
   )}
   ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T7 — Mettre à jour `src/messages/fr-NE.json`
 
-- [ ] Ajouter section `parametres.audit` :
+- [x] Ajouter section `parametres.audit` :
   ```json
   "audit": {
     "heading": "Audit & Conformité",
@@ -445,13 +445,13 @@ AND   test d'intégration : trigger immutabilité bloque DELETE ✓, export JSON
 
 ### T8 — Vérification finale (AC8)
 
-- [ ] `pnpm check` : lint ✓ typecheck ✓ tests ✓ (pas de régression)
-- [ ] `pnpm build` : passe sans erreur
-- [ ] Trigger immutabilité : tentative DELETE sur audit_event → exception PostgreSQL ✓
-- [ ] Export JSON sur plage de dates → fichier téléchargé ✓
-- [ ] Export CSV → fichier UTF-8 avec BOM, colonnes correctes ✓
-- [ ] Non-admin → 403 ✓
-- [ ] Login tracé dans audit_event ✓
+- [x] `pnpm check` : lint ✓ typecheck ✓ tests ✓ (pas de régression)
+- [x] `pnpm build` : passe sans erreur
+- [x] Trigger immutabilité : tentative DELETE sur audit_event → exception PostgreSQL ✓
+- [x] Export JSON sur plage de dates → fichier téléchargé ✓
+- [x] Export CSV → fichier UTF-8 avec BOM, colonnes correctes ✓
+- [x] Non-admin → 403 ✓
+- [x] Login tracé dans audit_event ✓
 
 ---
 
@@ -657,25 +657,48 @@ claude-sonnet-4-6
 
 ### Debug Log References
 
-_À remplir par le dev agent lors de l'implémentation._
+- T1 : `pnpm db:generate` génère `drizzle/0012_nappy_shiver_man.sql` (index seul) → édité pour ajouter trigger + `pnpm db:migrate` ✓
+- T4 : `auditPlugin` ajouté dans `auth.ts` — pattern identique à `accountLockoutPlugin`. Logout via cookie `better-auth.session_token` → query session table → `emitLogoutAudit`. Login via after-hook + email → query user → `emitLoginAudit`.
+- Aucune erreur de type, aucun test cassé.
 
 ### Completion Notes List
 
-_À remplir par le dev agent lors de l'implémentation._
+- **AC1** : Trigger `prevent_audit_update_delete` posé via migration 0012 — interdit UPDATE/DELETE sur `audit_event`, INSERT conservé.
+- **AC2** : sync.create/update/delete/conflict.archived déjà couverts (push/route.ts). auth.login/auth.logout ajoutés via `auditPlugin` dans `auth.ts`.
+- **AC3** : GET /api/v1/audit/export?format=json — 200 JSON, filtré companyId (via userIds), trié `when` ASC, limité 10 000.
+- **AC4** : GET /api/v1/audit/export?format=csv — 200 CSV UTF-8 avec BOM, Content-Disposition correct.
+- **AC5** : Composant `AuditExport` monté dans `/parametres` (admin only), date-pickers + boutons JSON/CSV, toast sonner.
+- **AC6** : `emitLoginAudit` / `emitLogoutAudit` dans `src/lib/audit.ts`, hookés dans `auth.ts`.
+- **AC7** : Commentaire "Rétention 7 ans — ne pas purger avant 2033+" dans migration SQL. Pas de politique suppression.
+- **AC8** : `pnpm check` 0 erreurs, 334 tests ✓, `pnpm build` ✓.
 
 ### File List
 
-- `src/lib/schema.ts` (à modifier — ajouter index audit_event.when)
-- `drizzle/` (migration à générer + éditer pour trigger SQL)
-- `src/app/api/v1/audit/export/route.ts` (à créer)
-- `src/lib/audit.ts` (à modifier — ajouter emitLoginAudit/emitLogoutAudit)
-- `src/lib/auth.ts` (à modifier — hooks login/logout)
-- `src/components/settings/audit-export.tsx` (à créer)
-- `src/app/(app)/parametres/page.tsx` (à modifier — section AuditExport)
-- `src/messages/fr-NE.json` (à modifier)
+- `src/lib/schema.ts` (modifié — index idx_audit_event_when + colonne company_id + index idx_audit_event_company)
+- `drizzle/0012_nappy_shiver_man.sql` (créé — index + trigger immutabilité)
+- `drizzle/0013_calm_albert_cleary.sql` (créé — colonne audit_event.company_id + index)
+- `drizzle/meta/_journal.json` (mis à jour)
+- `drizzle/meta/0012_snapshot.json` (créé)
+- `drizzle/meta/0013_snapshot.json` (créé)
+- `src/app/api/v1/audit/export/route.ts` (modifié — filtre companyId direct, BOM UTF-8, escaping CSV)
+- `src/lib/audit.ts` (modifié — emitLoginAudit/emitLogoutAudit + companyId)
+- `src/lib/auth.ts` (modifié — auditPlugin login/logout + regex Secure cookie + join user)
+- `src/lib/quota/quota-notify.ts` (modifié — companyId dans emitAuditEvent)
+- `src/app/api/v1/companies/route.ts` (modifié — companyId dans emitAuditEvent)
+- `src/app/api/v1/companies/logo/route.ts` (modifié — companyId dans emitAuditEvent)
+- `src/app/api/v1/sync/push/route.ts` (modifié — companyId dans les deux emitAuditEvent)
+- `src/components/settings/audit-export.tsx` (créé)
+- `src/app/(app)/parametres/page.tsx` (modifié — section AuditExport admin)
+- `src/messages/fr-NE.json` (modifié — clés parametres.audit)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour)
 - `_bmad-output/implementation-artifacts/6-3-immutable-audit-trail-export.md` (ce fichier)
 
 ### Change Log
 
 - Story 6-3 créée : audit trail immutable (trigger PostgreSQL) + export JSON/CSV — NFR-O1 MVP-1 (Date: 2026-06-25)
+- Story 6-3 implémentée : trigger immutabilité, index when, route export JSON/CSV, hooks auth.login/logout, UI Paramètres admin (Date: 2026-06-28)
+- Story 6-3 code review fixes (Date: 2026-06-28) :
+  - [High] `audit_event.company_id` ajouté (migration 0013) — tenant scope immutable écrit à la création, export filtre directement sur `auditEvent.companyId` (plus de join instable via userIds)
+  - [Medium] Regex logout mise à jour : `(?:__Secure-)?better-auth\.session_token` — couvre le cookie Secure en production HTTPS ; join `userTable` ajouté pour récupérer `companyId` au logout
+  - [Medium] BOM CSV : U+FEFF (65279) confirmé correct — `Response` + `charset=utf-8` produit les bytes `EF BB BF`
+  - [Low] Double-échappement CSV corrigé : pre-escape `.replace(/"/g, '""')` sur `before`/`after` supprimé, seul le pass générique CSV reste

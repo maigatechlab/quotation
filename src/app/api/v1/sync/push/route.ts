@@ -547,6 +547,7 @@ async function applyOp(
   if (currentEntity !== null && serverRevision > op.baseRevision) {
     await emitAuditEvent(
       createAuditEvent({
+        companyId: userCompanyId,
         who: userId,
         what: "conflict.archived",
         where: "api/v1/sync/push",
@@ -643,6 +644,7 @@ async function applyOp(
 
   await emitAuditEvent(
     createAuditEvent({
+      companyId: userCompanyId,
       who: userId,
       what: `sync.${op.type}`,
       where: "api/v1/sync/push",

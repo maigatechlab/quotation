@@ -62,6 +62,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     .where(eq(companyTable.id, companyId));
 
   await emitAuditEvent(createAuditEvent({
+    companyId,
     who: userId,
     what: "company.logo_updated",
     where: "api/v1/companies/logo",
