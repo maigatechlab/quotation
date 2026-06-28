@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { AuditExport } from "@/components/settings/audit-export";
 import { ClauseManager } from "@/components/settings/clause-manager";
+import { LogoutButton } from "@/components/settings/logout-button";
 import { CompanyForm } from "@/components/settings/company-form";
 import { LogoUpload } from "@/components/settings/logo-upload";
 import { PaymentTermsForm } from "@/components/settings/payment-terms-form";
@@ -125,6 +126,10 @@ export default async function ParametresPage() {
           Gestion des utilisateurs
         </Link>
       )}
+
+      <div className="mt-8 rounded-2xl border border-border bg-surface p-1">
+        <LogoutButton />
+      </div>
     </div>
   );
 }
