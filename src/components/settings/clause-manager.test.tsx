@@ -242,6 +242,12 @@ describe("ClauseManager", () => {
     await waitFor(() => {
       expect(button(container, "Supprimer")).toBeTruthy();
     });
+    // First click enters the confirmation state.
+    fireEvent.click(button(container, "Supprimer"));
+    // Wait for confirm UI ("Annuler" appears), then click the confirm "Supprimer".
+    await waitFor(() => {
+      expect(button(container, "Annuler")).toBeTruthy();
+    });
     fireEvent.click(button(container, "Supprimer"));
 
     await waitFor(async () => {

@@ -1,5 +1,25 @@
 # Deferred Work
 
+## Deferred from: code review de 6-1-indexeddb-encryption-at-rest (2026-06-27)
+
+- **Refresh perd la clé en mémoire** [`src/lib/crypto/crypto-context.tsx`] — Conforme AC3 (clé mémoire-seule), mais un hard refresh (F5) avec session Better Auth persistante affiche les champs classifiés vides jusqu'à reconnexion. Candidat v2 : écran de déverrouillage / clé enveloppée éphémère re-dérivée sans re-login.
+- **Changement de mot de passe cross-device** [`src/lib/crypto/`] — Si le mot de passe change sur un autre appareil (sans passer par le reset local), les données chiffrées avec l'ancienne clé deviennent illisibles (champs → undefined) jusqu'à re-sync. Le flow reset local (AC4) couvre le cas même-appareil. Réconciliation multi-appareils à prévoir.
+- **Coût déchiffrement par champ sur grandes listes** [`src/lib/crypto/entity-crypto.ts`] — ~200 clients × 6 champs = ~1200 appels subtle.decrypt par emit liveQuery. Acceptable MVP-1 ; envisager un cache mémoire déchiffré ou un batch si latence ressentie.
+- **templates / routeTemplates non chiffrés** [`src/lib/crypto/field-classification.ts`] — Non énumérés dans AC2, laissés en clair (métadonnées structurelles). Réévaluer si jugés sensibles. (NB : `quoteClauses.contenu` et `quotes.clientSnapshot` ajoutés au chiffrement suite au 2ᵉ code review.)
+- **PBKDF2 100k perçu au login mot de passe erroné** [`src/components/auth/login-form.tsx`] — clé dérivée avant `signIn`, coût payé même si mauvais mot de passe. Micro-label « Dérivation… » envisageable (UX, low).
+
+## Deferred from: code review de 3-6/3-7/3-8 (2026-06-27)
+
+- **[3-6] `conditionsPaiementDefaut: null` dans le payload outbox** [`src/components/settings/payment-terms-form.tsx`] — Payload outbox envoie `null` quand la valeur est effacée, mais Dexie fait `delete`. Côté serveur null est accepté. Uniformiser vers omission conditionnelle dans une passe transversale.
+- **[3-6] PaymentTermsForm fallback SSR prop quand `useLiveCompany()=null`** [`src/components/settings/payment-terms-form.tsx`] — Comportement documenté/intentionnel. Documenter plus explicitement pour éviter confusion future.
+- **[3-7] `pays` hardcodé `"NE"` dans création clause** [`src/components/settings/clause-manager.tsx`, `src/components/quote/wizard-step-conditions.tsx`] — Pattern pré-existant toutes entités. À résoudre lors de l'extension AES (Mali, Burkina Faso).
+- **[3-7] `useLiveClauses` absorbe silencieusement erreurs Dexie** [`src/hooks/use-live-clauses.ts:26`] — Pattern pré-existant identique à `useLiveTemplates` et `useLiveRouteTemplates`. Exposer un état `error` dans une passe transversale.
+- **[3-8] Pas d'atomicité quote update / bulkPut quoteClauses / auditMirror** [`src/components/quote/wizard-step-conditions.tsx:L220-330`] — Crash entre opérations = état incohérent local. Wrapping `db.transaction("rw", [quotes, quoteClauses, auditMirror])` requis ; différé car hors périmètre MVP-0.
+- **[3-8] IDs clauseIds sélectionnés deviennent obsolètes si bibliothèque modifiée mid-wizard** [`src/components/quote/wizard-step-conditions.tsx`] — `clauseById.get(key)` retourne undefined → `contenu:""` persisté. Edge case faible en MVP solo. Reconciliation à prévoir lors du mode multi-utilisateurs.
+- **[3-8] Modèle "Enregistrer comme modèle" a toujours le titre "Clause spécifique"** [`src/components/quote/wizard-step-conditions.tsx:L248`] — Toutes les clauses spécifiques sauvegardées s'appellent identiquement. Gap UX différé.
+
+
+
 ## Deferred from: code review de 6-5-route-corridor-templates-crud (2026-06-27)
 
 - **Contraintes DB manquantes sur `route_template`** [`drizzle/0010_chilly_iron_man.sql`] — Pas de FK ni NOT NULL sur `company_id`, `pays` nullable. Pattern pré-existant sur toutes les tables tenant-scoped. Ajouter contraintes dans une migration dédiée post-MVP.
@@ -105,3 +125,14 @@
 ## Deferred from: code review of 4-3-client-signature-zone-pdf.md (2026-06-27)
 
 - La generation du nom de fichier PDF caste `clientSnapshot.companyName` en string sans garde runtime [src/components/pdf/quote-preview.tsx:93]. Hors perimetre Story 4.3; a traiter avec les changements d'export/partage.
+
+## Deferred from: code review of 3-10-search-filter-quotations (2026-06-27)
+
+- `StatusBadge` indexes `STATUS_CONFIG[status]` without a fallback; an unknown or future persisted/synced status can crash quote-list rendering. Pre-existing in the Story 3.9 status component, outside the direct Story 3.10 scope.
+
+## Deferred from: code review 3-11 / 3-9 / 3-10 (2026-06-27)
+
+- **D1** [`duplicate-quote-button.tsx`] Données source lues hors transaction — sync pull entre lecture et `db.transaction` capturerait snapshot périmé. Fix : lire source dans la transaction. Acceptable MVP single-user.
+- **D2** [`quote-list.tsx:52`] `Date.now()` dans `useMemo` filtre période — staleness au plus quelques ms, négligeable.
+- **D3** [`status-change-sheet.tsx:115,134`] Double lecture quote draft→validated (validation puis mutation) — race condition si sync pull entre les deux lectures retire le client. Revalider dans la 2ème lecture pour strictement corriger.
+- **D4** [`status-change-sheet.tsx:249`] `aria-pressed` sur boutons de transition de statut — `aria-current="true"` serait plus sémantique pour l'élément courant. Amélioration accessibilité.

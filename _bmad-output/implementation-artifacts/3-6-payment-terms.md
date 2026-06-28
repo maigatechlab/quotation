@@ -2,13 +2,13 @@
 story_key: 3-6-payment-terms
 epic_num: 3
 story_num: 6
-status: review
+status: done
 baseline_commit: "f3cdc3d477c5dce39d3c32d3ced7663578779b0c"
 ---
 
 # Story 3.6 : Conditions de paiement (FR-25)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -402,6 +402,12 @@ Aucun debug externe. Trois allers-retours de validation internes :
 - `src/messages/fr-NE.json` (modifié — ajout clés parametres.conditionsPaiement + devis.wizard.conditions)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml (mis à jour)`
 - `_bmad-output/implementation-artifacts/3-6-payment-terms.md (mis à jour)`
+
+### Review Findings
+
+- [x] [Review][Patch] Stale closure `company` dans `useEffect` — `fallback` capture `company.conditionsPaiementDefaut` à l'initialisation mais `company` n'est pas dans les deps ; si la prop change (sync pull), le fallback reste périmé. Ajouter `company` (ou `company.conditionsPaiementDefaut`) aux deps et supprimer le `// eslint-disable-next-line`. [src/components/quote/wizard-step-conditions.tsx:839] → Corrigé : `company.conditionsPaiementDefaut` ajouté aux deps, eslint-disable supprimé.
+- [x] [Review][Defer] `conditionsPaiementDefaut: null` dans le payload outbox au lieu de champ absent — pré-existant, le serveur accepte null ; uniformisation en sprint ultérieur.
+- [x] [Review][Defer] PaymentTermsForm : fallback sur prop SSR quand `useLiveCompany()` retourne null (Dexie confirm aucune société) — comportement documenté, intentionnel.
 
 ### Change Log
 

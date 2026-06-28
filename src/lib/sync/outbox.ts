@@ -68,6 +68,7 @@ export async function applyLocalMutation(
   baseRevision: number,
   dexieWriteFn: () => Promise<void>,
   createdBy?: string,
+  extraTables: EntityTable<Record<string, unknown>, string>[] = []
 ): Promise<SyncMutationResult> {
   const op: SyncOp = {
     opId: crypto.randomUUID(),
@@ -85,7 +86,7 @@ export async function applyLocalMutation(
 
   const entityTable = getEntityTable(entity);
 
-  await db.transaction("rw", entityTable, db.syncQueue, async () => {
+  await db.transaction("rw", [entityTable, db.syncQueue, ...extraTables], async () => {
     await dexieWriteFn();
     await db.syncQueue.add(op);
   });

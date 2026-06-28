@@ -18,6 +18,7 @@
   "auth": {
     "signIn": "Se connecter",
     "signOut": "Se déconnecter",
+    "resetPasswordSuccess": "Données locales réinitialisées et re-synchronisées.",
     "email": "Email",
     "password": "Mot de passe",
     "login": {
@@ -241,6 +242,15 @@
         "specificClauseChip": "Clause spécifique"
       }
     },
+    "duplicate": {
+      "button": "Dupliquer ce devis",
+      "confirmTitle": "Dupliquer ce devis ?",
+      "confirmDescription": "Un nouveau devis en Brouillon sera créé avec les mêmes informations.",
+      "confirmAction": "Dupliquer",
+      "cancel": "Annuler",
+      "successToast": "Devis dupliqué avec succès",
+      "errorGeneric": "Erreur lors de la duplication. Veuillez réessayer."
+    },
     "apercu": {
       "title": "Aperçu du devis",
       "modifier": "Modifier",
@@ -310,6 +320,57 @@
       "errorScanUpload": "Erreur lors de l'envoi du scan. L'accord sera enregistré sans scan.",
       "errorGeneric": "Erreur lors de l'enregistrement. Veuillez réessayer.",
       "statusNotSent": "L'accord ne peut être enregistré que pour un devis au statut \"Envoyé\"."
+    },
+    "status": {
+      "draft": "Brouillon",
+      "validated": "Validé",
+      "sent": "Envoyé",
+      "accepted": "Accepté",
+      "expired": "Expiré",
+      "cancelled": "Annulé",
+      "changeStatus": "Changer le statut",
+      "heading": "Changer le statut du devis",
+      "currentStatus": "Statut actuel",
+      "cancel": "Annuler",
+      "toastChanged": "Statut → {status}",
+      "validationErrors": {
+        "missingClient": "Client requis",
+        "missingLines": "Au moins une ligne de prestation est requise",
+        "zeroTotal": "Le total doit être supérieur à 0",
+        "missingRoute": "Trajet requis (ville de départ et d'arrivée)",
+        "missingSignatory": "Signataire requis"
+      },
+      "invalidTransition": "Transition non autorisée"
+    },
+    "list": {
+      "empty": "Aucun devis. Créez votre premier devis.",
+      "emptyFiltered": "Aucun devis ne correspond à votre recherche.",
+      "clearFilters": "Effacer les filtres",
+      "createFirst": "Créer un devis",
+      "searchPlaceholder": "Numéro, client, référence…",
+      "filterAll": "Tous",
+      "period7": "7 jours",
+      "period30": "30 jours",
+      "period90": "90 jours",
+      "periodAll": "Tout",
+      "pagination": "page {page}/{total}",
+      "paginationCount": "{count, plural, one {# devis} other {# devis}}",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "amount": "{amount} FCFA",
+      "noClient": "Client non assigné"
+    },
+    "detail": {
+      "back": "Mes devis",
+      "heading": "Devis",
+      "history": "Historique",
+      "historyEmpty": "Aucune transition enregistrée.",
+      "historyEntry": "De {from} vers {to}",
+      "historyBy": "par {user}",
+      "lines": "Lignes de prestation",
+      "total": "Total devis",
+      "signatory": "Signataire",
+      "conditions": "Conditions de paiement"
     }
   },
   "routeTemplates": {

@@ -1,6 +1,7 @@
 "use client";
 
 import Dexie, { type EntityTable } from "dexie";
+import { installEncryptionLayer } from "@/lib/crypto/encryption-middleware";
 
 export interface ClientLocal {
   id: string;
@@ -140,10 +141,11 @@ export interface CompanyLocal {
 export interface QuoteStatusLogLocal {
   id: string;
   quoteId: string;
-  fromStatus: string;
-  toStatus: string;
-  changedBy: string;
+  fromStatus?: QuoteLocal["status"];
+  toStatus: QuoteLocal["status"];
+  changedBy?: string;
   changedAt: string;
+  note: string | null;
 }
 
 export interface RouteTemplateLocal {
@@ -253,3 +255,9 @@ export class LocalDatabase extends Dexie {
 }
 
 export const db = new LocalDatabase();
+
+// Story 6.1 (NFR-S4): transparent at-rest encryption of classified fields.
+// Installed at module load so every read/write flows through the crypto layer.
+// No-op until a session key is loaded (see crypto-context.tsx) — MVP-0 records
+// stay plaintext and decrypt gracefully (AC6).
+installEncryptionLayer(db);

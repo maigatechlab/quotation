@@ -2,13 +2,13 @@
 story_key: 3-7-standard-clauses-library
 epic_num: 3
 story_num: 7
-status: review
+status: done
 baseline_commit: "042b9951faaf968ef27a70fed80c329940211b32"
 ---
 
 # Story 3.7 : Bibliothèque de clauses standards (FR-26)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -470,6 +470,15 @@ GLM-5.2 (claude-glm) — exécution du workflow `bmad-dev-story`.
 - `src/messages/fr-NE.json` (modifié — ajout section `parametres.clauses`)
 - `_bmad-output/implementation-artifacts/3-7-standard-clauses-library.md` (modifié — baseline_commit, cases cochées, Dev Agent Record, Status → review)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (mis à jour — `3-7-standard-clauses-library` ready-for-dev → review, `last_updated: 2026-06-27`)
+
+### Review Findings
+
+- [x] [Review][Decision] Groupement "Autres/Sans catégorie" — AC1 liste 4 groupes : Paiement, Responsabilité, Exclusions, **Autres**. L'implémentation affiche `Sans catégorie` pour les non-catégorisées et les catégories libres dans un groupe séparé alphabétique. Clarifier : faut-il fusionner les catégories libres + non-catégorisées en un seul bucket "Autres", ou garder le comportement actuel (plus expressif) ? [src/components/settings/clause-manager.tsx:L22] → Résolu : comportement actuel conservé (plus expressif, chaque catégorie libre garde son propre groupe).
+- [x] [Review][Patch] Pas de confirmation avant suppression — AC4 : "clique 'Supprimer' et confirme". Bouton `handleDelete` s'exécute immédiatement sans dialog de confirmation. [src/components/settings/clause-manager.tsx:L270] → Corrigé : deux-étapes inline (clic → confirm/cancel), test mis à jour.
+- [x] [Review][Patch] Edit clause : `revision` non incrémentée dans le `dexieWriteFn` — `db.clauses.put({...dbClause, ...})` sans `revision: dbClause.revision + 1`. Diverge du pattern établi (signatory-config, payment-terms). Provoque des conflits fantômes lors d'un 2ème edit. [src/components/settings/clause-manager.tsx:L136-144] → Corrigé : `revision: dbClause.revision + 1` ajouté.
+- [x] [Review][Patch] Effacer la catégorie à l'edit ne persiste pas le clear — `...(trimmedCategorie ? { categorie } : {})` omet la clé quand vide, mais le spread de `dbClause` conserve l'ancienne valeur. La catégorie n'est jamais supprimée. [src/components/settings/clause-manager.tsx:L126-133] → Corrigé : `putRecord` construit puis `delete putRecord.categorie` quand vide.
+- [x] [Review][Defer] `pays` hardcodé à `"NE"` dans création clause — pré-existant dans toutes les entités, extension AES différée.
+- [x] [Review][Defer] `useLiveClauses` absorbe silencieusement les erreurs Dexie — pattern pré-existant, identique à `useLiveTemplates`, `useLiveRouteTemplates`.
 
 ### Change Log
 

@@ -1,6 +1,5 @@
 "use client";
 
-import { localCrypto } from "@/lib/crypto/local-crypto";
 import { db } from "@/lib/local-db";
 import type {
   ClientLocal,
@@ -59,27 +58,25 @@ export async function pullDelta(cursor: string): Promise<PullResult> {
     "rw",
     [db.clients, db.quotes, db.quoteLines, db.clauses, db.templates, db.routeTemplates, db.company],
     async () => {
+      // At-rest encryption of classified fields is applied transparently by the
+      // Dexie encryption layer (Story 6.1) on every put — no manual encrypt here.
       for (const item of clients) {
-        const encrypted = (await localCrypto.encrypt(item)) as ClientLocal;
-        await db.clients.put(encrypted);
+        await db.clients.put(item);
         updatedCount++;
       }
 
       for (const item of quotes) {
-        const encrypted = (await localCrypto.encrypt(item)) as QuoteLocal;
-        await db.quotes.put(encrypted);
+        await db.quotes.put(item);
         updatedCount++;
       }
 
       for (const item of quoteLines) {
-        const encrypted = (await localCrypto.encrypt(item)) as QuoteLineLocal;
-        await db.quoteLines.put(encrypted);
+        await db.quoteLines.put(item);
         updatedCount++;
       }
 
       for (const item of clauses) {
-        const encrypted = (await localCrypto.encrypt(item)) as ClauseLocal;
-        await db.clauses.put(encrypted);
+        await db.clauses.put(item);
         updatedCount++;
       }
 
@@ -87,8 +84,7 @@ export async function pullDelta(cursor: string): Promise<PullResult> {
         if (item.deletedAt) {
           await db.templates.delete(item.id);
         } else {
-          const encrypted = (await localCrypto.encrypt(item)) as TemplateLocal;
-          await db.templates.put(encrypted);
+          await db.templates.put(item);
         }
         updatedCount++;
       }
@@ -97,15 +93,13 @@ export async function pullDelta(cursor: string): Promise<PullResult> {
         if (item.deletedAt) {
           await db.routeTemplates.delete(item.id);
         } else {
-          const encrypted = (await localCrypto.encrypt(item)) as RouteTemplateLocal;
-          await db.routeTemplates.put(encrypted);
+          await db.routeTemplates.put(item);
         }
         updatedCount++;
       }
 
       if (company) {
-        const encrypted = (await localCrypto.encrypt(company)) as CompanyLocal;
-        await db.company.put(encrypted);
+        await db.company.put(company);
         updatedCount++;
       }
     }

@@ -14,9 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSession, signOut } from "@/lib/auth-client";
+import { useCrypto } from "@/lib/crypto/crypto-context";
 
 export function UserProfile() {
   const { data: session, isPending } = useSession();
+  const { clearCrypto } = useCrypto();
   const router = useRouter();
 
   if (isPending) {
@@ -40,6 +42,7 @@ export function UserProfile() {
 
   const handleSignOut = async () => {
     await signOut();
+    clearCrypto(); // drop the in-memory at-rest key (Story 6.1)
     router.replace("/");
     router.refresh();
   };

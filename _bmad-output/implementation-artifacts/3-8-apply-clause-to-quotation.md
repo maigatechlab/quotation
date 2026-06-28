@@ -2,13 +2,13 @@
 story_key: 3-8-apply-clause-to-quotation
 epic_num: 3
 story_num: 8
-status: review
+status: done
 baseline_commit: "10ee0a4c80aea5e47a91dc232744a78583beaeb6"
 ---
 
 # Story 3.8 : Application de clauses & clause spécifique au devis (FR-27, FR-28)
 
-**Statut :** review
+**Statut :** done
 
 ## Story
 
@@ -434,6 +434,15 @@ GLM-5.2 (claude-glm wrapper) — workflow `bmad-dev-story`.
 
 Aucune migration DB générée — la table `quoteClauses` et la version Dexie 3
 étaient déjà présentes (voir note T1).
+
+### Review Findings
+
+- [x] [Review][Patch] `bulkPut` sans pré-suppression accumule des `QuoteClauseLocal` orphelines — si l'utilisateur revient à l'étape 5 et re-soumet, chaque run génère de nouveaux UUIDs et `bulkPut` ajoute sans écraser. Résultat : doublons dans les clauses du devis / PDF. Fix : `await db.quoteClauses.where("quoteId").equals(quoteId).delete()` avant `bulkPut`. [src/components/quote/wizard-step-conditions.tsx:L314] → Corrigé : delete systématique avant bulkPut, même quand clauseOrder vide.
+- [x] [Review][Patch] `hasSpecific=true` + textarea vidé → enregistre une `QuoteClauseLocal` avec `contenu:""` — l'utilisateur peut ajouter une clause spécifique (chip ajouté), puis effacer le textarea, puis cliquer Terminer. `SPECIFIC_CLAUSE_KEY` reste dans `clauseOrder` mais `specificClause.trim()==""`. Fix : dans `handleFinish`, skip le branch `SPECIFIC_CLAUSE_KEY` si `specificClause.trim()==""`. [src/components/quote/wizard-step-conditions.tsx:L283] → Corrigé : `effectiveOrder` filtre SPECIFIC_CLAUSE_KEY si textarea vide.
+- [x] [Review][Patch] Extrait clause dans wizard sans ellipse (`…`) — `clause.contenu.slice(0, 80)` sans `…` quand `contenu.length > 80`. Incohérence avec `clause-manager.tsx` (ligne 242-244 qui ajoute `…`). [src/components/quote/wizard-step-conditions.tsx:L395] → Corrigé : ternaire `length > 80 ? slice + … : contenu`.
+- [x] [Review][Defer] Pas d'atomicité entre update quote / `bulkPut` quoteClauses / auditMirror — crash entre les opérations laisse état incohérent. Wrapping `db.transaction("rw", [...])` requis mais hors périmètre MVP-0.
+- [x] [Review][Defer] IDs de clauses sélectionnées devenus obsolètes si la bibliothèque est modifiée pendant le wizard — `clauseById.get(key)` retourne undefined → `contenu:""` persisté. Edge case faible en usage solo MVP.
+- [x] [Review][Defer] Modèle sauvegardé depuis clause spécifique a toujours le titre "Clause spécifique" — pas de champ titre dans l'AC ; gap UX différé.
 
 ### Change Log
 

@@ -2,13 +2,13 @@
 story_key: 3-11-duplicate-quotation
 epic_num: 3
 story_num: 11
-status: ready-for-dev
-baseline_commit: ""
+status: done
+baseline_commit: "928801976efab1a6dc09efbd6128036b6ef21af3"
 ---
 
 # Story 3.11 : Duplication d'un devis (FR-14)
 
-**Statut :** ready-for-dev
+**Statut :** done
 
 ## Story
 
@@ -124,8 +124,8 @@ AND    pnpm build passe sans erreur
 
 ### T1 — Créer `src/components/quote/duplicate-quote-button.tsx`
 
-- [ ] `"use client"` première ligne
-- [ ] Imports :
+- [x] `"use client"` première ligne
+- [x] Imports :
   ```ts
   import { useState } from "react";
   import { useRouter } from "next/navigation";
@@ -137,167 +137,41 @@ AND    pnpm build passe sans erreur
   import { computeLineTotal, computeQuoteTotal } from "@/lib/calc/quote-calc";
   import { useToast } from "@/hooks/use-toast";
   ```
-- [ ] Props :
-  ```ts
-  interface DuplicateQuoteButtonProps {
-    quoteId: string;
-    userId: string;
-  }
-  ```
-- [ ] État local : `isPending`, `showConfirm`
-- [ ] Fonction `handleDuplicate()` :
-  ```ts
-  async function handleDuplicate() {
-    setIsPending(true);
-    try {
-      // 1. Lire le devis source
-      const source = await db.quotes.get(quoteId);
-      if (!source) throw new Error("quote_not_found");
-
-      // 2. Lire les lignes source
-      const sourceLines = await db.quoteLines
-        .where("quoteId").equals(quoteId).sortBy("ordre");
-
-      // 3. Nouveau numéro TEMP
-      const newQuoteId = crypto.randomUUID();
-      const now = new Date();
-      const newNumber = buildTempNumber();
-      const dateDevis = now.toISOString();
-      const dateValidite = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-
-      // 4. Recalculer truckCount et goodsValueFcfa
-      const tonnage = source.tonnage ?? 0;
-      const capacity = source.truckCapacity ?? 1;
-      const unitPrice = source.unitPrice ?? 0;
-      const exchangeRate = source.exchangeRate ?? 1;
-      const truckCount = capacity > 0 ? Math.ceil(tonnage / capacity) : 0;
-      const goodsValueFcfa = Math.round(tonnage * unitPrice * exchangeRate);
-
-      // 5. Recalculer totalFcfa depuis les lignes copiées
-      const newLines = sourceLines.map((l, idx) => ({
-        id: crypto.randomUUID(),
-        quoteId: newQuoteId,
-        designation: l.designation,
-        unitPrice: l.unitPrice,
-        quantity: l.quantity,
-        totalFcfa: computeLineTotal(l.unitPrice, l.quantity),
-        ordre: idx,
-        pays: "NE",
-        revision: 0,
-        updatedAt: dateDevis,
-        createdAt: dateDevis,
-      }));
-      const totalFcfa = computeQuoteTotal(newLines.map(l => l.totalFcfa));
-
-      // 6. Créer le nouveau devis via applyLocalMutation
-      const quotePayload: Omit<QuoteLocal, "id"> = {
-        number: newNumber,
-        reference: source.reference,
-        objet: source.objet,
-        status: "draft",
-        clientId: source.clientId,
-        clientSnapshot: source.clientSnapshot,
-        ownerId: userId,
-        dateDevis,
-        dateValidite,
-        signataireNom: source.signataireNom,
-        signataireFonction: source.signataireFonction,
-        conditionsPaiement: source.conditionsPaiement,
-        originCountry: source.originCountry,
-        originCity: source.originCity,
-        destinationCountry: source.destinationCountry,
-        destinationCity: source.destinationCity,
-        goodsNature: source.goodsNature,
-        tonnage: source.tonnage,
-        truckCapacity: source.truckCapacity,
-        truckCount,
-        unitPrice: source.unitPrice,
-        sourceCurrency: source.sourceCurrency,
-        exchangeRate: source.exchangeRate,
-        goodsValueFcfa,
-        totalFcfa,
-        pays: "NE",
-        revision: 0,
-        updatedAt: dateDevis,
-        createdAt: dateDevis,
-      };
-
-      await applyLocalMutation(
-        "quote", newQuoteId, "create",
-        quotePayload,
-        0,
-        async () => { await db.quotes.put({ id: newQuoteId, ...quotePayload }); },
-        userId
-      );
-
-      // 7. Créer chaque ligne via applyLocalMutation
-      for (const line of newLines) {
-        await applyLocalMutation(
-          "quoteLine", line.id, "create",
-          line,
-          0,
-          async () => { await db.quoteLines.put(line); },
-          userId
-        );
-      }
-
-      void triggerSync();
-      toast({ title: t("successToast"), duration: 2200 });
-      router.push(`/devis/${newQuoteId}`);
-    } catch {
-      toast({ title: t("errorGeneric"), variant: "destructive", duration: 3000 });
-    } finally {
-      setIsPending(false);
-      setShowConfirm(false);
-    }
-  }
-  ```
-- [ ] Rendu : bouton "Dupliquer" + dialog/modale de confirmation inline
-- [ ] `pnpm typecheck` — zéro erreur
+  Note : `buildTempNumber` n'existe pas — utilisation de `getDeviceId` + `getNextLocalSeq` + `generateTempNumber`. `toast` de "sonner" (pas useToast). `computeQuoteTotal` prend `{totalFcfa: number}[]`.
+- [x] Props : `DuplicateQuoteButtonProps { quoteId: string; userId: string }`
+- [x] État local : `isPending`, `showConfirm`
+- [x] Fonction `handleDuplicate()` avec séquence quote → quoteLine → triggerSync
+- [x] Rendu : bouton "Dupliquer" + confirmation inline
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T2 — Mettre à jour `src/app/(app)/devis/[id]/page.tsx`
 
-- [ ] Importer `DuplicateQuoteButton` :
+- [x] Importer `DuplicateQuoteButton` :
   ```ts
   import { DuplicateQuoteButton } from "@/components/quote/duplicate-quote-button";
   ```
-- [ ] Ajouter dans le header du détail (visible si `can(role, "quote.duplicate")`) :
-  ```tsx
-  {can(role, "quote.duplicate") && (
-    <DuplicateQuoteButton quoteId={id} userId={userId} />
-  )}
-  ```
-- [ ] `pnpm typecheck` — zéro erreur
+  Note : intégration réalisée dans `src/components/pdf/quote-preview.tsx` (client component qui contient le header du détail). `can(role, "quote.duplicate")` importé de `@/lib/permissions`.
+- [x] Bouton visible dans le header si `can(role, "quote.duplicate")` ✓
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T3 — Mettre à jour `src/messages/fr-NE.json`
 
-- [ ] Ajouter section `devis.duplicate` :
-  ```json
-  "duplicate": {
-    "button": "Dupliquer ce devis",
-    "confirmTitle": "Dupliquer ce devis ?",
-    "confirmDescription": "Un nouveau devis en Brouillon sera créé avec les mêmes informations.",
-    "confirmAction": "Dupliquer",
-    "cancel": "Annuler",
-    "successToast": "Devis dupliqué avec succès",
-    "errorGeneric": "Erreur lors de la duplication. Veuillez réessayer."
-  }
-  ```
-- [ ] `pnpm typecheck` — zéro erreur
+- [x] Section `devis.duplicate` ajoutée avec toutes les clés requises ✓
+- [x] `pnpm typecheck` — zéro erreur
 
 ### T4 — Vérification finale (AC7)
 
-- [ ] `pnpm check` : lint ✓ typecheck ✓ tests existants ✓
-- [ ] `pnpm build` : passe sans erreur
-- [ ] Bouton "Dupliquer" visible sur /devis/[id] pour admin et commercial ✓
-- [ ] Bouton absent si role = operateur ✓
-- [ ] Confirmation affichée avant duplication ✓
-- [ ] Doublon créé avec nouveau numéro TEMP, status draft, dates mises à jour ✓
-- [ ] Lignes de prestation copiées avec nouveaux IDs ✓
-- [ ] Total recalculé ✓
-- [ ] Redirection vers /devis/[newId] après duplication ✓
-- [ ] Nouveau devis visible dans la liste /devis (liveQuery) ✓
-- [ ] Fonctionne offline ✓
+- [x] `pnpm check` : lint 0 erreurs ✓ typecheck ✓ 269 tests passent ✓
+- [x] `pnpm build` : passe sans erreur ✓
+- [x] Bouton "Dupliquer" visible sur /devis/[id] pour admin et commercial ✓ (can(role, "quote.duplicate") = true)
+- [x] Bouton absent si role = operateur ✓ (can returns false)
+- [x] Confirmation affichée avant duplication ✓ (état inline showConfirm)
+- [x] Doublon créé avec nouveau numéro TEMP, status draft, dates mises à jour ✓
+- [x] Lignes de prestation copiées avec nouveaux IDs ✓ (crypto.randomUUID())
+- [x] Total recalculé ✓ (computeLineTotal + computeQuoteTotal)
+- [x] Redirection vers /devis/[newId] après duplication ✓ (router.push)
+- [x] Nouveau devis visible dans la liste /devis (liveQuery) ✓ (db.quotes.put dans transaction)
+- [x] Fonctionne offline ✓ (applyLocalMutation → syncQueue → triggerSync au retour réseau)
 
 ---
 
@@ -445,20 +319,43 @@ pnpm build   # passe sans erreur
 
 ### Agent Model Used
 
-_à remplir_
+claude-sonnet-4-6
 
 ### Debug Log References
 
-_à remplir_
+- `buildTempNumber` absent de numbering.ts → utilisation de `getDeviceId() + getNextLocalSeq() + generateTempNumber()`
+- `toast` de "sonner" (pas useToast) — pattern `toast.success()` / `toast.error()`
+- `computeQuoteTotal` prend `{totalFcfa: number}[]` (pas `number[]`)
+- Intégration dans `quote-preview.tsx` (client component) plutôt que `page.tsx` (server component) — QuotePreview contient le header du détail et dispose déjà de `role`, `userId`, `quoteId`
+- Champs optionnels de QuoteLocal : spread conditionnel `...(val != null && { key: val })` pour respecter exactOptionalPropertyTypes
 
 ### Completion Notes List
 
-_à remplir_
+- Créé `src/components/quote/duplicate-quote-button.tsx` : bouton + confirmation inline + logique de duplication complète (quote → lignes → sync)
+- Mis à jour `src/components/pdf/quote-preview.tsx` : import DuplicateQuoteButton + can() de permissions, bouton dans header conditionné par `can(role, "quote.duplicate")`
+- Mis à jour `src/messages/fr-NE.json` : section `devis.duplicate` avec 7 clés i18n
+- pnpm check : 0 erreurs lint, typecheck clean, 269 tests verts
+- pnpm build : succès
 
 ### File List
 
-_à remplir_
+- src/lib/duplicate-quote.ts (créé — builder pur, testable sans React)
+- src/lib/duplicate-quote.test.ts (créé — 25 tests unitaires)
+- src/components/quote/duplicate-quote-button.tsx (réécrit — transaction atomique unique, clauses incluses)
+- src/components/pdf/quote-preview.tsx (modifié — import DuplicateQuoteButton + can, intégration header)
+- src/messages/fr-NE.json (modifié — section devis.duplicate)
 
 ### Change Log
 
-_à remplir_
+- 2026-06-27 : Story 3-11 implémentée — DuplicateQuoteButton créé, intégré dans QuotePreview header, traductions ajoutées. Tous ACs satisfaits.
+- 2026-06-28 : Code review findings adressés — atomicité (une seule db.transaction), calc helpers (computeCamions/computeValeurMarchandise), ordre préservé (l.ordre), clauses dupliquées (quoteClauses), 25 tests unitaires ajoutés. 294 tests verts.
+
+### Review Findings
+
+- [x] [Review][Patch] `StatusChangeSheet.updatedQuote` manque `revision + 1` — `applyLocalMutation` stocke la même révision dans Dexie et l'outbox après changement de statut → conflit fantôme au prochain edit. [`src/components/quote/status-change-sheet.tsx:147-151`] → Corrigé (appartient à 3-9, retrouvé lors de la review 3-11).
+- [x] [Review][Patch] `QuoteListItem` affiche `createdAt` mais le filtre période utilise `dateDevis ?? createdAt` → incohérence UX (date affichée ≠ date de filtre). [`src/components/quote/quote-list-item.tsx:44`] → Corrigé (appartient à 3-10, retrouvé lors de la review 3-11).
+- [x] [Review][Patch] `quote-status.ts` importe `QuoteStatus` depuis `@/components/quote/status-badge` (lib → composant, dépendance inversée) ; `QuoteStatus` = `QuoteLocal["status"]` déjà connu. [`src/lib/quote-status.ts:18,118`] → Corrigé : défini inline, import supprimé.
+- [x] [Review][Defer] Données source lues hors transaction dans `handleDuplicate` — sync pull entre lecture et écriture capturerait snapshot périmé. Acceptable MVP single-user.
+- [x] [Review][Defer] `Date.now()` dans `useMemo` filtre période (quote-list.tsx:52) — staleness négligeable.
+- [x] [Review][Defer] Double lecture quote dans `handleSelectStatus` (3-9) — race validation/mutation, faible risque MVP.
+- [x] [Review][Defer] `aria-pressed` sur boutons de transition (status-change-sheet) — sémantique discutable, amélioration accessibilité différée.

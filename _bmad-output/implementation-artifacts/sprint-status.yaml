@@ -1,5 +1,5 @@
 # generated: 2026-06-21
-# last_updated: 2026-06-29
+# last_updated: 2026-06-27
 # story 5-1 done 2026-06-26
 # story 5-3 done 2026-06-26
 # story 4-3 done 2026-06-27
@@ -54,11 +54,20 @@
 
 generated: 2026-06-21
 last_updated: 2026-06-27
+# story 6-1 in-progress 2026-06-27
+# story 6-1 review 2026-06-27
+# story 6-1 done 2026-06-27
+# story 6-1 review-2 fixes (H1/H2/M1/M2) 2026-06-28
+# story 6-1 done 2026-06-28
 # story 3-8 review 2026-06-27
 # story 3-8 in-progress 2026-06-27
 # story 6-6 in-progress 2026-06-27
 # story 3-7 in-progress 2026-06-27
 # story 3-7 review 2026-06-27
+# story 3-6 done 2026-06-27
+# story 3-7 done 2026-06-27
+# story 3-8 done 2026-06-27
+# story 3-11 done 2026-06-27
 project: quotation
 project_key: NOKEY
 tracking_system: file-system
@@ -126,12 +135,12 @@ development_status:
   3-3-goods-automatic-calculations: done
   3-4-service-lines-quotation-total: done
   3-5-reusable-line-templates: done
-  3-6-payment-terms: review
-  3-7-standard-clauses-library: review
-  3-8-apply-clause-to-quotation: review
-  3-9-lifecycle-status-change: ready-for-dev
-  3-10-search-filter-quotations: ready-for-dev
-  3-11-duplicate-quotation: ready-for-dev
+  3-6-payment-terms: done
+  3-7-standard-clauses-library: done
+  3-8-apply-clause-to-quotation: done
+  3-9-lifecycle-status-change: done
+  3-10-search-filter-quotations: done
+  3-11-duplicate-quotation: done
   epic-3-retrospective: optional
 
   # Epic 4: PDF, validation client & partage
@@ -152,7 +161,7 @@ development_status:
 
   # Epic 6: Durcissement v1 [MVP-1]
   epic-6: in-progress
-  6-1-indexeddb-encryption-at-rest: ready-for-dev
+  6-1-indexeddb-encryption-at-rest: done
   6-2-tier-quota-enforcement: ready-for-dev
   6-3-immutable-audit-trail-export: ready-for-dev
   6-4-background-sync-api: done
