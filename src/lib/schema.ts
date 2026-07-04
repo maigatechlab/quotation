@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   pgEnum,
@@ -9,7 +10,20 @@ import {
   jsonb,
   real,
   index,
+  uniqueIndex,
+  date,
+  unique,
+  check,
 } from "drizzle-orm/pg-core";
+
+// ---------------------------------------------------------------------------
+// Multi-tenant SaaS enums (Epic 7)
+// ---------------------------------------------------------------------------
+
+export const tenantStatusEnum = pgEnum("tenant_status", ["active", "trial", "suspended", "cancelled"]);
+export const tenantPlanEnum = pgEnum("tenant_plan", ["free", "pro", "enterprise"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["nitta", "wave", "amana", "stripe", "cash", "virement"]);
+export const billingCycleEnum = pgEnum("billing_cycle", ["monthly", "annual"]);
 
 // ---------------------------------------------------------------------------
 // Subscription / Quota enums
@@ -37,7 +51,47 @@ export const userRoleEnum = pgEnum("user_role", [
   "admin",
   "commercial",
   "operateur",
+  "superadmin",
 ]);
+
+// ---------------------------------------------------------------------------
+// Tenants table — root of SaaS multi-tenancy (must be declared before user)
+// ---------------------------------------------------------------------------
+
+export const tenants = pgTable(
+  "tenants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull(),
+    status: tenantStatusEnum("status").notNull().default("trial"),
+    plan: tenantPlanEnum("plan").notNull().default("free"),
+    subscriptionStart: date("subscription_start", { mode: "date" }),
+    subscriptionEnd: date("subscription_end", { mode: "date" }),
+    trialEndsAt: date("trial_ends_at", { mode: "date" }),
+    gracePeriodEndsAt: date("grace_period_ends_at", { mode: "date" }),
+    maxUsers: integer("max_users").notNull().default(3),
+    notes: text("notes"),
+    // Stripe integration (story 7-10). NULL for tenants created manually /
+    // paid via mobile money. stripeCustomerId is the idempotent lookup key
+    // for renewal checkouts (AC6) — no stripeSubscriptionId since Stripe is
+    // used in mode "payment", not "subscription".
+    stripeCustomerId: text("stripe_customer_id"),
+    stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    unique("tenants_slug_unique").on(t.slug),
+    index("idx_tenants_status").on(t.status),
+    uniqueIndex("idx_tenants_stripe_customer_id")
+      .on(t.stripeCustomerId)
+      .where(sql`${t.stripeCustomerId} IS NOT NULL`),
+  ]
+);
 
 // ---------------------------------------------------------------------------
 // Better Auth tables (DO NOT change IDs — they use text, not uuid)
@@ -56,13 +110,21 @@ export const user = pgTable(
     loginAttempts: integer("login_attempts").notNull().default(0),
     lockedAt: timestamp("locked_at"),
     companyId: uuid("company_id"),
+    tenantId: uuid("tenant_id").references(() => tenants.id, { onDelete: "set null" }),
+    // Soft-disable for tenant user revocation (story 7-9).
+    // Null = active; non-null = revoked (excluded from quota count, can't log in).
+    disabledAt: timestamp("disabled_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("user_email_idx").on(table.email)]
+  (table) => [
+    index("user_email_idx").on(table.email),
+    index("user_tenant_id_idx").on(table.tenantId),
+    index("user_tenant_disabled_idx").on(table.tenantId, table.disabledAt),
+  ]
 );
 
 export const session = pgTable(
@@ -434,3 +496,136 @@ export const auditEvent = pgTable(
     index("idx_audit_event_company").on(t.companyId),
   ]
 );
+
+// ---------------------------------------------------------------------------
+// Tenant SaaS payments + events (Epic 7)
+// ---------------------------------------------------------------------------
+
+export const subscriptionPayments = pgTable(
+  "subscription_payments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    amount: integer("amount").notNull(), // FCFA integer, never float
+    currency: text("currency").notNull().default("XOF"),
+    paymentMethod: paymentMethodEnum("payment_method").notNull(),
+    paymentReference: text("payment_reference"),
+    paidAt: timestamp("paid_at").notNull(),
+    periodStart: date("period_start", { mode: "date" }).notNull(),
+    periodEnd: date("period_end", { mode: "date" }).notNull(),
+    billingCycle: billingCycleEnum("billing_cycle").notNull(),
+    confirmedBy: text("confirmed_by").notNull(), // superadmin user_id (text, no FK — allows SYSTEM sentinel)
+    notes: text("notes"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("idx_subscription_payments_tenant_id").on(t.tenantId),
+    index("idx_subscription_payments_paid_at").on(t.paidAt),
+  ]
+);
+
+// append-only — no revision, no updatedAt (pattern: audit_event story 6-3)
+export const tenantEvents = pgTable(
+  "tenant_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    actorId: text("actor_id").notNull(), // superadmin user_id or "SYSTEM" sentinel (text, no FK)
+    before: jsonb("before"),
+    after: jsonb("after"),
+    note: text("note"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("idx_tenant_events_tenant_id").on(t.tenantId),
+    index("idx_tenant_events_created_at").on(t.createdAt),
+  ]
+);
+
+// Stripe webhook idempotence (story 7-10) — a dedicated table because the
+// event id must be checked BEFORE the tenant is known (tenant_events is
+// tenantId NOT NULL / scoped, so it can't record a pre-tenant event).
+// Append-only, no updatedAt.
+export const stripeProcessedEvents = pgTable(
+  "stripe_processed_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: text("event_id").notNull(),
+    eventType: text("event_type").notNull(),
+    tenantId: uuid("tenant_id").references(() => tenants.id, { onDelete: "set null" }),
+    processedAt: timestamp("processed_at").defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("idx_stripe_events_event_id").on(t.eventId)]
+);
+
+// ---------------------------------------------------------------------------
+// Platform settings — owner-editable config (Epic 7, story 7-12)
+// ---------------------------------------------------------------------------
+
+export interface PlatformNotificationSettings {
+  senderAddress: string;
+  trialWelcome: boolean;
+  reminderJ7: boolean;
+  reminderJ3: boolean;
+  reminderJ1: boolean;
+  expiryNotification: boolean;
+  suspensionNotification: boolean;
+  reactivationNotification: boolean;
+}
+
+// Singleton: exactly one row (id = 1), enforced by CHECK. Exception to the
+// project's uuid()-for-custom-tables rule — justified for a config singleton
+// (see story 7-12 Dev Notes).
+export const platformSettings = pgTable(
+  "platform_settings",
+  {
+    id: integer("id").primaryKey().notNull(),
+    // Plans & tarifs (FCFA — entiers non-négatifs, référence commerciale XOF)
+    priceFreeMonthly: integer("price_free_monthly").notNull().default(0),
+    priceFreeAnnual: integer("price_free_annual").notNull().default(0),
+    priceProMonthly: integer("price_pro_monthly").notNull().default(25000),
+    priceProAnnual: integer("price_pro_annual").notNull().default(250000),
+    priceEnterpriseMonthly: integer("price_enterprise_monthly").notNull().default(75000),
+    priceEnterpriseAnnual: integer("price_enterprise_annual").notNull().default(750000),
+    // Quotas maxUsers par plan
+    maxUsersFree: integer("max_users_free").notNull().default(1),
+    maxUsersPro: integer("max_users_pro").notNull().default(5),
+    maxUsersEnterprise: integer("max_users_enterprise").notNull().default(20),
+    // Cycle de vie (jours)
+    trialDays: integer("trial_days").notNull().default(14),
+    gracePeriodDays: integer("grace_period_days").notNull().default(7),
+    // Contenu tenant
+    suspendedContactEmail: text("suspended_contact_email")
+      .notNull()
+      .default("contact@maigatechlab.com"),
+    suspendedContactWhatsapp: text("suspended_contact_whatsapp").notNull().default(""),
+    expiryMessage: text("expiry_message").notNull().default(""),
+    // Notifications (bloc jsonb — toggles + sender address)
+    notifications: jsonb("notifications").$type<PlatformNotificationSettings>().notNull().default({
+      senderAddress: "contact@maigatechlab.com",
+      trialWelcome: true,
+      reminderJ7: true,
+      reminderJ3: true,
+      reminderJ1: true,
+      expiryNotification: true,
+      suspensionNotification: true,
+      reactivationNotification: true,
+    }),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  () => [
+    // Singleton enforcement — literal SQL string (Drizzle #4661: CHECK does not
+    // support bound params; sql`id = ${1}` would emit invalid `CHECK (id = $1)`).
+    check("platform_settings_singleton_check", sql`id = 1`),
+  ]
+);
+
+export type PlatformSettings = typeof platformSettings.$inferSelect;
