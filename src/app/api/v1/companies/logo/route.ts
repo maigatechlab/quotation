@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { PermissionError, requirePermission, type Role } from "@/lib/permissions";
 import { company as companyTable } from "@/lib/schema";
 import { upload } from "@/lib/storage";
+import { assertSessionTenantWritable } from "@/lib/tenants/request-guard";
 
 export async function POST(req: Request): Promise<NextResponse> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -24,6 +25,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   const rawCid = (session.user as Record<string, unknown>).companyId;
   const companyId: string | null = typeof rawCid === "string" && rawCid !== "" ? rawCid : null;
   if (!companyId) return apiError("FORBIDDEN", "Aucune société associée à ce compte.", HTTP_STATUS.FORBIDDEN);
+  const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
+  if (tenantGuard) return tenantGuard;
   const userId = (session.user as Record<string, unknown>).id as string;
 
   let formData: FormData;

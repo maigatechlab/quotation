@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { can, PermissionError, requirePermission, type Role } from "@/lib/permissions";
 import { company as companyTable, user as userTable } from "@/lib/schema";
+import { assertSessionTenantWritable } from "@/lib/tenants/request-guard";
 import { companySchema } from "@/lib/validation/company";
 
 export async function GET(_req: Request): Promise<NextResponse> {
@@ -68,6 +69,9 @@ export async function POST(req: Request): Promise<NextResponse> {
       HTTP_STATUS.CONFLICT
     );
   }
+
+  const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
+  if (tenantGuard) return tenantGuard;
 
   let body: unknown;
   try {

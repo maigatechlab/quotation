@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { PermissionError, requirePermission, type Role } from "@/lib/permissions";
 import { checkQuota, incrementQuotaUsed } from "@/lib/quota/quota-check";
 import { user as userTable } from "@/lib/schema";
+import { assertSessionTenantWritable } from "@/lib/tenants/request-guard";
 
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -76,6 +77,9 @@ export async function POST(req: Request): Promise<NextResponse> {
   if (!tenantId) {
     return apiError("FORBIDDEN", "Utilisateur non associé à une entreprise.", HTTP_STATUS.FORBIDDEN);
   }
+
+  const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
+  if (tenantGuard) return tenantGuard;
 
   const quotaResult = await checkQuota(tenantId, "user.create", db);
   if (!quotaResult.allowed) {

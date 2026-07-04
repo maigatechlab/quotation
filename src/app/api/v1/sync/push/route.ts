@@ -20,6 +20,7 @@ import {
   routeTemplate as routeTemplateTable,
   syncOpLog,
 } from "@/lib/schema";
+import { assertSessionTenantWritable } from "@/lib/tenants/request-guard";
 import { clientSchema } from "@/lib/validation/client";
 import { routeTemplateSchema } from "@/lib/validation/route-template";
 
@@ -683,6 +684,9 @@ export async function POST(req: Request): Promise<NextResponse> {
     }
     throw err;
   }
+
+  const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
+  if (tenantGuard) return tenantGuard;
 
   let body: unknown;
   try {

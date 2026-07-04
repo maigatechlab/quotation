@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { PermissionError, requirePermission, type Role } from "@/lib/permissions";
 import { user as userTable } from "@/lib/schema";
+import { assertSessionTenantWritable } from "@/lib/tenants/request-guard";
 
 const patchSchema = z.object({
   role: z.enum(["admin", "commercial", "operateur"]),
@@ -45,6 +46,9 @@ export async function PATCH(
       { status: 422 }
     );
   }
+
+  const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
+  if (tenantGuard) return tenantGuard;
 
   let body: unknown;
   try {

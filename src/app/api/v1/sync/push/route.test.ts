@@ -23,8 +23,13 @@ vi.mock("@/lib/audit", () => ({
   emitAuditEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
+
+vi.mock("@/lib/tenants/request-guard", () => ({
+  assertSessionTenantWritable: vi.fn().mockResolvedValue(null),
+}));
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { assertSessionTenantWritable } from "@/lib/tenants/request-guard";
 
 const CID_A = "cid-aaaaaaaa-0000-0000-0000-000000000000";
 const CID_B = "cid-bbbbbbbb-0000-0000-0000-000000000000";
@@ -99,7 +104,10 @@ function makeReq(ops: unknown[] = [BASE_OP]) {
 }
 
 describe("POST /api/v1/sync/push", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(assertSessionTenantWritable).mockResolvedValue(null);
+  });
 
   it("401 when no session", async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(null as never);
@@ -129,6 +137,22 @@ describe("POST /api/v1/sync/push", () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
+  });
+
+  it("403 when tenant lifecycle guard blocks mutations", async () => {
+    mockSession("admin", CID_A);
+    vi.mocked(assertSessionTenantWritable).mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ error: { code: "TENANT_READONLY", message: "Le tenant est en lecture seule." } }),
+        { status: 403, headers: { "Content-Type": "application/json" } }
+      ) as never
+    );
+
+    const res = await POST(makeReq());
+    expect(res.status).toBe(403);
+    const body = await res.json() as { error: { code: string } };
+    expect(body.error.code).toBe("TENANT_READONLY");
+    expect(db.select).not.toHaveBeenCalled();
   });
 
   it("400 when ops array is empty", async () => {
