@@ -3,6 +3,27 @@
     "name": "Quotation Logistique",
     "shortName": "Quotation"
   },
+  "cron": {
+    "emails": {
+      "reminder": {
+        "subjectFirst": "Votre abonnement Quotation Logistique expire dans 7 jours",
+        "subjectSecond": "Rappel : votre abonnement expire dans 3 jours",
+        "subjectUrgent": "Urgent : votre abonnement Quotation expire demain",
+        "bodyIntro": "Bonjour,",
+        "bodyReminder": "Votre abonnement pour {tenantName} expire le {expiryDate} (dans {days} jours).",
+        "bodyAction": "Régularisez votre paiement pour éviter l'interruption de service.",
+        "bodyAccess": "Accédez à votre espace : {subdomainUrl}",
+        "bodyContact": "Contact : {ownerContact}"
+      },
+      "expiry": {
+        "subject": "Votre abonnement a été suspendu — régularisez sous {graceDays} jours",
+        "bodySuspended": "Votre abonnement pour {tenantName} a été suspendu pour non-paiement.",
+        "bodyGrace": "Vous disposez d'une période de grâce de {graceDays} jours (jusqu'au {graceEndsAt}) pour régulariser.",
+        "bodyReadonly": "Au-delà, l'accès sera limité en lecture seule.",
+        "bodyContact": "Contactez votre fournisseur pour régulariser : {ownerContact}"
+      }
+    }
+  },
   "common": {
     "loading": "Chargement...",
     "save": "Enregistrer",
@@ -503,6 +524,586 @@
       "save": "Enregistrer",
       "readOnly": "Vous n'avez pas les droits pour modifier ces informations.",
       "noCompany": "Aucune société configurée."
+    }
+  },
+  "subscriptionExpired": {
+    "title": "Votre abonnement a expiré",
+    "message": "Votre abonnement Quotation Logistique a expiré ou a été suspendu.",
+    "effectiveDate": "Date d'effet : {date}",
+    "dataPreserved": "Vos données sont conservées. Aucune information n'a été supprimée. Contactez votre interlocuteur pour régulariser et réactiver votre accès.",
+    "contactTitle": "Contactez Maiga Tech Lab",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "logout": "Se déconnecter"
+  },
+  "subscription": {
+    "expired": {
+      "title": "Abonnement expiré",
+      "message": "Votre abonnement Quotation Logistique a expiré.",
+      "expiryDate": "Date d'expiration : {date}",
+      "contactOwner": "Contactez votre fournisseur pour renouveler :",
+      "dataPreserved": "Vos données sont conservées. Aucune suppression."
+    },
+    "grace": {
+      "banner": "Votre abonnement expire le {date}. Régularisez votre paiement pour éviter l'interruption."
+    }
+  },
+  "checkout": {
+    "title": "Souscrire à Quotation Logistique",
+    "plan": {
+      "label": "Choisissez votre plan",
+      "pro": "Pro",
+      "enterprise": "Enterprise",
+      "freeHint": "(Le plan Free est disponible sur demande — contactez-nous)"
+    },
+    "cycle": {
+      "label": "Cycle de facturation",
+      "monthly": "Mensuel",
+      "annual": "Annuel",
+      "annualBadge": "2 mois offerts"
+    },
+    "fields": {
+      "adminEmail": "Email administrateur",
+      "companyName": "Nom de la société",
+      "adminName": "Nom complet"
+    },
+    "price": {
+      "xofPerMonth": "{amount}/mois",
+      "xofPerYear": "{amount}/an",
+      "eurApprox": "≈ {amount} €"
+    },
+    "submit": "Payer avec Stripe",
+    "submitting": "Redirection vers Stripe…",
+    "canceled": "Paiement annulé. Vous pouvez réessayer.",
+    "errors": {
+      "planFree": "Le plan Free n'est pas disponible au checkout",
+      "validation": "Vérifiez les champs du formulaire",
+      "stripe": "Impossible de démarrer le paiement. Réessayez."
+    },
+    "success": {
+      "title": "Paiement confirmé",
+      "body": "Votre espace est en cours d'activation. Vous recevrez un email avec vos identifiants de connexion dans quelques instants.",
+      "home": "Retour à l'accueil"
+    }
+  },
+  "owner": {
+    "layout": {
+      "dashboard": "Dashboard",
+      "tenants": "Tenants",
+      "payments": "Paiements",
+      "reports": "Rapports",
+      "settings": "Paramètres",
+      "backToApp": "Retour à l'app",
+      "logout": "Déconnexion",
+      "comingSoon": "Bientôt disponible"
+    },
+    "settings": {
+      "eyebrow": "Owner",
+      "title": "Paramètres plateforme",
+      "sections": {
+        "pricing": {
+          "title": "Plans & tarifs",
+          "note": "Référence commerciale. Les prix Stripe (price_id) sont gérés dans le dashboard Stripe. La modification ici n'affecte pas les abonnements Stripe existants."
+        },
+        "quotas": {
+          "title": "Quotas d'utilisateurs"
+        },
+        "lifecycle": {
+          "title": "Cycle de vie",
+          "note": "La durée de grâce s'applique aux nouvelles suspensions calculées par le cron. Les tenants déjà en grâce conservent leur date existante."
+        },
+        "tenantContent": {
+          "title": "Contenu affiché aux tenants"
+        },
+        "notifications": {
+          "title": "Notifications automatiques"
+        }
+      },
+      "fields": {
+        "priceFreeMonthly": "Free mensuel (XOF)",
+        "priceFreeAnnual": "Free annuel (XOF)",
+        "priceProMonthly": "Pro mensuel (XOF)",
+        "priceProAnnual": "Pro annuel (XOF)",
+        "priceEnterpriseMonthly": "Enterprise mensuel (XOF)",
+        "priceEnterpriseAnnual": "Enterprise annuel (XOF)",
+        "maxUsersFree": "Utilisateurs max (Free)",
+        "maxUsersPro": "Utilisateurs max (Pro)",
+        "maxUsersEnterprise": "Utilisateurs max (Enterprise)",
+        "trialDays": "Durée d'essai (jours)",
+        "gracePeriodDays": "Durée de grâce (jours)",
+        "suspendedContactEmail": "Email de contact (tenants suspendus)",
+        "suspendedContactWhatsapp": "WhatsApp de contact (tenants suspendus)",
+        "expiryMessage": "Message page d'expiration (vide = message par défaut)",
+        "senderAddress": "Adresse expéditeur des emails",
+        "trialWelcome": "Email de bienvenue (trial)",
+        "reminderJ7": "Rappel J-7",
+        "reminderJ3": "Rappel J-3",
+        "reminderJ1": "Rappel J-1",
+        "expiryNotification": "Notification d'expiration (J0)",
+        "suspensionNotification": "Notification de suspension",
+        "reactivationNotification": "Notification de réactivation"
+      },
+      "actions": {
+        "save": "Enregistrer",
+        "saving": "Enregistrement…"
+      },
+      "messages": {
+        "saved": "Paramètres plateforme enregistrés."
+      }
+    },
+    "dashboard": {
+      "eyebrow": "OWNER CONSOLE",
+      "title": "Vue d'ensemble",
+      "active": "Actifs",
+      "trial": "En trial",
+      "suspended": "Suspendus",
+      "cancelled": "Annulés",
+      "mrr": "MRR",
+      "arr": "ARR",
+      "collectedThisMonth": "Encaissé ce mois",
+      "alerts": {
+        "title": "Alertes critiques",
+        "expiringSoon": "Expire dans ≤ 7 jours",
+        "inGrace": "En période de grâce",
+        "overdue": "Retard > 30 jours",
+        "none": "Aucune alerte critique",
+        "count": "{count} alertes"
+      },
+      "recentActivity": {
+        "title": "Activité récente",
+        "empty": "Aucune activité"
+      },
+      "health": {
+        "title": "Santé plateforme",
+        "ratio": "{active} / {total} actifs"
+      }
+    },
+    "tenants": {
+      "title": "Tenants",
+      "columns": {
+        "name": "Nom",
+        "plan": "Plan",
+        "status": "Statut",
+        "expiry": "Expiration",
+        "lastPayment": "Dernier paiement",
+        "users": "Utilisateurs",
+        "actions": "Actions"
+      },
+      "filters": {
+        "status": "Statut",
+        "plan": "Plan",
+        "expiry": "Expiration",
+        "paymentMethod": "Méthode paiement",
+        "createdAfter": "Créé après",
+        "createdBefore": "Créé avant",
+        "reset": "Réinitialiser",
+        "search": "Rechercher"
+      },
+      "actions": {
+        "view": "Voir",
+        "suspend": "Suspendre",
+        "reactivate": "Réactiver",
+        "recordPayment": "Enregistrer paiement"
+      },
+      "suspend": {
+        "trigger": "Suspendre",
+        "title": "Suspendre le tenant « {name} »",
+        "reasonLabel": "Motif de suspension",
+        "reasonPlaceholder": "Sélectionnez un motif",
+        "reasonRequired": "Le motif de suspension est requis",
+        "reasonNonPaiement": "Non-paiement",
+        "reasonFraude": "Fraude",
+        "reasonDemandeClient": "Demande client",
+        "reasonAutre": "Autre",
+        "note": "Note interne",
+        "noteHint": "Visible par le owner uniquement (optionnel)",
+        "noteTooLong": "La note ne doit pas dépasser 2000 caractères",
+        "totalBlock": "Bloquer totalement (fraude/sécurité)",
+        "totalBlockHint": "Lecture seule si décoché (consultation autorisée). Blocage total si coché (aucun accès).",
+        "confirm": "Confirmer la suspension",
+        "cancel": "Annuler",
+        "success": "Tenant « {name} » suspendu",
+        "errorConflict": "Le tenant n'est pas suspendable dans son état actuel",
+        "error": "Une erreur est survenue"
+      },
+      "cancel": {
+        "trigger": "Annuler définitivement",
+        "title": "Annuler définitivement le tenant « {name} » ?",
+        "warning": "Cette action est IRRÉVERSIBLE. Le tenant sera bloqué totalement. Les données sont CONSERVÉES (aucune suppression). Le tenant ne pourra plus se connecter tant qu'il n'est pas réactivé manuellement.",
+        "confirmSlugLabel": "Pour confirmer, saisissez le slug du tenant",
+        "confirmSlugHint": "Slug attendu : {slug}",
+        "confirmSlugMismatch": "Le slug saisi ne correspond pas",
+        "confirm": "Confirmer l'annulation",
+        "cancel": "Annuler",
+        "success": "Tenant « {name} » annulé définitivement",
+        "errorConflict": "Ce tenant est déjà annulé",
+        "error": "Une erreur est survenue"
+      },
+      "reactivate": {
+        "trigger": "Réactiver",
+        "title": "Réactiver le tenant « {name} »",
+        "subtitle": "Sélectionnez un paiement couvrant la nouvelle période.",
+        "selectPayment": "Paiement couvrant",
+        "noteLabel": "Note interne",
+        "noteHint": "Visible par le owner uniquement (optionnel)",
+        "noCoveringPayment": "Aucun paiement ne couvre la période de réactivation. Vous devez enregistrer un paiement pour la période voulue.",
+        "noCoveringPaymentCancelled": "Aucun paiement ne couvre la période de réactivation. Ce tenant est annulé — l'enregistrement d'un nouveau paiement n'est pas possible depuis cet écran.",
+        "recordPaymentLink": "Enregistrer un paiement",
+        "summary": "Le tenant passera en ACTIF, abonnement valable du {start} au {end}.",
+        "confirm": "Confirmer la réactivation",
+        "cancel": "Annuler",
+        "submitting": "Réactivation en cours…",
+        "success": "Tenant « {name} » réactivé",
+        "errorNoCoveringPayment": "Aucun paiement ne couvre la période de réactivation. Enregistrez d'abord un paiement.",
+        "errorConflict": "Le tenant est déjà actif ou en essai — rien à réactiver",
+        "error": "Une erreur est survenue. La réactivation a échoué.",
+        "tenantNotFound": "Tenant introuvable",
+        "paymentLabel": "{method} — {amount} XOF — du {start} au {end} (payé le {paidAt})"
+      },
+      "export": {
+        "csv": "Exporter CSV",
+        "exported": "Export téléchargé"
+      },
+      "pagination": {
+        "previous": "Précédent",
+        "next": "Suivant",
+        "page": "Page {current} / {total}",
+        "results": "{count} tenants"
+      },
+      "empty": "Aucun tenant",
+      "daysRemaining": {
+        "expired": "Expiré",
+        "days": "J-{n}",
+        "ok": "+{n} j"
+      },
+      "new": {
+        "eyebrow": "OWNER · TENANTS",
+        "title": "Nouveau tenant",
+        "companyName": "Nom de la société",
+        "companyNameRequired": "Le nom de la société est requis",
+        "slug": "Sous-domaine",
+        "slugHint": "Le tenant sera accessible sur {slug}.quotation.com",
+        "slugInvalid": "Le slug ne doit contenir que des minuscules, des chiffres et des tirets",
+        "slugTaken": "Ce sous-domaine est déjà utilisé",
+        "plan": "Plan",
+        "cycle": "Cycle de facturation",
+        "monthly": "Mensuel",
+        "annual": "Annuel",
+        "adminSection": "Administrateur du tenant",
+        "adminName": "Nom de l'administrateur",
+        "adminNameRequired": "Le nom de l'administrateur est requis",
+        "adminEmail": "Email de l'administrateur",
+        "adminEmailInvalid": "Format email invalide",
+        "adminEmailTaken": "Un utilisateur avec cet email existe déjà",
+        "passwordMode": "Mot de passe",
+        "passwordAuto": "Générer automatiquement",
+        "passwordManual": "Définir manuellement",
+        "manualPassword": "Mot de passe",
+        "manualPasswordRequired": "Le mot de passe doit faire au moins 12 caractères",
+        "sendWelcomeEmail": "Envoyer l'email de bienvenue avec les identifiants",
+        "notes": "Notes internes",
+        "submit": "Créer le tenant",
+        "submitting": "Création en cours…",
+        "success": "Tenant « {name} » créé — {slug}.quotation.com",
+        "error": "Une erreur est survenue. Le tenant n'a pas été créé.",
+        "emailNotSent": "Email non envoyé — communiquez les identifiants manuellement",
+        "generatedPassword": "Mot de passe généré",
+        "copyPassword": "Copier",
+        "changePasswordHint": "Changez votre mot de passe à la première connexion.",
+        "goToList": "Voir la liste des tenants"
+      },
+      "detail": {
+        "backToTenants": "Tenants",
+        "tabs": {
+          "infos": "Infos générales",
+          "abonnement": "Abonnement",
+          "utilisateurs": "Utilisateurs",
+          "journal": "Journal"
+        },
+        "infos": {
+          "identityTitle": "Identité",
+          "name": "Nom",
+          "slug": "Slug",
+          "createdAt": "Créé le",
+          "subscriptionTitle": "Abonnement courant",
+          "subscriptionStart": "Début",
+          "subscriptionEnd": "Fin",
+          "cycle": "Cycle",
+          "cycleMonthly": "Mensuel",
+          "cycleAnnual": "Annuel",
+          "noCycle": "—",
+          "inGrace": "Période de grâce — fin {date}",
+          "inTrial": "Trial — fin {date}",
+          "notesTitle": "Notes internes",
+          "notesHint": "Visibles par le owner uniquement",
+          "notesPlaceholder": "Ajouter des notes internes…",
+          "notesSave": "Enregistrer les notes",
+          "notesSaving": "Enregistrement…",
+          "notesSaved": "Notes enregistrées",
+          "notesTooLong": "Les notes ne doivent pas dépasser 5000 caractères",
+          "planTitle": "Plan",
+          "planChange": "Changer de plan",
+          "planApply": "Appliquer",
+          "planChanged": "Plan mis à jour",
+          "actionsTitle": "Actions",
+          "plan": "Plan",
+          "status": "Statut",
+          "planChangeFailed": "Échec de la mise à jour du plan",
+          "notesSaveFailed": "Échec de l'enregistrement des notes"
+        },
+        "abonnement": {
+          "title": "Abonnement",
+          "currentPeriodTitle": "Période courante",
+          "timeline": {
+            "title": "Timeline de l'abonnement",
+            "noPayments": "Aucun paiement enregistré",
+            "paid": "Payé ({days}j)",
+            "gap": "Gap ({days}j)",
+            "segmentTooltip": "{method} {amount} — {start} → {end}",
+            "gapTooltip": "Gap — {days} jours — {start} → {end}",
+            "noPaymentsSuggestion": "Utilisez le bouton « Enregistrer un paiement » pour saisir le premier paiement."
+          },
+          "historyTitle": "Historique des paiements",
+          "columns": {
+            "date": "Date",
+            "method": "Méthode",
+            "amount": "Montant",
+            "reference": "Référence",
+            "period": "Période couverte",
+            "cycle": "Cycle",
+            "confirmedBy": "Confirmé par"
+          },
+          "empty": "Aucun paiement",
+          "recordPayment": "Enregistrer un paiement"
+        },
+        "utilisateurs": {
+          "title": "Utilisateurs",
+          "quota": "{active} / {max} utilisateurs",
+          "quotaExceeded": "Quota dépassé",
+          "quotaFull": "Quota atteint — passez au plan supérieur pour ajouter des utilisateurs",
+          "addUser": "+ Ajouter un utilisateur",
+          "tenantInactive": "Tenant {status} — actions désactivées",
+          "columns": {
+            "name": "Nom",
+            "email": "Email",
+            "role": "Rôle",
+            "lastSeen": "Dernière connexion",
+            "status": "Statut",
+            "actions": "Actions"
+          },
+          "lastSeenNever": "Jamais",
+          "statusActive": "Actif",
+          "statusDisabled": "Désactivé",
+          "statusUnverified": "Email non vérifié",
+          "revoke": "Révoquer",
+          "empty": "Aucun utilisateur",
+          "roles": {
+            "admin": "Administrateur",
+            "commercial": "Commercial",
+            "operateur": "Opérateur"
+          },
+          "add": {
+            "title": "Ajouter un utilisateur",
+            "name": "Nom",
+            "nameRequired": "Le nom est requis",
+            "email": "Email",
+            "emailInvalid": "Format email invalide",
+            "emailTaken": "Un utilisateur avec cet email existe déjà",
+            "role": "Rôle",
+            "passwordMode": "Mot de passe",
+            "passwordAuto": "Générer automatiquement",
+            "passwordManual": "Définir manuellement",
+            "manualPassword": "Mot de passe",
+            "manualPasswordRequired": "Le mot de passe doit faire au moins 12 caractères",
+            "sendWelcomeEmail": "Envoyer l'email de bienvenue avec les identifiants",
+            "cancel": "Annuler",
+            "submit": "Ajouter",
+            "submitting": "Ajout en cours…",
+            "addedSuccess": "Utilisateur « {name} » ajouté",
+            "error": "Une erreur est survenue. L'utilisateur n'a pas été ajouté.",
+            "generatedPassword": "Mot de passe généré",
+            "copyPassword": "Copier",
+            "changePasswordHint": "L'utilisateur devra changer son mot de passe à la première connexion."
+          },
+          "revokeDialog": {
+            "title": "Révoquer l'utilisateur",
+            "confirm": "Révoquer {name} ({email}) ? L'utilisateur ne pourra plus se connecter. Cette action libère un siège de quota.",
+            "submit": "Confirmer la révocation",
+            "success": "Utilisateur « {name} » révoqué",
+            "lastAdminError": "Dernier admin — ne peut pas être révoqué. Nommez d'abord un nouvel administrateur.",
+            "lastAdminTooltip": "Dernier admin — ne peut pas être révoqué",
+            "notFound": "Utilisateur introuvable"
+          },
+          "reactivate": {
+            "trigger": "Réactiver",
+            "title": "Réactiver l'utilisateur",
+            "confirm": "Réactiver {name} ? Un siège de quota sera consommé.",
+            "submit": "Confirmer la réactivation",
+            "success": "Utilisateur « {name} » réactivé",
+            "quotaFull": "Quota atteint — révoquez d'abord un utilisateur actif"
+          }
+        },
+        "journal": {
+          "title": "Journal d'événements",
+          "filterAll": "Tous les types",
+          "filterByType": "Type d'événement",
+          "actorSystem": "Système",
+          "empty": "Aucun événement enregistré pour ce tenant",
+          "appendOnly": "Ce journal est immuable. Aucun événement ne peut être modifié ni supprimé."
+        }
+      }
+    },
+    "badges": {
+      "status": {
+        "active": "Actif",
+        "trial": "Trial",
+        "suspended": "Suspendu",
+        "cancelled": "Annulé"
+      },
+      "plan": {
+        "free": "Free",
+        "pro": "Pro",
+        "enterprise": "Enterprise"
+      },
+      "paymentMethod": {
+        "nitta": "Nitta",
+        "wave": "Wave",
+        "amana": "Amana",
+        "stripe": "Stripe",
+        "cash": "Cash",
+        "virement": "Virement"
+      }
+    },
+    "events": {
+      "created": "Tenant créé",
+      "activated": "Activé",
+      "suspended": "Suspendu",
+      "reactivated": "Réactivé",
+      "cancelled": "Annulé",
+      "payment_recorded": "Paiement enregistré",
+      "plan_changed": "Plan modifié",
+      "user_added": "Utilisateur ajouté",
+      "reminder_sent": "Rappel envoyé",
+      "updated": "Tenant modifié"
+    },
+    "tenantDetail": {
+      "eyebrow": "OWNER · TENANT",
+      "status": {
+        "active": "Actif",
+        "trial": "Trial",
+        "suspended": "Suspendu",
+        "cancelled": "Annulé — données conservées"
+      },
+      "reactivate": "Réactiver (story 7-8)",
+      "noData": "Aucune donnée disponible"
+    },
+    "payments": {
+      "record": {
+        "title": "Enregistrer un paiement",
+        "subtitle": "Tenant : {name}",
+        "paymentMethod": "Méthode de paiement",
+        "paymentMethodRequired": "La méthode de paiement est requise",
+        "paymentReference": "Référence transaction",
+        "paymentReferenceHint": "Ex : ID de transaction Wave, référence Nitta",
+        "amount": "Montant (FCFA)",
+        "amountInvalid": "Le montant doit être un entier positif en FCFA",
+        "paidAt": "Date du paiement",
+        "paidAtFuture": "La date de paiement ne peut pas être dans le futur",
+        "billingCycle": "Cycle de facturation",
+        "monthly": "Mensuel",
+        "annual": "Annuel",
+        "periodStart": "Début de période couverte",
+        "periodEnd": "Fin de période couverte",
+        "periodEndInvalid": "La date de fin de période doit être après la date de début",
+        "notes": "Notes (internes)",
+        "reactivateIfSuspended": "Réactiver le compte si suspendu",
+        "reactivateWarning": "Le compte restera suspendu après ce paiement. Cochez « Réactiver » pour le réactiver.",
+        "reactivatedNote": "Le compte sera réactivé après l'enregistrement.",
+        "submit": "Enregistrer le paiement",
+        "submitting": "Enregistrement en cours…",
+        "success": "Paiement de {amount} XOF enregistré pour {name}",
+        "error": "Une erreur est survenue. Le paiement n'a pas été enregistré.",
+        "tenantNotFound": "Tenant introuvable",
+        "cancelledConflict": "Impossible d'enregistrer un paiement pour un tenant annulé",
+        "cancelled": "Annuler",
+        "amountPreview": "{amount} XOF",
+        "methods": {
+          "nitta": "Nitta",
+          "wave": "Wave",
+          "amana": "Amana",
+          "stripe": "Stripe",
+          "cash": "Cash",
+          "virement": "Virement"
+        }
+      }
+    },
+    "reports": {
+      "eyebrow": "COMPTABILITÉ",
+      "title": "Rapports & comptabilité",
+      "description": "Rapports mensuels, exports comptables et prévisions d'abonnement.",
+      "monthly": {
+        "title": "Rapport mensuel",
+        "monthLabel": "Mois",
+        "revenueByMethod": "Revenus par méthode de paiement",
+        "method": "Méthode",
+        "count": "Nb paiements",
+        "total": "Total",
+        "grandTotal": "TOTAL",
+        "noPayments": "Aucun paiement sur cette période",
+        "kpi": {
+          "newTenants": "Nouveaux tenants",
+          "churn": "Churn (annulations)",
+          "activeNow": "Tenants actifs"
+        }
+      },
+      "paymentsExport": {
+        "title": "Export paiements",
+        "description": "Exportez tous les paiements encaissés sur une période au format CSV (compatible Excel).",
+        "from": "Date de début",
+        "to": "Date de fin",
+        "download": "Télécharger CSV",
+        "limit": "Limité à 10 000 lignes par export. Affinez la plage pour les gros volumes.",
+        "errors": {
+          "fromToRequired": "Les dates de début et de fin sont requises.",
+          "fromAfterTo": "La date de début doit précéder la date de fin."
+        }
+      },
+      "snapshot": {
+        "title": "Instantané des tenants",
+        "description": "État courant du parc SaaS. (La reconstitution à une date passée est prévue en V2.)",
+        "dateLabel": "Date de référence",
+        "referenceDate": "Référence : {date}",
+        "download": "Exporter CSV",
+        "columns": {
+          "name": "Nom",
+          "plan": "Plan",
+          "status": "Statut",
+          "subscriptionStart": "Début abo.",
+          "subscriptionEnd": "Fin abo.",
+          "maxUsers": "Users max"
+        },
+        "pagination": {
+          "previous": "Précédent",
+          "next": "Suivant",
+          "page": "Page {current} / {total}"
+        },
+        "empty": "Aucun tenant"
+      },
+      "forecast": {
+        "title": "Renouvellements attendus le mois prochain",
+        "description": "Tenants dont l'abonnement expire dans le mois calendaire suivant.",
+        "disclaimer": "Montants estimés d'après la grille tarifaire et le dernier cycle de facturation. Le montant réel encaissé peut différer (remises, changement de plan).",
+        "columns": {
+          "tenant": "Tenant",
+          "plan": "Plan",
+          "subscriptionEnd": "Fin abo.",
+          "cycle": "Cycle",
+          "expected": "Montant attendu"
+        },
+        "total": "Total prévu",
+        "count": "{count} renouvellement(s) attendu(s)",
+        "empty": "Aucun renouvellement attendu le mois prochain"
+      }
     }
   }
 }
