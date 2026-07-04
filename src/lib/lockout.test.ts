@@ -64,6 +64,23 @@ describe("checkAccountLockout", () => {
     setSelectRows([{ lockedAt: new Date(), loginAttempts: 5 }])
     await expect(checkAccountLockout("LOCKED@EXAMPLE.COM")).rejects.toThrow(APIError)
   })
+
+  it("lève APIError FORBIDDEN si le compte est révoqué (disabledAt défini) — story 7-9", async () => {
+    setSelectRows([{ lockedAt: null, loginAttempts: 0, disabledAt: new Date() }])
+    await expect(checkAccountLockout("revoked@example.com")).rejects.toThrow(APIError)
+  })
+
+  it("le check disabledAt prime sur lockedAt (compte révoqué même si non verrouillé)", async () => {
+    setSelectRows([{ lockedAt: null, loginAttempts: 0, disabledAt: new Date() }])
+    const err = await checkAccountLockout("revoked@example.com").catch((e) => e)
+    expect(err).toBeInstanceOf(APIError)
+    expect((err as APIError).body?.code).toBe("ACCOUNT_DISABLED")
+  })
+
+  it("ne lève pas d'erreur si disabledAt est null", async () => {
+    setSelectRows([{ lockedAt: null, loginAttempts: 0, disabledAt: null }])
+    await expect(checkAccountLockout("active@example.com")).resolves.toBeUndefined()
+  })
 })
 
 describe("recordLoginAttempt", () => {
