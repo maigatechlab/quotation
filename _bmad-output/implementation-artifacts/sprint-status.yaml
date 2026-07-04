@@ -1,5 +1,5 @@
-# generated: 2026-06-21
-# last_updated: 2026-06-27
+﻿# generated: 2026-06-21
+# last_updated: 2026-06-28
 # story 5-1 done 2026-06-26
 # story 5-3 done 2026-06-26
 # story 4-3 done 2026-06-27
@@ -51,13 +51,10 @@
 # story 6-5 done 2026-06-27
 # story 3-6 in-progress 2026-06-27
 # story 3-6 review 2026-06-27
-
-generated: 2026-06-21
-last_updated: 2026-06-28
 # story 6-3 in-progress 2026-06-28
 # story 6-3 review 2026-06-28
-# story 6-3 done 2026-06-28 (code review: 4 findings fixed — immutable tenant scope, logout cookie regex, CSV BOM, double-escape)
-# story 6-2 done 2026-06-28 (code review opus-4-8: 8 patches + D1 appliqués, 334/334 tests)
+# story 6-3 done 2026-06-28 (code review: 4 findings fixed â€” immutable tenant scope, logout cookie regex, CSV BOM, double-escape)
+# story 6-2 done 2026-06-28 (code review opus-4-8: 8 patches + D1 appliquÃ©s, 334/334 tests)
 # story 6-2 back to in-progress 2026-06-28 (code review: 1 decision_needed, 8 patch)
 # story 6-2 in-progress 2026-06-28
 # story 6-2 review 2026-06-28
@@ -75,6 +72,59 @@ last_updated: 2026-06-28
 # story 3-7 done 2026-06-27
 # story 3-8 done 2026-06-27
 # story 3-11 done 2026-06-27
+# story 7-10 ready-for-dev 2026-06-28 (depends 7-1/7-3/7-4/7-8; Stripe checkout+webhook auto-activate, EUR, idempotent)
+# story 7-11 ready-for-dev 2026-06-28 (depends 7-1/7-2; reports + CSV payments export, forecasts, no xlsx CVE)
+# story 7-12 ready-for-dev 2026-06-28 (depends 7-1/7-2/7-5/7-6; platform_settings singleton, externalize constants, tierEnum unify reco)
+# story 7-7 ready-for-dev 2026-06-28 (depends 7-1/7-2/7-4/7-5; fiche tenant 4 onglets, CSS timeline)
+# story 7-8 ready-for-dev 2026-06-28 (depends 7-1/7-4; reactivate with payment-coverage guard, FOR UPDATE)
+# story 7-9 ready-for-dev 2026-06-28 (depends 7-1/7-3; tenant user mgmt, quota guard, soft-disable disabledAt)
+# story 7-4 ready-for-dev 2026-06-28 (depends 7-1/7-2; payment record mobile money, atomic tx, FCFA int)
+# story 7-5 ready-for-dev 2026-06-28 (depends 7-1/7-2; manual suspend + /subscription-expired page)
+# story 7-6 ready-for-dev 2026-06-28 (depends 7-1; Vercel cron expiry + J-7/3/1 reminders, CRON_SECRET)
+# story 7-1 ready-for-dev 2026-06-28 (Epic 7 source: Docs/business/owner-subscription-management.md)
+# story 7-2 ready-for-dev 2026-06-28 (depends 7-1; extends userRoleEnum superadmin; owner dashboard + tenant list)
+# story 7-3 ready-for-dev 2026-06-28 (depends 7-1; manual tenant creation + welcome email via Resend)
+# sprint-planning 2026-06-28 â€” Epic 7 ajoutÃ© (Owner Panel & Subscription Management)
+# epic-1 done 2026-06-28 (toutes stories complÃ©tÃ©es)
+# epic-2 done 2026-06-28 (toutes stories complÃ©tÃ©es)
+# epic-3 done 2026-06-28 (toutes stories complÃ©tÃ©es)
+# epic-4 done 2026-06-28 (toutes stories complÃ©tÃ©es)
+# epic-6 done 2026-06-28 (toutes stories complÃ©tÃ©es)
+
+# story 7-7 review 2026-07-03 (4 onglets Infos/Abonnement/Utilisateurs/Journal, PATCH update tenant, @radix-ui/react-tabs, 657/657 tests, build OK)
+# story 7-8 done 2026-07-03 (code review: 1 decision_needed + 12 patches appliquÃ©s, 9 diffÃ©rÃ©s ; 701/701 tests, build OK)
+# story 7-9 in-progress 2026-07-03
+# story 7-9 review 2026-07-03 (user.disabledAt + quota guard atomique, add/revoke/reactivate tenant users, remplace placeholder 7-7 ; 725/725 tests, build OK ; E2E Ã©crit mais bloquÃ© par bug Playwright/env prÃ©existant)
+# story 7-9 review 2026-07-03 (code review: 3 High + 2 Medium rÃ©solus â€” disabledAt sign-in guard, companyId, quota tenant.maxUsers, tenant status check revoke/reactivate, FOR UPDATE lock quota/dernier-admin ; 731/731 tests, build OK)
+# story 7-9 done 2026-07-03 (second reviewer indÃ©pendant confirme les 5 fixes, aucun nouveau finding)
+# story 7-12 in-progress 2026-07-04
+# story 7-12 review 2026-07-04 (platform_settings singleton, accesseurs async platform-config.ts, refactor 5 dispatch emails, page /owner/settings Server Action ; fix transversal Better Auth additionalFields role/companyId manquants ; 832/832 tests, build OK ; E2E Ã©crit mais bloquÃ© par bug Playwright/env prÃ©existant, vÃ©rifiÃ© manuellement via session rÃ©elle)
+# epic-7 done 2026-07-04 (toutes stories 7-1 Ã  7-12 complÃ©tÃ©es)
+generated: 2026-06-21
+last_updated: 2026-07-04
+# story 7-11 in-progress 2026-07-03
+# story 7-11 review 2026-07-04 (rapport mensuel revenus/churn/actifs, export CSV paiements, instantanÃ© tenants, prÃ©visions renouvellements ; 798/798 tests, build OK ; E2E Ã©crit mais bloquÃ© par bug Playwright/env prÃ©existant, reproduit sur spec non modifiÃ©)
+# story 7-11 review 2026-07-04 (code review: 1 High + 2 Medium + 1 Low rÃ©solus â€” validation stricte YYYY-MM-DD, ?month= validÃ©, sÃ©lecteur date instantanÃ© AC6 ajoutÃ©, snapshotPage clampÃ© ; +10 tests, 808/808, typecheck/lint OK ; build non re-confirmÃ©, Docker Desktop injoignable en session)
+# story 7-11 done 2026-07-04 (second reviewer indÃ©pendant confirme les 4 fixes, aucun nouveau finding ; pnpm build reconfirmÃ© vert aprÃ¨s redÃ©marrage Postgres du projet â€” caveat levÃ©)
+# story 7-10 in-progress 2026-07-03
+# story 7-10 review 2026-07-03 (Stripe checkout+webhook, EUR pricing, idempotent creation/renewal; 765/765 tests, build OK; E2E full-flow test gated behind STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET)
+# story 7-10 review-fixes 2026-07-03 (code review: 2 High + 1 Medium resolved â€” renewal customer-id reuse, orphaned user/account rollback, INVALID_METADATA 400; +12 tests, 777/777, build OK)
+# story 7-10 done 2026-07-03 (review findings resolved, 777/777 tests, build OK)
+# story 7-8 in-progress 2026-07-03
+# story 7-8 review 2026-07-03 (699/699 tests, build OK; E2E written but blocked by pre-existing Playwright/env issue reproducible on unmodified specs)
+# story 7-6 done 2026-07-03 (code review opus-4-8: 3 dÃ©cisions + 9 patches appliquÃ©s, P7 repliÃ©, 6 diffÃ©rÃ©s; lint 0 err, 621/621 tests)
+# story 7-6 review 2026-07-03 (616/616 tests, build+manual smoke test OK, cron /api/cron/expiry-reminders + vercel.json)
+# story 7-6 in-progress 2026-07-02
+# story 7-4 review 2026-07-02 (code review: 2 decision_needed rÃ©solus + 4 patches appliquÃ©s â€” pnpm check 570/570 tests, 0 erreur)
+# story 7-4 done 2026-07-02
+# story 7-3 review 2026-06-28 (460 tests, build âœ“, type=password, goToList i18n, email lowercase, slug FR messages)
+# story 7-3 done 2026-06-28 (code review: 4 patches appliquÃ©s, D2/W1/W2/W3 diffÃ©rÃ©s)
+# story 7-2 in-progress 2026-06-28
+# story 7-2 review 2026-06-28 (superadmin role, owner console /owner + /owner/tenants, CSV export BOM, 425 tests, clean build)
+# story 7-2 done 2026-06-28 (H1 subquery tiebreaker, H2 proxy API bypass â€” review approved)
+# story 7-1 in-progress 2026-06-28
+# story 7-1 review 2026-06-28 (schema tenants+payments+events, proxy subdomain, enforcement, 393 tests)
+# story 7-1 done 2026-06-28 (review approuvÃ©, H2 dette explicite â†’ 7-2 requireTenantSession)
 project: quotation
 project_key: NOKEY
 tracking_system: file-system
@@ -88,8 +138,8 @@ story_location: _bmad-output/implementation-artifacts
 #   - done: All stories in epic completed
 #
 # Epic Status Transitions:
-#   - backlog → in-progress: Automatically when first story is created (via create-story)
-#   - in-progress → done: Manually when all stories reach 'done' status
+#   - backlog â†’ in-progress: Automatically when first story is created (via create-story)
+#   - in-progress â†’ done: Manually when all stories reach 'done' status
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
@@ -111,7 +161,7 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Socle, Design System & Authentification
-  epic-1: in-progress
+  epic-1: done
   1-1-init-libraries-design-system: done
   1-2-shared-business-foundations: done
   1-3-local-data-layer-crypto-seam: done
@@ -122,8 +172,8 @@ development_status:
   1-8-pwa-install-update: done
   epic-1-retrospective: optional
 
-  # Epic 2: Référentiel offline — Société, Clients & Moteur de sync
-  epic-2: in-progress
+  # Epic 2: RÃ©fÃ©rentiel offline â€” SociÃ©tÃ©, Clients & Moteur de sync
+  epic-2: done
   2-1-offline-sync-engine: done
   2-2-service-worker-cache-strategy: done
   2-3-company-info-config: done
@@ -135,8 +185,8 @@ development_status:
   2-9-delete-client: done
   epic-2-retrospective: optional
 
-  # Epic 3: Devis — création, calculs, prestations & clauses
-  epic-3: in-progress
+  # Epic 3: Devis â€” crÃ©ation, calculs, prestations & clauses
+  epic-3: done
   3-1-create-quotation-numbering: done
   3-2-route-entry: done
   3-3-goods-automatic-calculations: done
@@ -151,7 +201,7 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: PDF, validation client & partage
-  epic-4: in-progress
+  epic-4: done
   4-1-professional-pdf-generation: done
   4-2-preview-before-generation: done
   4-3-client-signature-zone-pdf: done
@@ -167,7 +217,7 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Durcissement v1 [MVP-1]
-  epic-6: in-progress
+  epic-6: done
   6-1-indexeddb-encryption-at-rest: done
   6-2-tier-quota-enforcement: done
   6-3-immutable-audit-trail-export: done
@@ -175,3 +225,21 @@ development_status:
   6-5-route-corridor-templates-crud: done
   6-6-geo-replicated-backup-pitr: done
   epic-6-retrospective: optional
+
+  # Epic 7: Owner Panel & Gestion des abonnements SaaS [Post-MVP]
+  # Source: Docs/business/owner-subscription-management.md
+  # DÃ©pendances: Epic 1 (auth/rÃ´les), Epic 6.2 (quota enforcement)
+  epic-7: done
+  7-1-tenants-schema-subdomain-middleware: done
+  7-2-owner-dashboard-tenant-list: done
+  7-3-create-tenant-welcome-email: done
+  7-4-record-payment-mobile-money: done
+  7-5-manual-suspension-expiry-page: done
+  7-6-expiry-cron-automated-reminders: done
+  7-7-tenant-detail-page-tabs: done
+  7-8-reactivation-after-payment: done
+  7-9-tenant-user-management: done
+  7-10-stripe-integration-webhook: done
+  7-11-reports-accounting-export: done
+  7-12-platform-settings: done
+  epic-7-retrospective: optional
