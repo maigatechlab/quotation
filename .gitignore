@@ -53,3 +53,4 @@ public/uploads
 # local tooling (BMad skills, agent runtime)
 .claude/
 .agent/
+.tmp/
