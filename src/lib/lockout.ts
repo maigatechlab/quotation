@@ -12,11 +12,25 @@ const LOCKOUT_TTL_MS = 30 * 60 * 1000 // 30 minutes
 export async function checkAccountLockout(email: string): Promise<void> {
   const normalizedEmail = email.toLowerCase()
   const rows = await db
-    .select({ lockedAt: userTable.lockedAt, loginAttempts: userTable.loginAttempts })
+    .select({
+      lockedAt: userTable.lockedAt,
+      loginAttempts: userTable.loginAttempts,
+      disabledAt: userTable.disabledAt,
+    })
     .from(userTable)
     .where(eq(userTable.email, normalizedEmail))
     .limit(1)
   const found = rows[0]
+
+  // Revoked tenant users (story 7-9 soft-disable) must never be able to sign
+  // in again, even with a correct password — takes priority over lockout,
+  // which is a temporary/automatic state, not an administrative decision.
+  if (found?.disabledAt) {
+    throw new APIError("FORBIDDEN", {
+      code: "ACCOUNT_DISABLED",
+      message: "This account has been disabled",
+    })
+  }
 
   if (found?.lockedAt) {
     const elapsed = Date.now() - found.lockedAt.getTime()
