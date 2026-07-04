@@ -1,0 +1,20 @@
+CREATE TABLE "platform_settings" (
+	"id" integer PRIMARY KEY NOT NULL,
+	"price_free_monthly" integer DEFAULT 0 NOT NULL,
+	"price_free_annual" integer DEFAULT 0 NOT NULL,
+	"price_pro_monthly" integer DEFAULT 25000 NOT NULL,
+	"price_pro_annual" integer DEFAULT 250000 NOT NULL,
+	"price_enterprise_monthly" integer DEFAULT 75000 NOT NULL,
+	"price_enterprise_annual" integer DEFAULT 750000 NOT NULL,
+	"max_users_free" integer DEFAULT 1 NOT NULL,
+	"max_users_pro" integer DEFAULT 5 NOT NULL,
+	"max_users_enterprise" integer DEFAULT 20 NOT NULL,
+	"trial_days" integer DEFAULT 14 NOT NULL,
+	"grace_period_days" integer DEFAULT 7 NOT NULL,
+	"suspended_contact_email" text DEFAULT 'contact@maigatechlab.com' NOT NULL,
+	"suspended_contact_whatsapp" text DEFAULT '' NOT NULL,
+	"expiry_message" text DEFAULT '' NOT NULL,
+	"notifications" jsonb DEFAULT '{"senderAddress":"contact@maigatechlab.com","trialWelcome":true,"reminderJ7":true,"reminderJ3":true,"reminderJ1":true,"expiryNotification":true,"suspensionNotification":true,"reactivationNotification":true}'::jsonb NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "platform_settings_singleton_check" CHECK (id = 1)
+);

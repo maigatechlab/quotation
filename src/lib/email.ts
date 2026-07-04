@@ -3,13 +3,15 @@
   subject: string
   html: string
   text: string
+  /** Overrides EMAIL_FROM — used by the platform_settings sender address (story 7-12). */
+  from?: string
 }
 
 export function isEmailDeliveryConfigured(): boolean {
   return Boolean(process.env.RESEND_API_KEY) || process.env.NODE_ENV !== "production"
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -18,11 +20,11 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;")
 }
 
-function escapeAttribute(value: string): string {
+export function escapeAttribute(value: string): string {
   return escapeHtml(value).replaceAll("`", "&#96;")
 }
 
-export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<void> {
+export async function sendEmail({ to, subject, html, text, from }: SendEmailOptions): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
 
   if (!apiKey) {
@@ -44,7 +46,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions): 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM ?? "Quotation Logistique <noreply@quotation.app>",
+      from: from ?? process.env.EMAIL_FROM ?? "Quotation Logistique <noreply@quotation.app>",
       to,
       subject,
       html,

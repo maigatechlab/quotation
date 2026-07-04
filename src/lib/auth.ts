@@ -157,6 +157,27 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
+  // Better Auth strips any `user` column it doesn't know about from session.user
+  // by default. role/companyId are read from session.user throughout the app
+  // (requireOwnerAuth, requirePermission, can(), API routes) — without this,
+  // session.user.role is always undefined and every role guard silently falls
+  // back to "commercial", locking every real user (including superadmins) out
+  // of their own role-gated routes.
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "commercial",
+        input: false, // role changes go through admin flows, not sign-up/update-user
+      },
+      companyId: {
+        type: "string",
+        required: false,
+        input: false,
+      },
+    },
+  },
   plugins: [accountLockoutPlugin, passwordResetRateLimitPlugin, auditPlugin],
   emailAndPassword: {
     enabled: true,
