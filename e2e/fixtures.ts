@@ -8,7 +8,7 @@ export async function loginAs(
   page: Page,
   email: string,
   password: string,
-  role: "Administrateur" | "Commercial" | "Opérateur" = "Administrateur"
+  role: "Administrateur" | "Commercial" | "Opérateur" | "Owner" = "Administrateur"
 ) {
   await page.goto("/login");
   await page.getByRole("button", { name: role }).click();
@@ -27,6 +27,7 @@ type AuthFixtures = {
 export const test = base.extend<AuthFixtures>({
   authedPage: async ({ page }, use) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD, "Administrateur");
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture `use` is not a React hook
     await use(page);
   },
 });

@@ -59,3 +59,31 @@ export function isProtectedRoute(path: string): boolean {
     (route) => path === route || path.startsWith(`${route}/`)
   );
 }
+
+/**
+ * Requires an authenticated superadmin session (Server Components).
+ * Redirects to "/" if not authenticated or not superadmin.
+ */
+export async function requireOwnerAuth() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/");
+  const role = ((session.user as Record<string, unknown>).role ?? "commercial") as Role;
+  if (role !== "superadmin") redirect("/");
+  return session;
+}
+
+/**
+ * Requires an authenticated superadmin session for API routes.
+ * Returns a typed result instead of throwing, so the caller can wrap in apiError.
+ */
+export async function requireOwnerSession() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    return { ok: false as const, status: 401, code: "UNAUTHORIZED" as const };
+  }
+  const role = ((session.user as Record<string, unknown>).role ?? "commercial") as Role;
+  if (role !== "superadmin") {
+    return { ok: false as const, status: 403, code: "FORBIDDEN" as const };
+  }
+  return { ok: true as const, session };
+}
