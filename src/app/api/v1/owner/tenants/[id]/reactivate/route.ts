@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
 import { apiError, HTTP_STATUS } from "@/lib/api/envelope";
 import { requireOwnerSession } from "@/lib/session";
-import { recordPayment, RecordPaymentError } from "@/lib/tenants/record-payment";
-import { recordPaymentSchema } from "@/lib/validation/payment";
+import { reactivateTenant, ReactivateError } from "@/lib/tenants/reactivate";
+import { reactivateSchema } from "@/lib/validation/reactivate";
 
-export async function POST(
-  req: Request,
-  ctx: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const guard = await requireOwnerSession();
   if (!guard.ok) {
-    return apiError(guard.code, "Accès non autorisé.", guard.status);
+    return apiError(guard.code, "Accès refusé.", guard.status);
   }
 
   const { id } = await ctx.params;
@@ -23,46 +20,41 @@ export async function POST(
   } catch {
     return apiError("VALIDATION_FAILED", "Corps de requête JSON invalide.", HTTP_STATUS.BAD_REQUEST);
   }
-  const parsed = recordPaymentSchema.safeParse(body);
 
+  const parsed = reactivateSchema.safeParse(body);
   if (!parsed.success) {
     const fields: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
       const path = issue.path.join(".");
       if (path) fields[path] = issue.message;
     }
-    return apiError(
-      "VALIDATION_FAILED",
-      "Données invalides.",
-      HTTP_STATUS.BAD_REQUEST,
-      fields
-    );
+    return apiError("VALIDATION_FAILED", "Données invalides.", HTTP_STATUS.BAD_REQUEST, fields);
   }
 
   try {
-    const result = await recordPayment({
+    const result = await reactivateTenant({
       tenantId: id,
       input: parsed.data,
       actorId,
       actorEmail,
     });
-    return NextResponse.json(result, { status: HTTP_STATUS.CREATED });
+    return NextResponse.json(result, { status: HTTP_STATUS.OK });
   } catch (err) {
-    if (err instanceof RecordPaymentError) {
+    if (err instanceof ReactivateError) {
       if (err.code === "NOT_FOUND") {
         return apiError("NOT_FOUND", err.message, HTTP_STATUS.NOT_FOUND);
+      }
+      if (err.code === "NO_COVERING_PAYMENT") {
+        return apiError("NO_COVERING_PAYMENT", err.message, HTTP_STATUS.CONFLICT);
       }
       if (err.code === "CONFLICT") {
         return apiError("CONFLICT", err.message, HTTP_STATUS.CONFLICT);
       }
-      if (err.code === "VALIDATION") {
-        return apiError("VALIDATION_FAILED", err.message, HTTP_STATUS.BAD_REQUEST, {
-          reactivateIfSuspended: err.message,
-        });
-      }
     }
-     
-    console.error("POST /api/v1/owner/tenants/[id]/payments error:", err instanceof Error ? err.message : "unknown");
+    console.error(
+      "POST /api/v1/owner/tenants/[id]/reactivate error:",
+      err instanceof Error ? err.message : "unknown"
+    );
     return apiError("INTERNAL_ERROR", "Une erreur est survenue.", HTTP_STATUS.INTERNAL);
   }
 }
