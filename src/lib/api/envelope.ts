@@ -1,10 +1,14 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export type ApiErrorCode =
   | "VALIDATION_FAILED"
   | "FORBIDDEN"
+  | "TENANT_READONLY"
+  | "TENANT_BLOCKED"
+  | "TENANT_CANCELLED"
   | "QUOTA_EXCEEDED"
   | "CONFLICT"
+  | "NO_COVERING_PAYMENT"
   | "NOT_FOUND"
   | "UNAUTHORIZED"
   | "RATE_LIMITED"

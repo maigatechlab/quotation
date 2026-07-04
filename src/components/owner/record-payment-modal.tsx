@@ -1,10 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,12 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { formatFcfa } from "@/lib/money";
 import { calculatePeriodFromCycle } from "@/lib/tenants/period";
 import { recordPaymentSchema } from "@/lib/validation/payment";
@@ -28,7 +28,10 @@ import { recordPaymentSchema } from "@/lib/validation/payment";
 type FieldErrors = Partial<Record<string, string>>;
 
 function toDateInputValue(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export interface RecordPaymentModalProps {
@@ -37,6 +40,7 @@ export interface RecordPaymentModalProps {
   tenantStatus: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultReactivateIfSuspended?: boolean;
 }
 
 export function RecordPaymentModal({
@@ -45,6 +49,7 @@ export function RecordPaymentModal({
   tenantStatus,
   open,
   onOpenChange,
+  defaultReactivateIfSuspended = false,
 }: RecordPaymentModalProps) {
   const t = useTranslations("owner.payments.record");
   const router = useRouter();
@@ -68,7 +73,8 @@ export function RecordPaymentModal({
   });
   const [periodEdited, setPeriodEdited] = useState(false);
   const [notes, setNotes] = useState("");
-  const [reactivateIfSuspended, setReactivateIfSuspended] = useState(false);
+  const [reactivateIfSuspended, setReactivateIfSuspended] = useState(defaultReactivateIfSuspended);
+  const submittingRef = useRef(false);
 
   const autoPeriod = useMemo(() => {
     if (periodEdited || !paidAt) return null;
@@ -83,6 +89,7 @@ export function RecordPaymentModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submittingRef.current) return;
     setErrors({});
     setGlobalError(null);
 
@@ -110,6 +117,7 @@ export function RecordPaymentModal({
       return;
     }
 
+    submittingRef.current = true;
     setIsPending(true);
     try {
       const res = await fetch(`/api/v1/owner/tenants/${tenantId}/payments`, {
@@ -143,6 +151,7 @@ export function RecordPaymentModal({
     } catch {
       toast.error(t("error"));
     } finally {
+      submittingRef.current = false;
       setIsPending(false);
     }
   }
@@ -333,6 +342,10 @@ export function RecordPaymentModal({
                 <div className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-xs text-green-700">
                   {t("reactivatedNote")}
                 </div>
+              )}
+
+              {errors.reactivateIfSuspended && (
+                <p className="text-xs text-status-annule-text">{errors.reactivateIfSuspended}</p>
               )}
             </div>
           )}

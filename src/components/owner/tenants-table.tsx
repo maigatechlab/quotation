@@ -3,9 +3,9 @@ import { formatFcfa } from "@/lib/money";
 import { formatDateFr, formatDaysRemaining } from "@/lib/owner/format";
 import type { TenantFilters, TenantRow } from "@/lib/owner/tenant-filters";
 import { cn } from "@/lib/utils";
+import { TenantActionsMenu } from "./tenant-actions-menu";
 import { TenantPlanBadge } from "./tenant-plan-badge";
 import { TenantStatusBadge } from "./tenant-status-badge";
-import { TenantActionsMenu } from "./tenant-actions-menu";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   nitta: "Nitta",
