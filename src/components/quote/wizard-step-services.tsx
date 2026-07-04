@@ -19,10 +19,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useTranslations } from "next-intl";
+import { useLiveTemplates } from "@/hooks/use-live-templates";
 import { computeLineTotal, computeQuoteTotal } from "@/lib/calc";
 import { db } from "@/lib/local-db";
 import type { QuoteLocal, TemplateLocal } from "@/lib/local-db";
-import { useLiveTemplates } from "@/hooks/use-live-templates";
 import { formatFcfa } from "@/lib/money";
 import { applyLocalMutation, triggerSync } from "@/lib/sync/outbox";
 import { useWizardStore } from "@/stores/wizard-store";

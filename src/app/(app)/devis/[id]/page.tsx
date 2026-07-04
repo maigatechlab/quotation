@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
+import { QuotePreview } from "@/components/pdf/quote-preview";
 import { can } from "@/lib/permissions";
 import { getSessionWithRole } from "@/lib/session";
-import { QuotePreview } from "@/components/pdf/quote-preview";
 
 export default async function QuotePreviewPage({
   params,

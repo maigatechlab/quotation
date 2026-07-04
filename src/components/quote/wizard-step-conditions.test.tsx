@@ -4,11 +4,10 @@ import type { ReactNode } from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { WizardStepConditions } from "./wizard-step-conditions";
 import { db } from "@/lib/local-db";
 import type { ClauseLocal, CompanyLocal, QuoteLocal } from "@/lib/local-db";
-
 import frNE from "@/messages/fr-NE.json";
+import { WizardStepConditions } from "./wizard-step-conditions";
 
 const now = "2026-06-27T00:00:00.000Z";
 
