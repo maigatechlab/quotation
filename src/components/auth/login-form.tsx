@@ -17,12 +17,14 @@ const ROLES: { value: Role; label: string }[] = [
   { value: "admin", label: "Administrateur" },
   { value: "commercial", label: "Commercial" },
   { value: "operateur", label: "Opérateur" },
+  { value: "superadmin", label: "Owner" },
 ]
 
 const ROLE_LABELS: Record<Role, string> = {
   admin: "Administrateur",
   commercial: "Commercial",
   operateur: "Opérateur",
+  superadmin: "Owner",
 }
 
 export function LoginForm() {

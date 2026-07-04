@@ -1,4 +1,4 @@
-export type Role = "admin" | "commercial" | "operateur";
+export type Role = "admin" | "commercial" | "operateur" | "superadmin";
 
 export type Action =
   | "quote.create"
@@ -28,11 +28,47 @@ export type Action =
   | "user.read"
   | "user.manage"
   | "sync.push"
-  | "sync.pull";
+  | "sync.pull"
+  | "owner.access"
+  | "tenant.read"
+  | "tenant.read-all";
 
 type Permission = boolean | "own";
 
 const PERMISSION_MATRIX: Record<Role, Partial<Record<Action, Permission>>> = {
+  superadmin: {
+    "owner.access": true,
+    "tenant.read": true,
+    "tenant.read-all": true,
+    "quote.create": false,
+    "quote.read": false,
+    "quote.update": false,
+    "quote.delete": false,
+    "quote.change-status": false,
+    "quote.duplicate": false,
+    "client.create": false,
+    "client.read": false,
+    "client.update": false,
+    "client.delete": false,
+    "company.read": false,
+    "company.update": false,
+    "clause.create": false,
+    "clause.read": false,
+    "clause.update": false,
+    "clause.delete": false,
+    "template.create": false,
+    "template.read": false,
+    "template.update": false,
+    "template.delete": false,
+    "route-template.create": false,
+    "route-template.read": false,
+    "route-template.update": false,
+    "route-template.delete": false,
+    "user.read": false,
+    "user.manage": false,
+    "sync.push": false,
+    "sync.pull": false,
+  },
   admin: {
     "quote.create": true,
     "quote.read": true,
