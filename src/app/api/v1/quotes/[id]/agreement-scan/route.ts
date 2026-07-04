@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { PermissionError, requirePermission, type Role } from "@/lib/permissions";
 import { quote as quoteTable } from "@/lib/schema";
 import { upload } from "@/lib/storage";
+import { assertSessionTenantWritable } from "@/lib/tenants/request-guard";
 
 export async function POST(
   req: Request,
@@ -19,6 +20,9 @@ export async function POST(
 
   const userRole = ((session.user as Record<string, unknown>).role ?? "commercial") as Role;
   const userId = session.user.id;
+
+  const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
+  if (tenantGuard) return tenantGuard;
 
   const { id: quoteId } = await params;
 
