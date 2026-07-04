@@ -4,11 +4,10 @@ import type { ReactNode } from "react";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PaymentTermsForm } from "./payment-terms-form";
 import { db } from "@/lib/local-db";
 import type { CompanyLocal } from "@/lib/local-db";
-
 import frNE from "@/messages/fr-NE.json";
+import { PaymentTermsForm } from "./payment-terms-form";
 
 const now = "2026-06-27T00:00:00.000Z";
 
