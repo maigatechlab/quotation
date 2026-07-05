@@ -41,17 +41,17 @@ const STATUS_CONFIG: Record<QuoteStatus, StatusConfig> = {
     label: "Accepté",
   },
   expired: {
-    // AC6 : expired = orange/terracotta (--terracotta = #b8502d)
-    dot: "bg-[var(--terracotta)]",
-    bg: "bg-[var(--terracotta)]/10",
-    text: "text-[var(--terracotta)]",
-    label: "Expiré",
-  },
-  cancelled: {
-    // AC6 : cancelled = rouge (--status-expire-* = rouge, tokens dédiés à cet usage)
+    // Design brief 2026-07 : expiré = rouge (triplet --status-expire-*)
     dot: "bg-[var(--status-expire-dot)]",
     bg: "bg-[var(--status-expire-bg)]",
     text: "text-[var(--status-expire-text)]",
+    label: "Expiré",
+  },
+  cancelled: {
+    // Design brief 2026-07 : annulé = gris (triplet --status-annule-*)
+    dot: "bg-[var(--status-annule-dot)]",
+    bg: "bg-[var(--status-annule-bg)]",
+    text: "text-[var(--status-annule-text)]",
     label: "Annulé",
   },
 };
@@ -68,7 +68,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-[6px] px-2 py-0.5 text-xs font-semibold",
         config.bg,
         config.text,
         className

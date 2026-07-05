@@ -55,6 +55,7 @@
   --color-surface: var(--surface);
   --color-surface-alt: var(--surface-alt);
   --color-surface-tint-amber: var(--surface-tint-amber);
+  --color-surface-tint-navy: var(--surface-tint-navy);
 
   /* ===== Text ===== */
   --font-serif: var(--font-spectral);
@@ -116,6 +117,7 @@
   --surface: #ffffff; /* cartes, inputs, lignes */
   --surface-alt: #faf8f3; /* champs inset, bandes */
   --surface-tint-amber: #fdf3df; /* carte camion */
+  --surface-tint-navy: #eef1f8; /* nav active, fonds navy légers */
 
   /* ===== Texte ===== */
   --text-primary: #1c1a17;

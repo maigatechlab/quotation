@@ -15,6 +15,7 @@ const config = [
       "public/swe-worker-*.js",
       "_bmad/**",
       "_bmad-output/**",
+      "design-handoff/**",
       ".agent/**",
       ".claude/skills/**",
       ".claude/worktrees/**",

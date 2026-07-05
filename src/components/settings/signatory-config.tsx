@@ -55,6 +55,14 @@ function SignatoryConfigInner({ companyId, canEdit, userId, initialCompany }: Si
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Reset all controlled fields back to their mount-time initial values (derived
+  // from the `initialCompany` prop) and clear the error, discarding unsaved edits.
+  function handleCancel() {
+    setSignataireNom(initialCompany?.signataireNom ?? "");
+    setSignataireFonction(initialCompany?.signataireFonction ?? "");
+    setError(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!initialCompany || !companyId) return;
@@ -237,13 +245,24 @@ function SignatoryConfigInner({ companyId, canEdit, userId, initialCompany }: Si
           </p>
         )}
 
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="h-11 w-full rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
-        >
-          {isPending ? "Enregistrement…" : "Enregistrer le signataire"}
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={handleCancel}
+            className="h-11 flex-1 rounded-xl border-border text-sm font-medium text-text-secondary hover:bg-surface"
+          >
+            Annuler
+          </Button>
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="h-11 flex-1 rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
+          >
+            {isPending ? "Enregistrement…" : "Enregistrer le signataire"}
+          </Button>
+        </div>
       </form>
     </div>
   );

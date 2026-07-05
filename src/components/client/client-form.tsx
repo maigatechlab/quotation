@@ -158,76 +158,81 @@ export function ClientForm({ userId }: ClientFormProps) {
         />
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="phone" className="text-xs font-semibold text-text-muted">
-          Téléphone *
-        </Label>
-        <Input
-          id="phone"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          disabled={isPending}
-          aria-invalid={!!errors.phone}
-          aria-describedby={errors.phone ? "phone-error" : undefined}
-          className="rounded-xl border-input bg-surface"
-          placeholder="Ex: +227 90 00 00 00"
-        />
-        {errors.phone && (
-          <p id="phone-error" role="alert" className="text-xs text-destructive">
-            {errors.phone}
-          </p>
-        )}
+      {/* Champs appariés à lg+ (design brief §6) : téléphone/email, ville/adresse */}
+      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+        <div className="space-y-1.5">
+          <Label htmlFor="phone" className="text-xs font-semibold text-text-muted">
+            Téléphone *
+          </Label>
+          <Input
+            id="phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            disabled={isPending}
+            aria-invalid={!!errors.phone}
+            aria-describedby={errors.phone ? "phone-error" : undefined}
+            className="rounded-xl border-input bg-surface"
+            placeholder="Ex: +227 90 00 00 00"
+          />
+          {errors.phone && (
+            <p id="phone-error" role="alert" className="text-xs text-destructive">
+              {errors.phone}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs font-semibold text-text-muted">
+            Email
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isPending}
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            className="rounded-xl border-input bg-surface"
+            placeholder="Ex: contact@transport-maiga.ne"
+          />
+          {errors.email && (
+            <p id="email-error" role="alert" className="text-xs text-destructive">
+              {errors.email}
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="email" className="text-xs font-semibold text-text-muted">
-          Email
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={isPending}
-          aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? "email-error" : undefined}
-          className="rounded-xl border-input bg-surface"
-          placeholder="Ex: contact@transport-maiga.ne"
-        />
-        {errors.email && (
-          <p id="email-error" role="alert" className="text-xs text-destructive">
-            {errors.email}
-          </p>
-        )}
-      </div>
+      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+        <div className="space-y-1.5">
+          <Label htmlFor="city" className="text-xs font-semibold text-text-muted">
+            Ville
+          </Label>
+          <Input
+            id="city"
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            disabled={isPending}
+            className="rounded-xl border-input bg-surface"
+            placeholder="Ex: Niamey"
+          />
+        </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="city" className="text-xs font-semibold text-text-muted">
-          Ville
-        </Label>
-        <Input
-          id="city"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          disabled={isPending}
-          className="rounded-xl border-input bg-surface"
-          placeholder="Ex: Niamey"
-        />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="address" className="text-xs font-semibold text-text-muted">
-          Adresse
-        </Label>
-        <Input
-          id="address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          disabled={isPending}
-          className="rounded-xl border-input bg-surface"
-          placeholder="Ex: Quartier Plateau, Rue 10"
-        />
+        <div className="space-y-1.5">
+          <Label htmlFor="address" className="text-xs font-semibold text-text-muted">
+            Adresse
+          </Label>
+          <Input
+            id="address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            disabled={isPending}
+            className="rounded-xl border-input bg-surface"
+            placeholder="Ex: Quartier Plateau, Rue 10"
+          />
+        </div>
       </div>
 
       <div className="space-y-1.5">
@@ -251,13 +256,15 @@ export function ClientForm({ userId }: ClientFormProps) {
         </p>
       )}
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="h-11 w-full rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
-      >
-        {isPending ? "Création en cours…" : "Créer le client"}
-      </Button>
+      <div className="lg:flex lg:justify-end lg:pt-1">
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="h-11 w-full rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep lg:w-auto lg:px-6"
+        >
+          {isPending ? "Création en cours…" : "Créer le client"}
+        </Button>
+      </div>
     </form>
   );
 }

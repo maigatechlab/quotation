@@ -41,6 +41,7 @@ export function AuditExport() {
         <div className="flex flex-col">
           <label className="text-xs font-semibold text-text-muted">{t("from")}</label>
           <input
+            lang="fr"
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
@@ -50,6 +51,7 @@ export function AuditExport() {
         <div className="flex flex-col">
           <label className="text-xs font-semibold text-text-muted">{t("to")}</label>
           <input
+            lang="fr"
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}

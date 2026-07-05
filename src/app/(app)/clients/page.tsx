@@ -15,7 +15,7 @@ export default async function ClientsPage() {
   const userId = (session.user as Record<string, unknown>).id as string;
 
   return (
-    <div className="flex flex-col px-5 pt-8 pb-10">
+    <div className="flex flex-col px-5 pt-8 pb-10 lg:p-0">
       <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Clients</p>
       <ClientList
         canCreate={canCreate}

@@ -48,6 +48,13 @@ function PaymentTermsFormInner({ company, userId }: PaymentTermsFormProps) {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Reset the controlled field back to its mount-time initial value (derived from
+  // the `company` prop) and clear the error, discarding unsaved edits.
+  function handleCancel() {
+    setTerms(company.conditionsPaiementDefaut ?? "");
+    setError(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -151,13 +158,24 @@ function PaymentTermsFormInner({ company, userId }: PaymentTermsFormProps) {
           </p>
         )}
 
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="h-11 w-full rounded-xl bg-brand-navy px-6 text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
-        >
-          {isPending ? t("saving") : t("save")}
-        </Button>
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={handleCancel}
+            className="h-11 flex-1 rounded-xl border-border text-sm font-medium text-text-secondary hover:bg-surface"
+          >
+            Annuler
+          </Button>
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="h-11 flex-1 rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
+          >
+            {isPending ? t("saving") : t("save")}
+          </Button>
+        </div>
       </form>
     </div>
   );
