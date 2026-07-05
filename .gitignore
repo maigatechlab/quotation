@@ -54,3 +54,8 @@ public/uploads
 .claude/
 .agent/
 .tmp/
+# design handoff package (temp, like .tmp-screenshots)
+design-handoff/
+design-handoff.zip
+.tmp-screenshots/
+.playwright-cli/

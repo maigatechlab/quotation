@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
+import { BackLink } from "@/components/nav/back-link";
 import { useLiveCompany } from "@/hooks/use-live-company";
 import { useWizardStore } from "@/stores/wizard-store";
 import { WizardStepClient } from "./wizard-step-client";
@@ -17,8 +20,9 @@ interface QuoteWizardProps {
 }
 
 export function QuoteWizard({ userId }: QuoteWizardProps) {
-  const { step, resetWizard } = useWizardStore();
+  const { step, setStep, resetWizard } = useWizardStore();
   const company = useLiveCompany();
+  const router = useRouter();
 
   useEffect(() => {
     resetWizard();
@@ -29,19 +33,23 @@ export function QuoteWizard({ userId }: QuoteWizardProps) {
   const currentLabel = STEP_LABELS[step - 1] ?? "";
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col lg:mx-auto lg:w-full lg:max-w-3xl">
       {/* Header */}
-      <div className="px-5 pt-8 pb-4">
+      <div className="px-5 pt-8 pb-4 lg:px-0 lg:pt-0">
+        <BackLink
+          label="Retour"
+          onClick={() => (step === 1 ? router.push("/") : setStep(step - 1))}
+        />
         <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
           Devis
         </p>
-        <h1 className="mt-1 font-serif text-2xl font-semibold text-text-primary">
+        <h1 className="mt-1 font-serif text-2xl font-semibold text-text-primary lg:text-[27px]">
           Nouveau devis
         </h1>
       </div>
 
-      {/* Progress bar */}
-      <div className="px-5 pb-4">
+      {/* Progress bar — mobile uniquement (le stepper prend le relais à lg+) */}
+      <div className="px-5 pb-4 lg:hidden">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs font-medium text-text-secondary">
             Étape {step} sur {TOTAL_STEPS} — {currentLabel}
@@ -80,6 +88,60 @@ export function QuoteWizard({ userId }: QuoteWizardProps) {
           ))}
         </div>
       </div>
+
+      {/* Stepper desktop — cercles + connecteurs (design brief §4) */}
+      <ol
+        className="mb-7 mt-1 hidden items-start lg:flex"
+        aria-label={`Progression du wizard: étape ${step} sur ${TOTAL_STEPS}`}
+      >
+        {STEP_LABELS.map((label, i) => {
+          const num = i + 1;
+          const isDone = num < step;
+          const isCurrent = num === step;
+          return (
+            <li key={label} className="contents">
+              {i > 0 && (
+                <div
+                  aria-hidden="true"
+                  className={`mt-[14px] h-0.5 flex-1 ${isDone || isCurrent ? "bg-brand-navy" : "bg-border"}`}
+                />
+              )}
+              <div className="flex w-[92px] shrink-0 flex-col items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => isDone && setStep(num)}
+                  disabled={!isDone}
+                  aria-current={isCurrent ? "step" : undefined}
+                  className={`flex h-[30px] w-[30px] items-center justify-center rounded-full text-[13px] font-bold transition-colors ${
+                    isCurrent
+                      ? "bg-brand-navy text-text-on-dark ring-4 ring-surface-tint-navy"
+                      : isDone
+                        ? "cursor-pointer bg-brand-navy text-text-on-dark"
+                        : "border-[1.5px] border-border bg-surface font-semibold text-text-muted"
+                  }`}
+                >
+                  {isDone ? (
+                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : (
+                    num
+                  )}
+                </button>
+                <span
+                  className={`text-center text-xs ${
+                    isCurrent
+                      ? "font-semibold text-brand-navy"
+                      : isDone
+                        ? "font-medium text-text-secondary"
+                        : "font-medium text-text-muted"
+                  }`}
+                >
+                  {label}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
 
       {/* Step content — defer until company loaded (undefined = still loading) */}
       {step === 1 && company !== undefined && (

@@ -26,12 +26,36 @@ interface StatusConfig {
 }
 
 export const STATUS_CONFIG: Record<QuoteStatus, StatusConfig> = {
-  draft: { dot: "bg-gray-400", bg: "bg-gray-100 text-gray-600", label: "Brouillon" },
-  validated: { dot: "bg-blue-500", bg: "bg-blue-50 text-blue-700", label: "Validé" },
-  sent: { dot: "bg-amber-500", bg: "bg-amber-50 text-amber-700", label: "Envoyé" },
-  accepted: { dot: "bg-green-500", bg: "bg-green-50 text-green-700", label: "Accepté" },
-  expired: { dot: "bg-red-400", bg: "bg-red-50 text-red-500", label: "Expiré" },
-  cancelled: { dot: "bg-red-500", bg: "bg-red-50 text-red-600", label: "Annulé" },
+  draft: {
+    dot: "bg-status-brouillon-dot",
+    bg: "bg-status-brouillon-bg text-status-brouillon-text",
+    label: "Brouillon",
+  },
+  validated: {
+    dot: "bg-status-valide-dot",
+    bg: "bg-status-valide-bg text-status-valide-text",
+    label: "Validé",
+  },
+  sent: {
+    dot: "bg-status-envoye-dot",
+    bg: "bg-status-envoye-bg text-status-envoye-text",
+    label: "Envoyé",
+  },
+  accepted: {
+    dot: "bg-status-accepte-dot",
+    bg: "bg-status-accepte-bg text-status-accepte-text",
+    label: "Accepté",
+  },
+  expired: {
+    dot: "bg-status-expire-dot",
+    bg: "bg-status-expire-bg text-status-expire-text",
+    label: "Expiré",
+  },
+  cancelled: {
+    dot: "bg-status-annule-dot",
+    bg: "bg-status-annule-bg text-status-annule-text",
+    label: "Annulé",
+  },
 };
 
 interface StatusBadgeProps {
@@ -43,7 +67,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = STATUS_CONFIG[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${config.bg} ${className ?? ""}`}
+      className={`inline-flex items-center gap-1.5 rounded-[6px] px-2.5 py-1 text-xs font-semibold ${config.bg} ${className ?? ""}`}
     >
       <span
         className={`h-1.5 w-1.5 shrink-0 rounded-full ${config.dot}`}

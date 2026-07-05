@@ -379,7 +379,17 @@
       "prevPage": "Page précédente",
       "nextPage": "Page suivante",
       "amount": "{amount} FCFA",
-      "noClient": "Client non assigné"
+      "noClient": "Client non assigné",
+      "newQuote": "Nouveau devis",
+      "colNumber": "Numéro",
+      "colClient": "Client",
+      "colRoute": "Trajet",
+      "colAmount": "Montant",
+      "colStatus": "Statut",
+      "colDate": "Date",
+      "rowActions": "Actions",
+      "actionOpen": "Ouvrir",
+      "actionDuplicate": "Dupliquer"
     },
     "detail": {
       "back": "Mes devis",

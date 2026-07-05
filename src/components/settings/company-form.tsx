@@ -112,6 +112,21 @@ function CompanyFormInner({ company, canEdit, userId, companyId }: CompanyFormPr
     setEmails((prev) => prev.map((e, i) => (i === idx ? val : e)));
   }
 
+  // Reset all controlled fields back to their mount-time initial values (derived
+  // from the `company` prop) and clear validation errors, discarding unsaved edits.
+  function handleCancel() {
+    setRaisonSociale(company?.raisonSociale ?? "");
+    setFormeJuridique(company?.formeJuridique ?? "");
+    setCapital(company?.capital != null ? String(company.capital) : "");
+    setRccm(company?.rccm ?? "");
+    setNif(company?.nif ?? "");
+    setAdresse(company?.adresse ?? "");
+    setBp(company?.bp ?? "");
+    setPhones(company?.phones?.length ? company.phones : [""]);
+    setEmails(company?.emails ?? []);
+    setErrors({});
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
@@ -505,13 +520,24 @@ function CompanyFormInner({ company, canEdit, userId, companyId }: CompanyFormPr
         </p>
       )}
 
-      <Button
-        type="submit"
-        disabled={isPending}
-        className="h-11 w-full rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
-      >
-        {isPending ? "Enregistrement…" : "Enregistrer"}
-      </Button>
+      <div className="flex gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPending}
+          onClick={handleCancel}
+          className="h-11 flex-1 rounded-xl border-border text-sm font-medium text-text-secondary hover:bg-surface"
+        >
+          Annuler
+        </Button>
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="h-11 flex-1 rounded-xl bg-brand-navy text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep"
+        >
+          {isPending ? "Enregistrement…" : "Enregistrer"}
+        </Button>
+      </div>
     </form>
   );
 }

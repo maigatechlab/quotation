@@ -7,6 +7,8 @@ import { CompanyForm } from "@/components/settings/company-form";
 import { LogoUpload } from "@/components/settings/logo-upload";
 import { LogoutButton } from "@/components/settings/logout-button";
 import { PaymentTermsForm } from "@/components/settings/payment-terms-form";
+import { SettingsTabs } from "@/components/settings/settings-tabs";
+import type { SettingsSection } from "@/components/settings/settings-tabs";
 import { SignatoryConfig } from "@/components/settings/signatory-config";
 import { TemplateManager } from "@/components/settings/template-manager";
 import { db as pgDb } from "@/lib/db";
@@ -63,71 +65,107 @@ export default async function ParametresPage() {
     }
   }
 
+  // Onglets desktop (design brief §7) — mobile garde la colonne empilée.
+  // Sections permission-gatées : un rôle sans droit ne voit pas l'onglet.
+  const sections: SettingsSection[] = [
+    {
+      id: "societe",
+      label: "Société",
+      content: (
+        <div className="flex flex-col gap-6 pt-6 lg:pt-0">
+          <CompanyForm
+            company={initialCompany}
+            canEdit={canEdit}
+            userId={userId}
+            companyId={companyId}
+          />
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <LogoUpload
+              companyId={companyId}
+              canEdit={canEdit}
+              initialCompany={initialCompany}
+            />
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <SignatoryConfig
+              companyId={companyId}
+              canEdit={canEdit}
+              userId={userId}
+              initialCompany={initialCompany}
+            />
+          </div>
+          {initialCompany && canEdit && (
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <PaymentTermsForm company={initialCompany} userId={userId} />
+            </div>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  if (can(role, "template.create") || can(role, "clause.create")) {
+    sections.push({
+      id: "modeles",
+      label: "Modèles",
+      content: (
+        <div className="flex flex-col gap-6 pt-6 lg:pt-0">
+          {can(role, "template.create") && (
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <TemplateManager userId={userId} />
+            </div>
+          )}
+          {can(role, "clause.create") && (
+            <div className="rounded-2xl border border-border bg-surface p-5">
+              <ClauseManager userId={userId} />
+            </div>
+          )}
+        </div>
+      ),
+    });
+  }
+
+  if (can(role, "user.manage")) {
+    sections.push({
+      id: "conformite",
+      label: "Conformité",
+      content: (
+        <div className="flex flex-col gap-6 pt-6 lg:pt-0">
+          <div className="rounded-2xl border border-border bg-surface p-5">
+            <AuditExport />
+          </div>
+        </div>
+      ),
+    });
+    sections.push({
+      id: "utilisateurs",
+      label: "Utilisateurs",
+      content: (
+        <div className="pt-8 lg:pt-0">
+          <Link
+            href="/parametres/utilisateurs"
+            className="inline-flex items-center rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium text-text-primary hover:bg-surface-alt transition-colors"
+          >
+            Gestion des utilisateurs
+          </Link>
+        </div>
+      ),
+    });
+  }
+
   return (
-    <div className="flex flex-col px-5 pt-8 pb-10">
+    <div className="flex flex-col px-5 pt-8 pb-10 lg:p-0">
       <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
         Paramètres
       </p>
-      <h1 className="mt-1 font-serif text-2xl font-semibold text-text-primary">
+      <h1 className="mt-1 mb-0 font-serif text-2xl font-semibold text-text-primary lg:mb-6 lg:text-[27px]">
         Paramètres société
       </h1>
 
-      <div className="mt-6">
-        <CompanyForm
-          company={initialCompany}
-          canEdit={canEdit}
-          userId={userId}
-          companyId={companyId}
-        />
-      </div>
+      <SettingsTabs sections={sections} />
 
-      <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-        <LogoUpload companyId={companyId} canEdit={canEdit} initialCompany={initialCompany} />
-      </div>
-
-      <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-        <SignatoryConfig
-          companyId={companyId}
-          canEdit={canEdit}
-          userId={userId}
-          initialCompany={initialCompany}
-        />
-      </div>
-
-      {initialCompany && canEdit && (
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-          <PaymentTermsForm company={initialCompany} userId={userId} />
-        </div>
-      )}
-
-      {can(role, "template.create") && (
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-          <TemplateManager userId={userId} />
-        </div>
-      )}
-
-      {can(role, "clause.create") && (
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-          <ClauseManager userId={userId} />
-        </div>
-      )}
-
-      {can(role, "user.manage") && (
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-          <AuditExport />
-        </div>
-      )}
-
-      {can(role, "user.manage") && (
-        <Link
-          href="/parametres/utilisateurs"
-          className="mt-8 inline-flex items-center rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium text-text-primary hover:bg-surface-alt transition-colors"
-        >
-          Gestion des utilisateurs
-        </Link>
-      )}
-
-      <div className="mt-8 rounded-2xl border border-border bg-surface p-1">
+      {/* Se déconnecter — mobile uniquement, doublon de la sidebar à lg+ (brief §7) */}
+      <div className="mt-8 rounded-2xl border border-border bg-surface p-1 lg:hidden">
         <LogoutButton />
       </div>
     </div>
