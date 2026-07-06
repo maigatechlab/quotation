@@ -29,7 +29,12 @@ function defaults(): Omit<PlatformSettings, "id" | "updatedAt"> {
     suspendedContactWhatsapp: process.env.OWNER_WHATSAPP ?? "",
     expiryMessage: "",
     notifications: {
-      senderAddress: plainEmail(process.env.EMAIL_FROM, "contact@maigatechlab.com"),
+      // Left empty on purpose: getNotificationSenderAddress() falls back to the
+      // live EMAIL_FROM env var when this is empty. Seeding it with a concrete
+      // address here would freeze it at bootstrap time — a later EMAIL_FROM /
+      // domain-verification change would then silently never take effect until
+      // an admin manually re-saves /owner/settings (see story 8-2 Dev Notes).
+      senderAddress: "",
       trialWelcome: true,
       reminderJ7: true,
       reminderJ3: true,

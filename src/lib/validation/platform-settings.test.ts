@@ -94,4 +94,11 @@ describe("platformSettingsSchema", () => {
     const result = platformSettingsSchema.safeParse(input);
     expect(result.success).toBe(false);
   });
+
+  it("accepts an empty notifications sender email (means: use EMAIL_FROM fallback)", () => {
+    const input = validInput();
+    input.notifications = { ...input.notifications, senderAddress: "" };
+    const result = platformSettingsSchema.safeParse(input);
+    expect(result.success).toBe(true);
+  });
 });

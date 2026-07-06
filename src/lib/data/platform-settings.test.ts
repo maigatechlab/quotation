@@ -17,7 +17,7 @@ const ROW = {
   suspendedContactWhatsapp: "",
   expiryMessage: "",
   notifications: {
-    senderAddress: "contact@maigatechlab.com",
+    senderAddress: "",
     trialWelcome: true,
     reminderJ7: true,
     reminderJ3: true,
@@ -91,7 +91,7 @@ describe("getPlatformSettings", () => {
     expect(result).toEqual(ROW);
   });
 
-  it("normalizes EMAIL_FROM display-name defaults to plain email fields", async () => {
+  it("normalizes EMAIL_FROM display-name default for suspendedContactEmail, but leaves notifications.senderAddress empty (story 8-2 — live env fallback, not a bootstrap snapshot)", async () => {
     const originalEmailFrom = process.env.EMAIL_FROM;
     const originalOwnerEmail = process.env.OWNER_EMAIL;
     delete process.env.OWNER_EMAIL;
@@ -103,7 +103,10 @@ describe("getPlatformSettings", () => {
 
     const values = h.valuesArg.mock.calls[0]?.[0] as typeof ROW;
     expect(values.suspendedContactEmail).toBe("noreply@example.com");
-    expect(values.notifications.senderAddress).toBe("noreply@example.com");
+    // senderAddress stays empty at bootstrap so getNotificationSenderAddress()
+    // always falls back to the *current* EMAIL_FROM instead of freezing whatever
+    // value was active the moment the row was first created.
+    expect(values.notifications.senderAddress).toBe("");
 
     if (originalEmailFrom === undefined) delete process.env.EMAIL_FROM;
     else process.env.EMAIL_FROM = originalEmailFrom;
