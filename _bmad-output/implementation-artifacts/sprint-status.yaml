@@ -1,5 +1,5 @@
 ﻿# generated: 2026-06-21
-# last_updated: 2026-06-28
+# last_updated: 2026-07-06
 # story 5-1 done 2026-06-26
 # story 5-3 done 2026-06-26
 # story 4-3 done 2026-06-27
@@ -101,7 +101,15 @@
 # story 7-12 review 2026-07-04 (platform_settings singleton, accesseurs async platform-config.ts, refactor 5 dispatch emails, page /owner/settings Server Action ; fix transversal Better Auth additionalFields role/companyId manquants ; 832/832 tests, build OK ; E2E Ã©crit mais bloquÃ© par bug Playwright/env prÃ©existant, vÃ©rifiÃ© manuellement via session rÃ©elle)
 # epic-7 done 2026-07-04 (toutes stories 7-1 Ã  7-12 complÃ©tÃ©es)
 generated: 2026-06-21
-last_updated: 2026-07-04
+last_updated: 2026-07-06
+# story 8-8 review 2026-07-06 (snapshot changedByName + fallback legacy /api/v1/users garde permission, 862/862 tests, build OK)
+# story 8-8 done 2026-07-06 (code review approuvé, aucun finding)
+# story 8-6 in-progress 2026-07-06
+# story 8-6 review 2026-07-06 (IDOR agreement-scan corrige AC1, audit routes REST + owner/** + matrice permissions AC1-3, 858/858 tests, build OK)
+# epic-8 created 2026-07-06 (post E2E test pass â€” see Docs/testing/test-plan.md; 2 cross-tenant security
+# bugs found+fixed on /api/v1/users outside story cycle, remaining scope tracked in 8-6)
+# story 8-6 ready-for-dev 2026-07-06 (audit surface mapped: sync push/pull + users routes already scoped; new IDOR found on POST /api/v1/quotes/[id]/agreement-scan -- admin bypasses companyId check, fix in Task 1)
+# story 8-8 ready-for-dev 2026-07-06 (actor name snapshot at write-time is primary fix; GET /api/v1/users only usable for admin role -- user.read permission gap flagged for legacy-entry fallback)
 # story 7-11 in-progress 2026-07-03
 # story 7-11 review 2026-07-04 (rapport mensuel revenus/churn/actifs, export CSV paiements, instantanÃ© tenants, prÃ©visions renouvellements ; 798/798 tests, build OK ; E2E Ã©crit mais bloquÃ© par bug Playwright/env prÃ©existant, reproduit sur spec non modifiÃ©)
 # story 7-11 review 2026-07-04 (code review: 1 High + 2 Medium + 1 Low rÃ©solus â€” validation stricte YYYY-MM-DD, ?month= validÃ©, sÃ©lecteur date instantanÃ© AC6 ajoutÃ©, snapshotPage clampÃ© ; +10 tests, 808/808, typecheck/lint OK ; build non re-confirmÃ©, Docker Desktop injoignable en session)
@@ -243,3 +251,18 @@ development_status:
   7-11-reports-accounting-export: done
   7-12-platform-settings: done
   epic-7-retrospective: optional
+
+  # Epic 8: PrÃ©paration Go-Live [Post-MVP]
+  # Source: Docs/testing/test-plan.md (passe de test E2E 2026-07-06)
+  # DÃ©clenchÃ©e par 4 bugs trouvÃ©s pendant la passe de test (2 critiques de sÃ©curitÃ© cross-tenant
+  # sur /api/v1/users, dÃ©jÃ  corrigÃ©s hors cycle de story â€” voir 8-6 pour l'audit Ã©largi restant)
+  epic-8: in-progress
+  8-1-stripe-e2e-verification: ready-for-dev
+  8-2-transactional-email-verification: review
+  8-3-cron-expiry-reminders-verification: ready-for-dev
+  8-4-offline-sync-edge-cases: ready-for-dev
+  8-5-exports-verification: ready-for-dev
+  8-6-cross-tenant-security-audit: review
+  8-7-production-cleanup: ready-for-dev
+  8-8-quote-status-actor-display: done
+  epic-8-retrospective: optional

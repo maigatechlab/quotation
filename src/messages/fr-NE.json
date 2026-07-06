@@ -398,6 +398,8 @@
       "historyEmpty": "Aucune transition enregistrée.",
       "historyEntry": "De {from} vers {to}",
       "historyBy": "par {user}",
+      "historyByDeleted": "Utilisateur supprimé",
+      "historyByUnknown": "Utilisateur inconnu",
       "lines": "Lignes de prestation",
       "total": "Total devis",
       "signatory": "Signataire",
@@ -645,6 +647,7 @@
         "suspendedContactWhatsapp": "WhatsApp de contact (tenants suspendus)",
         "expiryMessage": "Message page d'expiration (vide = message par défaut)",
         "senderAddress": "Adresse expéditeur des emails",
+        "senderAddressPlaceholder": "Vide = utilise EMAIL_FROM automatiquement",
         "trialWelcome": "Email de bienvenue (trial)",
         "reminderJ7": "Rappel J-7",
         "reminderJ3": "Rappel J-3",
@@ -951,6 +954,19 @@
             "submit": "Confirmer la réactivation",
             "success": "Utilisateur « {name} » réactivé",
             "quotaFull": "Quota atteint — révoquez d'abord un utilisateur actif"
+          },
+          "deleteDialog": {
+            "trigger": "Supprimer",
+            "title": "Supprimer le compte",
+            "confirm": "Supprimer définitivement le compte de {name} ({email}) ? Les devis et clients créés par cet utilisateur seront conservés.",
+            "irreversible": "Cette action est irréversible.",
+            "typeEmail": "Tapez {email} pour confirmer :",
+            "submit": "Supprimer définitivement",
+            "success": "Compte « {name} » supprimé",
+            "lastAdminError": "Dernier admin actif — ne peut pas être supprimé. Nommez d'abord un nouvel administrateur.",
+            "lastAdminTooltip": "Dernier admin actif — ne peut pas être supprimé",
+            "notFound": "Utilisateur introuvable",
+            "error": "Une erreur est survenue. Le compte n'a pas été supprimé."
           }
         },
         "journal": {
@@ -993,6 +1009,9 @@
       "payment_recorded": "Paiement enregistré",
       "plan_changed": "Plan modifié",
       "user_added": "Utilisateur ajouté",
+      "user_removed": "Utilisateur révoqué",
+      "user_deleted": "Utilisateur supprimé",
+      "user_reactivated": "Utilisateur réactivé",
       "reminder_sent": "Rappel envoyé",
       "updated": "Tenant modifié"
     },

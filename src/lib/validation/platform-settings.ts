@@ -1,7 +1,16 @@
 ﻿import { z } from "zod";
 
 export const notificationsSchema = z.object({
-  senderAddress: z.string().trim().toLowerCase().email("Adresse email expÃ©diteur invalide."),
+  // Empty string is valid on purpose: it means "use EMAIL_FROM" (see
+  // getNotificationSenderAddress(), story 8-2). Only non-empty values are
+  // required to be a well-formed email.
+  senderAddress: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .refine((value) => value === "" || z.string().email().safeParse(value).success, {
+      message: "Adresse email expÃ©diteur invalide.",
+    }),
   trialWelcome: z.coerce.boolean(),
   reminderJ7: z.coerce.boolean(),
   reminderJ3: z.coerce.boolean(),

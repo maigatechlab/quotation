@@ -607,7 +607,8 @@ export const platformSettings = pgTable(
     expiryMessage: text("expiry_message").notNull().default(""),
     // Notifications (bloc jsonb — toggles + sender address)
     notifications: jsonb("notifications").$type<PlatformNotificationSettings>().notNull().default({
-      senderAddress: "contact@maigatechlab.com",
+      // Empty on purpose — live-derived from EMAIL_FROM when unset. See story 8-2.
+      senderAddress: "",
       trialWelcome: true,
       reminderJ7: true,
       reminderJ3: true,

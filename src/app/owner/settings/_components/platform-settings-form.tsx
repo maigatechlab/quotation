@@ -194,6 +194,7 @@ export function PlatformSettingsForm({ defaults }: PlatformSettingsFormProps) {
               id="notifications.senderAddress"
               name="notifications.senderAddress"
               type="email"
+              placeholder={t("fields.senderAddressPlaceholder")}
               defaultValue={defaults.notifications.senderAddress}
             />
             {fieldError(state, "notifications.senderAddress") && (
