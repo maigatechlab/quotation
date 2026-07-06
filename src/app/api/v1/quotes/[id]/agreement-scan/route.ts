@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { apiError, HTTP_STATUS } from "@/lib/api/envelope";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -21,14 +21,23 @@ export async function POST(
   const userRole = ((session.user as Record<string, unknown>).role ?? "commercial") as Role;
   const userId = session.user.id;
 
+  const rawCid = (session.user as Record<string, unknown>).companyId;
+  const callerCompanyId: string | null =
+    typeof rawCid === "string" && rawCid !== "" ? rawCid : null;
+  if (!callerCompanyId) {
+    return apiError("FORBIDDEN", "Action non autorisée.", HTTP_STATUS.FORBIDDEN);
+  }
+
   const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
   if (tenantGuard) return tenantGuard;
 
   const { id: quoteId } = await params;
 
   const dbQuote = await db.query.quote.findFirst({
-    where: eq(quoteTable.id, quoteId),
+    where: and(eq(quoteTable.id, quoteId), eq(quoteTable.companyId, callerCompanyId)),
   });
+  // Same 404 for "not found" and "belongs to another tenant" — never reveal that a
+  // quote exists for a different companyId (avoids cross-tenant enumeration).
   if (!dbQuote) {
     return apiError("NOT_FOUND", "Devis introuvable.", HTTP_STATUS.NOT_FOUND);
   }
