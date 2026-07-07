@@ -13,7 +13,8 @@ export default async function QuotePreviewPage({
   const { session, role } = result;
   if (!can(role, "quote.read")) redirect("/devis");
   const userId = (session.user as Record<string, unknown>).id as string;
+  const userName = (session.user as Record<string, unknown>).name as string;
   const { id } = await params;
 
-  return <QuotePreview quoteId={id} userId={userId} role={role} />;
+  return <QuotePreview quoteId={id} userId={userId} userName={userName} role={role} />;
 }

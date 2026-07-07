@@ -161,10 +161,10 @@ export function QuoteWizard({ userId }: QuoteWizardProps) {
       {step === 2 && <WizardStepRoute userId={userId} />}
       {step === 3 && <WizardStepGoods userId={userId} />}
       {step === 4 && <WizardStepServices userId={userId} />}
-      {step === 5 && company !== undefined && company !== null && (
+      {step === 5 && company !== undefined && (
         <WizardStepConditions userId={userId} company={company} />
       )}
-      {step === 5 && (company === undefined || company === null) && (
+      {step === 5 && company === undefined && (
         <div className="px-5 py-4">
           <div className="h-10 animate-pulse rounded-xl bg-border" />
         </div>
