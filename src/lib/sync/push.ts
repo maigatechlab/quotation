@@ -22,6 +22,34 @@ class FatalHttpError extends Error {
   }
 }
 
+// Quota/readonly rejections reuse the conflict response shape ({status:"conflict",
+// entity:{error:"READONLY_MODE"|"QUOTA_EXCEEDED"|...}}) but `entity` has no `id` —
+// it must be distinguished from a real LWW conflict entity before calling handleConflict.
+// Only match the server's known reasons (route.ts: "READONLY_MODE" or checkQuota's
+// QUOTA_EXCEEDED-family strings) — a real conflict entity that happens to carry an
+// `error` field (or a malformed server payload) must still go through LWW handling.
+const KNOWN_QUOTA_REJECTION_REASONS = new Set(["READONLY_MODE", "QUOTA_EXCEEDED"]);
+
+function getQuotaRejectionReason(entity: unknown): string | undefined {
+  if (
+    entity !== null &&
+    typeof entity === "object" &&
+    "error" in entity &&
+    typeof (entity as { error: unknown }).error === "string" &&
+    KNOWN_QUOTA_REJECTION_REASONS.has((entity as { error: string }).error)
+  ) {
+    return (entity as { error: string }).error;
+  }
+  return undefined;
+}
+
+function getQuotaRejectionMessage(reason: string): string {
+  if (reason === "READONLY_MODE") {
+    return "Compte en lecture seule : mutation refusée à la synchronisation.";
+  }
+  return "Quota dépassé : mutation refusée à la synchronisation.";
+}
+
 async function pushSingleOp(op: SyncOp): Promise<PushOpResult> {
   const res = await fetch("/api/v1/sync/push", {
     method: "POST",
@@ -36,6 +64,16 @@ async function pushSingleOp(op: SyncOp): Promise<PushOpResult> {
         results: Array<{ opId: string; status: string; entity?: unknown }>;
       };
       const result = body.results[0];
+      const quotaReason = getQuotaRejectionReason(result?.entity);
+      if (quotaReason) {
+        // Quota/readonly rejection is not an editing conflict — do not run LWW
+        // conflict resolution (result.entity has no `id`, handleConflict would fail).
+        await db.syncQueue.update(op.opId, {
+          failed: true,
+          lastError: getQuotaRejectionMessage(quotaReason),
+        });
+        return { opId: op.opId, status: "failed" };
+      }
       if (result?.entity !== undefined) {
         const { handleConflict } = await import("@/lib/sync/conflict");
         await handleConflict(op, result.entity);

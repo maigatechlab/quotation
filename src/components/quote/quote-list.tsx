@@ -443,11 +443,11 @@ export function QuoteList({ userId }: QuoteListProps) {
                         </span>
                         {failedSyncIds.has(quote.id) && (
                           <span
-                            title="Échec de synchronisation — nouvelle tentative automatique"
+                            title={failedSyncIds.get(quote.id)}
                             className="inline-flex cursor-help text-status-envoye-dot"
                           >
                             <TriangleAlert className="h-3.5 w-3.5" aria-hidden="true" />
-                            <span className="sr-only">Échec de synchronisation</span>
+                            <span className="sr-only">{failedSyncIds.get(quote.id)}</span>
                           </span>
                         )}
                       </span>

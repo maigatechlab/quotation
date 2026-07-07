@@ -5,20 +5,25 @@ import { liveQuery } from "dexie";
 import { db } from "@/lib/local-db";
 
 /**
- * Ids d'entités dont au moins une opération de sync a échoué (dead-letter).
- * Sert à afficher une affordance d'erreur non bloquante sur la ligne
- * concernée (icône warning + tooltip) au lieu d'un toast/modal.
+ * Ids d'entités dont au moins une opération de sync a échoué (dead-letter),
+ * mappés à `lastError` de la plus récente pour affichage (icône warning +
+ * tooltip avec le message réel — quota/lecture-seule/conflit — plutôt qu'un
+ * message générique).
  */
-export function useFailedSyncIds(): Set<string> {
-  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
+export function useFailedSyncIds(): Map<string, string> {
+  const [failedIds, setFailedIds] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const subscription = liveQuery(async () => {
       const ops = await db.syncQueue.filter((op) => op.failed === true).toArray();
-      return new Set(ops.map((op) => op.entityId));
+      const byEntity = new Map<string, string>();
+      for (const op of ops) {
+        byEntity.set(op.entityId, op.lastError ?? "Échec de synchronisation");
+      }
+      return byEntity;
     }).subscribe({
       next: (ids) => setFailedIds(ids),
-      error: () => setFailedIds(new Set()),
+      error: () => setFailedIds(new Map()),
     });
     return () => subscription.unsubscribe();
   }, []);

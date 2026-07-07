@@ -1,4 +1,3 @@
-import { type Table } from "dexie";
 import {
   Serwist,
   CacheFirst,
@@ -8,6 +7,7 @@ import {
 } from "serwist";
 import { BACKGROUND_SYNC_TAG } from "../lib/sync/constants";
 import { openSwSyncDb } from "../lib/sync/sw-db";
+import type { Dexie, Table } from "dexie";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
 
 declare global {
@@ -61,6 +61,59 @@ interface SwSyncOp {
 interface SwPushOpResult {
   opId: string;
   status: "applied" | "conflict" | "noop" | "failed";
+  entity?: unknown;
+}
+
+// Mirrors push.ts's KNOWN_QUOTA_REJECTION_REASONS — quota/readonly rejections reuse
+// the conflict response shape ({status:"conflict", entity:{error:"READONLY_MODE"|
+// "QUOTA_EXCEEDED"}}) but `entity` has no `id`. Only match known reasons so a real
+// conflict entity with an `error`-named field still goes through LWW resolution.
+const KNOWN_QUOTA_REJECTION_REASONS = new Set(["READONLY_MODE", "QUOTA_EXCEEDED"]);
+
+function getQuotaRejectionReason(entity: unknown): string | undefined {
+  if (
+    entity !== null &&
+    typeof entity === "object" &&
+    "error" in entity &&
+    typeof (entity as { error: unknown }).error === "string" &&
+    KNOWN_QUOTA_REJECTION_REASONS.has((entity as { error: string }).error)
+  ) {
+    return (entity as { error: string }).error;
+  }
+  return undefined;
+}
+
+function getQuotaRejectionMessage(reason: string): string {
+  if (reason === "READONLY_MODE") {
+    return "Compte en lecture seule : mutation refusée à la synchronisation.";
+  }
+  return "Quota dépassé : mutation refusée à la synchronisation.";
+}
+
+// SW-side mirror of conflict.ts's getEntityTable — reads/writes the same
+// underlying IndexedDB tables via the SW's own Dexie handle (openSwSyncDb).
+function getSwEntityTable(
+  swDb: Dexie,
+  entity: string
+): Table<Record<string, unknown>, string> | undefined {
+  switch (entity) {
+    case "client":
+      return swDb.table("clients");
+    case "quote":
+      return swDb.table("quotes");
+    case "quoteLine":
+      return swDb.table("quoteLines");
+    case "clause":
+      return swDb.table("clauses");
+    case "template":
+      return swDb.table("templates");
+    case "company":
+      return swDb.table("company");
+    case "routeTemplate":
+      return swDb.table("routeTemplates");
+    default:
+      return undefined;
+  }
 }
 
 interface SwPushResponse {
@@ -195,10 +248,55 @@ async function directSyncFromSW(): Promise<void> {
       let deletedCount = 0;
       if (body?.results) {
         for (const r of body.results) {
-          // Remove ops the server has processed; leave conflicts/failures for client UI.
           if (r.status === "applied" || r.status === "noop") {
             await syncQueue.delete(r.opId);
             deletedCount++;
+            continue;
+          }
+
+          if (r.status === "conflict" || r.status === "failed") {
+            const op = batch.find((b) => b.opId === r.opId);
+            const quotaReason = getQuotaRejectionReason(r.entity);
+            if (quotaReason) {
+              // Quota/readonly rejection — not an editing conflict. Mark failed
+              // in place so a later window retry doesn't re-send it and get a
+              // bare "noop" from the server's opId dedupe (losing this outcome).
+              await syncQueue.update(r.opId, {
+                failed: true,
+                lastError: getQuotaRejectionMessage(quotaReason),
+              });
+            } else if (op && r.entity !== undefined) {
+              // Real LWW conflict — resolve directly against the shared IndexedDB
+              // (server already logged this opId; the client can no longer replay
+              // it and get anything but "noop"). Mirrors conflict.ts's handleConflict,
+              // minus the toast — no UI to notify from the SW.
+              await swDb.table("auditMirror").add({
+                id: crypto.randomUUID(),
+                who: op.createdBy ?? "unknown",
+                what: "conflict.archived",
+                when: new Date().toISOString(),
+                where: "sync/push (sw)",
+                entityType: op.entity,
+                entityId: op.entityId,
+                before: op.payload,
+                after: r.entity,
+                createdAt: new Date().toISOString(),
+                synced: false,
+              });
+              const table = getSwEntityTable(swDb, op.entity);
+              if (table) {
+                await table.put(r.entity as Record<string, unknown>);
+              }
+              await syncQueue.delete(r.opId);
+              deletedCount++;
+            } else {
+              // No usable entity to resolve with — mark failed rather than
+              // leaving it silently retryable into a future "noop".
+              await syncQueue.update(r.opId, {
+                failed: true,
+                lastError: "unresolvable conflict response (sw)",
+              });
+            }
           }
         }
       }
