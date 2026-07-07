@@ -8,7 +8,6 @@ import { enforceTenantAccess } from "@/lib/tenants/tenant-enforcement";
 const PUBLIC_PATHS = [
   "/subscription-expired",
   "/login",
-  "/register",
   "/forgot-password",
   "/reset-password",
 ];
@@ -101,9 +100,12 @@ export async function proxy(request: NextRequest) {
 
   // /owner/* routes: optimistic cookie check (role=superadmin validated in Server Component)
   if (isOwnerRoute) {
+    if (pathname === "/owner/login") {
+      return NextResponse.next({ request: { headers: sanitizedHeaders } });
+    }
     const sessionCookie = getSessionCookie(request);
     if (!sessionCookie) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/owner/login", request.url));
     }
     return NextResponse.next({ request: { headers: sanitizedHeaders } });
   }
@@ -122,5 +124,5 @@ export async function proxy(request: NextRequest) {
 export const config = {
   // Exclude static assets and Next internals from matcher.
   // /owner/* included so the proxy runs but skips tenant resolution (handled above).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.svg$|.*\\.png$|.*\\.ico$|.*\\.webp$|.*\\.jpg$|.*\\.jpeg$|.*\\.woff2?$).*)"],
 };

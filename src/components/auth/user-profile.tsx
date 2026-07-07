@@ -33,9 +33,6 @@ export function UserProfile() {
             Sign in
           </Button>
         </Link>
-        <Link href="/register">
-          <Button size="sm">Sign up</Button>
-        </Link>
       </div>
     );
   }

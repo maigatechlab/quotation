@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -17,7 +16,6 @@ const ROLES: { value: Role; label: string }[] = [
   { value: "admin", label: "Administrateur" },
   { value: "commercial", label: "Commercial" },
   { value: "operateur", label: "Opérateur" },
-  { value: "superadmin", label: "Owner" },
 ]
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -27,7 +25,7 @@ const ROLE_LABELS: Record<Role, string> = {
   superadmin: "Owner",
 }
 
-export function LoginForm() {
+export function LoginForm({ owner = false }: { owner?: boolean }) {
   const router = useRouter()
   const { initCrypto, clearCrypto } = useCrypto()
   const [email, setEmail] = useState("")
@@ -66,16 +64,21 @@ export function LoginForm() {
         const sessionData = await getSession();
         const actualRole = ((sessionData?.data?.user as Record<string, unknown>)?.role ?? "commercial") as Role;
 
-        if (actualRole !== selectedRole) {
+        const expectedRole = owner ? "superadmin" : selectedRole;
+        if (actualRole !== expectedRole) {
           await signOut({ fetchOptions: { onSuccess: () => {} } });
           clearCrypto();
-          setError(`Rôle incorrect. Votre rôle est ${ROLE_LABELS[actualRole]}.`);
+          setError(
+            owner
+              ? "Accès réservé au propriétaire de la plateforme."
+              : `Rôle incorrect. Votre rôle est ${ROLE_LABELS[actualRole]}.`
+          );
           setIsPending(false);
           return;
         }
 
         markOnline();
-        router.push("/");
+        router.push(owner ? "/owner" : "/");
         router.refresh();
       }
     } catch {
@@ -90,41 +93,44 @@ export function LoginForm() {
     <div className="flex flex-col items-center justify-center px-7 py-12">
       {/* Logo + titre */}
       <div className="mb-8 flex flex-col items-center gap-3">
-        <Image
-          src="/logo-mark.svg"
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-full.svg"
           alt="Quotation Logistique"
-          width={48}
-          height={48}
-          priority
+          width={220}
+          height={143}
         />
-        <h1 className="font-serif text-2xl font-semibold text-brand-navy">
-          Quotation · Logistique
-        </h1>
       </div>
 
-      {/* Segmented control rôle — MVP-0 : UX uniquement, n'affecte pas l'auth */}
-      <div
-        className="mb-6 flex w-full max-w-sm gap-1 rounded-xl border border-input bg-surface-alt p-1"
-        role="group"
-        aria-label="Sélection du rôle"
-      >
-        {ROLES.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={selectedRole === value}
-            onClick={() => setSelectedRole(value)}
-            className={cn(
-              "min-h-[44px] flex-1 rounded-[8px] px-2 py-2 text-xs font-semibold transition-colors",
-              selectedRole === value
-                ? "bg-brand-navy text-text-on-dark"
-                : "text-text-secondary hover:bg-surface"
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {owner ? (
+        <p className="mb-6 text-sm font-semibold text-text-secondary">
+          Owner Console — accès plateforme
+        </p>
+      ) : (
+        /* Segmented control rôle — MVP-0 : UX uniquement, n'affecte pas l'auth */
+        <div
+          className="mb-6 flex w-full max-w-sm gap-1 rounded-xl border border-input bg-surface-alt p-1"
+          role="group"
+          aria-label="Sélection du rôle"
+        >
+          {ROLES.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={selectedRole === value}
+              onClick={() => setSelectedRole(value)}
+              className={cn(
+                "min-h-[44px] flex-1 rounded-[8px] px-2 py-2 text-xs font-semibold transition-colors",
+                selectedRole === value
+                  ? "bg-brand-navy text-text-on-dark"
+                  : "text-text-secondary hover:bg-surface"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Formulaire */}
       <form
@@ -195,6 +201,7 @@ export function LoginForm() {
       </form>
 
       {/* Footer offline */}
+      {!owner && (
       <p className="mt-8 flex items-center gap-1.5 text-xs text-text-muted">
         <span
           className="inline-block h-2 w-2 rounded-full bg-green-500"
@@ -202,6 +209,7 @@ export function LoginForm() {
         />
         Fonctionne hors ligne · session 7 jours
       </p>
+      )}
     </div>
   )
 }

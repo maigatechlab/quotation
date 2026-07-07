@@ -86,12 +86,6 @@ export function SignInButton() {
           Forgot password?
         </Link>
       </div>
-      <div className="text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-primary hover:underline">
-          Sign up
-        </Link>
-      </div>
     </form>
   )
 }
