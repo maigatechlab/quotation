@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { and, eq } from "drizzle-orm";
 import { POST } from "@/app/api/v1/quotes/[id]/agreement-scan/route";
+import { quote as quoteTable } from "@/lib/schema";
 
 vi.mock("next/headers", () => ({
   headers: vi.fn().mockResolvedValue(new Headers()),
@@ -69,6 +71,14 @@ describe("POST /api/v1/quotes/[id]/agreement-scan", () => {
     expect(res.status).toBe(404);
     const body = await res.json();
     expect(body.error.code).toBe("NOT_FOUND");
+
+    // Guard against regressing to a bare eq(id) lookup: the predicate passed
+    // to findFirst must itself scope on companyId, not just entity id, so an
+    // undefined result actually proves the row is out of tenant (not just
+    // "not queried").
+    expect(vi.mocked(db.query.quote.findFirst).mock.calls[0]?.[0]).toEqual({
+      where: and(eq(quoteTable.id, "q1"), eq(quoteTable.companyId, "co-1")),
+    });
   });
 
   it("200 si le devis appartient au tenant de l'appelant", async () => {

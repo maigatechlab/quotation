@@ -161,12 +161,47 @@ describe("POST /api/v1/companies", () => {
     expect(body.error.code).toBe("FORBIDDEN");
   });
 
-  it("409 si société déjà configurée (companyId présent)", async () => {
+  it("409 si société déjà configurée (ligne company existante pour ce companyId)", async () => {
     mockSession("admin", CID);
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([MOCK_COMPANY]),
+    } as never);
     const res = await POST(makeRequest(VALID_BODY));
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.error.code).toBe("CONFLICT");
+  });
+
+  it("201 si companyId placeholder (assigné à la création du tenant) sans ligne company — bootstrap sur cet id", async () => {
+    mockSession("admin", CID);
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([]),
+    } as never);
+    vi.mocked(db.transaction).mockImplementation(async (cb) => {
+      const tx = {
+        insert: vi.fn().mockReturnValue({
+          values: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([{ ...MOCK_COMPANY, id: CID }]),
+          }),
+        }),
+        update: vi.fn().mockReturnValue({
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ id: "uid-1" }]),
+            }),
+          }),
+        }),
+      };
+      return cb(tx as never);
+    });
+    const res = await POST(makeRequest(VALID_BODY));
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body.id).toBe(CID);
   });
 
   it("400 si corps JSON invalide", async () => {

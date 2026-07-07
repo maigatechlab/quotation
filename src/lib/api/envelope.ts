@@ -7,6 +7,8 @@ export type ApiErrorCode =
   | "TENANT_BLOCKED"
   | "TENANT_CANCELLED"
   | "QUOTA_EXCEEDED"
+  | "SELF_DELETE"
+  | "LAST_SUPERADMIN"
   | "CONFLICT"
   | "NO_COVERING_PAYMENT"
   | "NOT_FOUND"

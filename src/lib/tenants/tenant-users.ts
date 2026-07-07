@@ -377,6 +377,96 @@ export async function revokeUserInTenant(
   return result;
 }
 
+export interface DeleteUserInTenantParams {
+  tenantId: string;
+  userId: string;
+  actorId: string;
+  actorEmail: string;
+}
+
+export interface DeleteUserInTenantResult {
+  userId: string;
+  email: string;
+}
+
+/**
+ * Permanently deletes a user account from a tenant. Unlike revoke (soft
+ * disable), this removes the user row — sessions and auth accounts cascade
+ * via FK ON DELETE CASCADE; quotes/clients they own keep their data
+ * (owner_id SET NULL).
+ *
+ * Same locking strategy as {@link revokeUserInTenant}: the tenant row is
+ * locked FOR UPDATE so a concurrent delete/revoke can't both pass the
+ * last-admin guard and leave the tenant with zero active admins.
+ */
+export async function deleteUserInTenant(
+  params: DeleteUserInTenantParams
+): Promise<DeleteUserInTenantResult> {
+  let result!: DeleteUserInTenantResult;
+  const auditBefore = { userId: "", email: "", role: "", disabledAt: null as string | null };
+
+  await db.transaction(async (tx) => {
+    const [tenantRow] = await tx
+      .select({ id: tenants.id })
+      .from(tenants)
+      .where(eq(tenants.id, params.tenantId))
+      .for("update");
+    if (!tenantRow) {
+      throw new TenantUserNotFoundError();
+    }
+
+    const [existing] = await tx
+      .select()
+      .from(userTable)
+      .where(and(eq(userTable.id, params.userId), eq(userTable.tenantId, params.tenantId)));
+    if (!existing) {
+      throw new TenantUserNotFoundError();
+    }
+
+    // An active admin can only be deleted if another active admin remains.
+    // (A revoked admin can always be deleted — it holds no quota seat.)
+    if (existing.role === "admin" && !existing.disabledAt) {
+      const [adminRow] = await tx
+        .select({ n: count() })
+        .from(userTable)
+        .where(
+          and(
+            eq(userTable.tenantId, params.tenantId),
+            eq(userTable.role, "admin"),
+            isNull(userTable.disabledAt)
+          )
+        );
+      if ((adminRow?.n ?? 0) <= 1) {
+        throw new LastAdminError();
+      }
+    }
+
+    // Sessions and auth accounts cascade via FK; explicit user delete only.
+    await tx.delete(userTable).where(and(eq(userTable.id, params.userId), eq(userTable.tenantId, params.tenantId)));
+
+    result = { userId: existing.id, email: existing.email };
+    auditBefore.userId = existing.id;
+    auditBefore.email = existing.email;
+    auditBefore.role = existing.role;
+    auditBefore.disabledAt = existing.disabledAt?.toISOString() ?? null;
+  });
+
+  try {
+    await db.insert(tenantEvents).values({
+      tenantId: params.tenantId,
+      eventType: "user_deleted",
+      actorId: params.actorId,
+      before: auditBefore,
+      after: null,
+      note: `Supprimé par ${params.actorEmail}`,
+    });
+  } catch (err) {
+    console.error("tenant_events (user_deleted) insert failed", toLogMessage(err));
+  }
+
+  return result;
+}
+
 export interface ReactivateUserInTenantParams {
   tenantId: string;
   userId: string;

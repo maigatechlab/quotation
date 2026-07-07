@@ -39,7 +39,9 @@ const CreateOwnerUserSchema = z.object({
   name: z.string().min(1, "Nom requis"),
   email: z.string().email("Email invalide"),
   password: z.string().min(8, "Mot de passe minimum 8 caractères"),
-  role: z.enum(["admin", "commercial", "operateur", "superadmin"]).default("commercial"),
+  // Tenantless accounts are owner-console only — tenant users must go through
+  // POST /api/v1/owner/tenants/[id]/users so they get a tenant link + quota check.
+  role: z.literal("superadmin").default("superadmin"),
   sendWelcomeEmail: z.boolean().default(true),
 });
 

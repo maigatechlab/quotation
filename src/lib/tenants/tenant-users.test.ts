@@ -82,6 +82,7 @@ import {
   checkUserQuota,
   countActiveTenantUsers,
   createUserInTenant,
+  deleteUserInTenant,
   getTenantUsersWithLastSeen,
   LastAdminError,
   reactivateUserInTenant,
@@ -368,6 +369,80 @@ describe("revokeUserInTenant", () => {
     expect(h.updateSet).not.toHaveBeenCalled();
     expect(h.deleteWhere).not.toHaveBeenCalled();
     expect(h.insertValues).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteUserInTenant", () => {
+  const PARAMS = { tenantId: "tenant-1", userId: "u1", actorId: "superadmin-1", actorEmail: "owner@x.test" };
+
+  it("success: hard-deletes user, logs user_deleted event", async () => {
+    h.selectQueue = [
+      [{ id: "tenant-1" }],
+      [{ id: "u1", email: "u1@x.test", role: "commercial", disabledAt: null }],
+    ];
+
+    const result = await deleteUserInTenant(PARAMS);
+
+    expect(result).toEqual({ userId: "u1", email: "u1@x.test" });
+    expect(h.deleteWhere).toHaveBeenCalledTimes(1);
+    expect(h.insertValues).toHaveBeenCalledTimes(1);
+    const event = h.insertValues.mock.calls[0]?.[0] as { vals: { eventType: string; after: unknown } };
+    expect(event.vals.eventType).toBe("user_deleted");
+    expect(event.vals.after).toBeNull();
+  });
+
+  it("tenant not found → TenantUserNotFoundError, no mutation", async () => {
+    h.selectQueue = [[]];
+
+    const err = await deleteUserInTenant(PARAMS).catch((e) => e);
+
+    expect(err).toBeInstanceOf(TenantUserNotFoundError);
+    expect(h.deleteWhere).not.toHaveBeenCalled();
+  });
+
+  it("user not found cross-tenant → TenantUserNotFoundError, no mutation", async () => {
+    h.selectQueue = [[{ id: "tenant-1" }], []];
+
+    const err = await deleteUserInTenant(PARAMS).catch((e) => e);
+
+    expect(err).toBeInstanceOf(TenantUserNotFoundError);
+    expect(h.deleteWhere).not.toHaveBeenCalled();
+  });
+
+  it("last active admin → LastAdminError, no mutation", async () => {
+    h.selectQueue = [
+      [{ id: "tenant-1" }],
+      [{ id: "u1", email: "admin@x.test", role: "admin", disabledAt: null }],
+      [{ n: 1 }],
+    ];
+
+    const err = await deleteUserInTenant(PARAMS).catch((e) => e);
+
+    expect(err).toBeInstanceOf(LastAdminError);
+    expect(h.deleteWhere).not.toHaveBeenCalled();
+  });
+
+  it("active admin delete allowed when another active admin remains", async () => {
+    h.selectQueue = [
+      [{ id: "tenant-1" }],
+      [{ id: "u1", email: "admin@x.test", role: "admin", disabledAt: null }],
+      [{ n: 2 }],
+    ];
+
+    const result = await deleteUserInTenant(PARAMS);
+    expect(result.userId).toBe("u1");
+    expect(h.deleteWhere).toHaveBeenCalledTimes(1);
+  });
+
+  it("revoked admin delete skips last-admin count", async () => {
+    h.selectQueue = [
+      [{ id: "tenant-1" }],
+      [{ id: "u1", email: "admin@x.test", role: "admin", disabledAt: new Date("2026-01-01") }],
+    ];
+
+    const result = await deleteUserInTenant(PARAMS);
+    expect(result.userId).toBe("u1");
+    expect(h.deleteWhere).toHaveBeenCalledTimes(1);
   });
 });
 

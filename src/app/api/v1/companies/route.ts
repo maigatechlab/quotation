@@ -62,12 +62,22 @@ export async function POST(req: Request): Promise<NextResponse> {
   const existingCompanyId: string | null =
     typeof rawCid === "string" && rawCid !== "" ? rawCid : null;
 
+  // A companyId is assigned to the tenant's admin at tenant-creation time (used
+  // as the scoping key for clients/quotes/etc. before the company profile exists).
+  // Only treat it as "already bootstrapped" if a company row actually exists there.
   if (existingCompanyId) {
-    return apiError(
-      "CONFLICT",
-      "Société déjà configurée. Utilisez la synchronisation pour mettre à jour.",
-      HTTP_STATUS.CONFLICT
-    );
+    const existingRows = await db
+      .select({ id: companyTable.id })
+      .from(companyTable)
+      .where(eq(companyTable.id, existingCompanyId))
+      .limit(1);
+    if (existingRows.length > 0) {
+      return apiError(
+        "CONFLICT",
+        "Société déjà configurée. Utilisez la synchronisation pour mettre à jour.",
+        HTTP_STATUS.CONFLICT
+      );
+    }
   }
 
   const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
@@ -101,7 +111,11 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const data = parsed.data;
   const now = new Date();
-  const newId = crypto.randomUUID();
+  // Reuse the placeholder companyId assigned at tenant-creation time (used to scope
+  // clients/quotes/etc. before the company profile exists) so bootstrap doesn't
+  // orphan those records under a different id. Falls back to a fresh id for legacy
+  // users that somehow reached bootstrap with no companyId at all.
+  const newId = existingCompanyId ?? crypto.randomUUID();
 
   // Custom error to signal race-condition within the transaction
   class AlreadyHasCompanyError extends Error {}
@@ -129,12 +143,15 @@ export async function POST(req: Request): Promise<NextResponse> {
         })
         .returning();
 
-      // Guard: only update if companyId is still NULL in the DB.
-      // Prevents orphan rows from a stale-session double-submit race.
+      // Guard: only update if companyId is still unset or still the placeholder we
+      // just bootstrapped. Prevents orphan rows from a stale-session double-submit race.
+      const guard = existingCompanyId
+        ? eq(userTable.companyId, existingCompanyId)
+        : isNull(userTable.companyId);
       const updated = await tx
         .update(userTable)
         .set({ companyId: newId })
-        .where(and(eq(userTable.id, userId), isNull(userTable.companyId)))
+        .where(and(eq(userTable.id, userId), guard))
         .returning({ id: userTable.id });
 
       if (updated.length === 0) throw new AlreadyHasCompanyError();

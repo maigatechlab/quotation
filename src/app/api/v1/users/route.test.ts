@@ -17,9 +17,9 @@ vi.mock("@/lib/db", () => ({
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-function mockSession(role: string) {
+function mockSession(role: string, companyId: string | null = "co-1") {
   vi.mocked(auth.api.getSession).mockResolvedValue({
-    user: { id: "u1", role } as never,
+    user: { id: "u1", role, companyId } as never,
     session: {} as never,
   });
 }
@@ -31,6 +31,7 @@ function mockNoSession() {
 function mockDbUsers() {
   const chain = {
     from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockResolvedValue([
       { id: "u1", name: "Alice", email: "alice@ex.com", role: "admin", createdAt: new Date() },
     ]),
@@ -71,5 +72,13 @@ describe("GET /api/v1/users", () => {
     const body = await res.json();
     expect(Array.isArray(body)).toBe(true);
     expect(body[0].id).toBe("u1");
+  });
+
+  it("200 liste vide si companyId absent (pas de fuite cross-tenant)", async () => {
+    mockSession("admin", null);
+    const res = await GET();
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual([]);
   });
 });

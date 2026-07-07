@@ -97,6 +97,24 @@ class OwnershipError extends Error {
   }
 }
 
+// Verifies a referenced parent row (client/quote/template) exists and belongs
+// to the caller's tenant, so a payload can't point a new row at another
+// tenant's data by guessing a valid UUID.
+async function assertReferenceBelongsToTenant(
+  table: typeof clientTable | typeof quoteTable | typeof templateTable,
+  id: string,
+  userCompanyId: string
+): Promise<void> {
+  const rows = await db
+    .select({ companyId: table.companyId })
+    .from(table)
+    .where(eq(table.id, id))
+    .limit(1);
+  if (rows.length === 0 || rows[0]?.companyId !== userCompanyId) {
+    throw new OwnershipError();
+  }
+}
+
 // Payload field coercions — payload is Record<string,unknown> from the client
 const str = (v: unknown): string => (typeof v === "string" ? v : String(v ?? ""));
 const strN = (v: unknown): string | null => (v != null && v !== "" ? String(v) : null);
@@ -296,12 +314,17 @@ async function persistEntityMutation(
             ? existingQuoteOwnerId
             : userId;
 
+        const clientId = strN(p.clientId);
+        if (clientId !== null) {
+          await assertReferenceBelongsToTenant(clientTable, clientId, tenantId);
+        }
+
         const quoteValues = {
           number: str(p.number),
           reference: strN(p.reference),
           objet: strN(p.objet),
           status: quoteStatusVal(p.status),
-          clientId: strN(p.clientId),
+          clientId,
           clientSnapshot: p.clientSnapshot ?? null,
           ownerId: quoteOwnerIdToUse,
           dateDevis: dateN(p.dateDevis),
@@ -343,14 +366,21 @@ async function persistEntityMutation(
       if (op.type === "delete") {
         await db.delete(quoteLineTable).where(eq(quoteLineTable.id, op.entityId));
       } else {
+        const quoteId = str(p.quoteId);
+        await assertReferenceBelongsToTenant(quoteTable, quoteId, tenantId);
+        const templateId = strN(p.templateId);
+        if (templateId !== null) {
+          await assertReferenceBelongsToTenant(templateTable, templateId, tenantId);
+        }
+
         const lineValues = {
-          quoteId: str(p.quoteId),
+          quoteId,
           designation: str(p.designation),
           unitPrice: intN(p.unitPrice) ?? 0,
           quantity: intN(p.quantity) ?? 1,
           totalFcfa: intN(p.totalFcfa) ?? 0,
           ordre: intN(p.ordre) ?? 0,
-          templateId: strN(p.templateId),
+          templateId,
           companyId: tenantId,
           pays: strN(p.pays) ?? "NE",
           revision: newRevision,
