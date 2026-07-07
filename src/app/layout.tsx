@@ -79,6 +79,9 @@ export default async function RootLayout({
       </head>
       <body
         className={`${spectral.variable} ${hankenGrotesk.variable} antialiased min-h-dvh flex flex-col`}
+        // Extensions type Grammarly injectent des attributs data-* sur <body>
+        // avant l'hydratation React — mismatch bénin, à ignorer.
+        suppressHydrationWarning
       >
         <NextIntlClientProvider messages={messages} locale="fr-NE">
           <ThemeProvider

@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 
-const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"]
+const AUTH_PATHS = ["/login", "/forgot-password", "/reset-password"]
 
 export function AppShell({
   children,
