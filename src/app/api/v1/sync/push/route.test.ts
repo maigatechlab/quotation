@@ -288,6 +288,57 @@ describe("POST /api/v1/sync/push", () => {
     expect(db.select).not.toHaveBeenCalled();
   });
 
+  // Cross-tenant FK injection (IDOR): payload references a parent row that
+  // belongs to another tenant. The server must reject even though the new
+  // row itself would be stamped with the caller's own companyId.
+  it("403 when quote.clientId points at a client owned by a different tenant", async () => {
+    const quoteOp = {
+      opId: "op-quote-1",
+      entity: "quote",
+      entityId: "ent-00000000-0000-0000-0000-000000000002",
+      type: "create",
+      payload: { number: "Q-1", clientId: "11111111-1111-4111-8111-111111111111" },
+      baseRevision: 0,
+      queuedAt: new Date().toISOString(),
+    };
+    mockSession("admin", CID_A);
+    mockSelectOnce([]); // idempotency → not seen
+    mockSelectOnce([]); // fetchCurrentEntity(quote) → new
+    mockAllInserts(); // getOrCreateSubscription insert(s)
+    mockSelectOnce([MOCK_SUB]); // getOrCreateSubscription (applyOp)
+    mockSelectOnce([MOCK_SUB]); // getOrCreateSubscription (checkQuota, quote.create)
+    mockSelectOnce([{ companyId: CID_B }]); // client lookup → belongs to CID_B
+
+    const res = await POST(makeReq([quoteOp]));
+    expect(res.status).toBe(403);
+    const body = await res.json() as { error: { code: string } };
+    expect(body.error.code).toBe("FORBIDDEN");
+  });
+
+  it("403 when quoteLine.quoteId points at a quote owned by a different tenant", async () => {
+    const lineOp = {
+      opId: "op-line-1",
+      entity: "quoteLine",
+      entityId: "ent-00000000-0000-0000-0000-000000000003",
+      type: "create",
+      payload: { quoteId: "22222222-2222-4222-8222-222222222222", designation: "Transport", unitPrice: 1000, quantity: 1 },
+      baseRevision: 0,
+      queuedAt: new Date().toISOString(),
+    };
+    mockSession("admin", CID_A);
+    mockSelectOnce([]); // idempotency → not seen
+    mockSelectOnce([]); // fetchCurrentEntity(quoteLine) → new
+    mockSelectOnce([{ ownerId: "someone", companyId: CID_B }]); // resolveEntityOwner → parent quote lookup
+    mockAllInserts(); // getOrCreateSubscription insert
+    mockSelectOnce([MOCK_SUB]); // getOrCreateSubscription (applyOp)
+    mockSelectOnce([{ companyId: CID_B }]); // quoteId tenant check → belongs to CID_B
+
+    const res = await POST(makeReq([lineOp]));
+    expect(res.status).toBe(403);
+    const body = await res.json() as { error: { code: string } };
+    expect(body.error.code).toBe("FORBIDDEN");
+  });
+
   // "own" perm: cross-user same-tenant
   it("403 when commercial updates client owned by different user — own perm enforced", async () => {
     const OTHER_UID = "uid-other";

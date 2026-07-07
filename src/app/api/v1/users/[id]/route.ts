@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -50,6 +50,17 @@ export async function PATCH(
   const tenantGuard = await assertSessionTenantWritable(session.user as Record<string, unknown>);
   if (tenantGuard) return tenantGuard;
 
+  const rawCid = (session.user as Record<string, unknown>).companyId;
+  const companyId: string | null =
+    typeof rawCid === "string" && rawCid !== "" ? rawCid : null;
+
+  if (!companyId) {
+    return NextResponse.json(
+      { error: { code: "FORBIDDEN", message: "Utilisateur non associé à une entreprise." } },
+      { status: 403 }
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -73,10 +84,12 @@ export async function PATCH(
     );
   }
 
+  // Scope the update to the acting admin's own tenant — without this, any tenant
+  // admin could change the role of a user belonging to a different tenant by id.
   const updated = await db
     .update(userTable)
     .set({ role: parsed.data.role })
-    .where(eq(userTable.id, id))
+    .where(and(eq(userTable.id, id), eq(userTable.companyId, companyId)))
     .returning({
       id: userTable.id,
       name: userTable.name,

@@ -48,6 +48,8 @@ export interface RecordPaymentResult {
   periodEnd: Date;
   reactivated: boolean;
   subscriptionExtended: boolean;
+  /** True when the payment promoted a trial tenant to active. */
+  activated: boolean;
   emailSent: boolean;
 }
 
@@ -55,6 +57,7 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Record
   let payment: typeof subscriptionPayments.$inferSelect;
   let reactivated = false;
   let subscriptionExtended = false;
+  let activated = false;
   let tenantSnapshot: typeof tenants.$inferSelect;
 
   // Transaction wraps: lock + insert payment + update tenant
@@ -130,17 +133,23 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Record
       // Suspended tenants with unchecked "reactivate" stay suspended — no point updating end date.
       const currentEnd = tenant.subscriptionEnd;
       const newEnd = new Date(params.input.periodEnd);
-      if (currentEnd === null || currentEnd < newEnd) {
+      const extendEnd = currentEnd === null || currentEnd < newEnd;
+      // A paid trial becomes a paying customer — mirrors the Stripe checkout
+      // path (status "active", trialEndsAt cleared).
+      const promoteFromTrial = tenant.status === "trial";
+      if (extendEnd || promoteFromTrial) {
         await tx
           .update(tenants)
           .set({
-            subscriptionEnd: newEnd,
+            ...(extendEnd ? { subscriptionEnd: newEnd } : {}),
             ...(tenant.subscriptionStart === null
               ? { subscriptionStart: new Date(params.input.periodStart) }
               : {}),
+            ...(promoteFromTrial ? { status: "active" as const, trialEndsAt: null } : {}),
           })
           .where(eq(tenants.id, tenant.id));
-        subscriptionExtended = true;
+        subscriptionExtended = extendEnd;
+        activated = promoteFromTrial;
       }
     }
   });
@@ -211,6 +220,29 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Record
     console.error("tenant_events (payment_recorded) insert failed:", toLogMessage(err));
   }
 
+  // Audit event: activated (trial → active promotion) — best-effort
+  if (activated) {
+    try {
+      await db.insert(tenantEvents).values({
+        tenantId: tenantSnapshot!.id,
+        eventType: "activated",
+        actorId: params.actorId,
+        before: {
+          status: tenantSnapshot!.status,
+          trialEndsAt: tenantSnapshot!.trialEndsAt ? tenantSnapshot!.trialEndsAt.toISOString() : null,
+        },
+        after: {
+          status: "active",
+          subscriptionEnd: payment!.periodEnd.toISOString(),
+          coveringPaymentId: payment!.id,
+        },
+        note: `Essai converti en abonnement actif — paiement ${payment!.paymentMethod} ${payment!.amount} XOF confirmé par ${params.actorEmail}`,
+      });
+    } catch (err) {
+      console.error("tenant_events (activated) insert failed:", toLogMessage(err));
+    }
+  }
+
   // Audit event: reactivated — best-effort. Uses the same note builder as
   // story 7-8's explicit reactivation so journal/accounting exports read
   // consistently regardless of entry point.
@@ -252,6 +284,7 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Record
     periodEnd: payment!.periodEnd,
     reactivated,
     subscriptionExtended,
+    activated,
     emailSent,
   };
 }

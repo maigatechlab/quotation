@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { apiError, HTTP_STATUS } from "@/lib/api/envelope";
 import { auth } from "@/lib/auth";
@@ -33,6 +33,16 @@ export async function GET() {
     throw err;
   }
 
+  const rawCid = (session.user as Record<string, unknown>).companyId;
+  const companyId: string | null =
+    typeof rawCid === "string" && rawCid !== "" ? rawCid : null;
+
+  if (!companyId) {
+    return NextResponse.json([]);
+  }
+
+  // Scoped to the caller's own tenant — without this filter, any user with
+  // user.read permission could list every user across every tenant.
   const users = await db
     .select({
       id: userTable.id,
@@ -42,6 +52,7 @@ export async function GET() {
       createdAt: userTable.createdAt,
     })
     .from(userTable)
+    .where(eq(userTable.companyId, companyId))
     .orderBy(asc(userTable.createdAt));
 
   return NextResponse.json(users);

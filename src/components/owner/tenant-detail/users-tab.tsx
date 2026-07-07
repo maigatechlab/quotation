@@ -4,6 +4,7 @@ import { formatDateFr } from "@/lib/owner/format";
 import type { TenantUserRow } from "@/lib/owner/tenant-detail";
 import type { TenantStatus } from "@/lib/tenants/tenant-config";
 import { AddUserDialog } from "./add-user-dialog";
+import { DeleteUserAction } from "./delete-user-action";
 import { RevokeReactivateAction } from "./revoke-reactivate-action";
 import { UserQuotaBar, type UserQuota } from "./user-quota-bar";
 
@@ -106,14 +107,24 @@ export async function UsersTab({ tenantId, tenantStatus, users, quota }: Props) 
                       {isDisabled ? t("statusDisabled") : t("statusActive")}
                     </td>
                     <td className="px-4 py-3">
-                      <RevokeReactivateAction
-                        tenantId={tenantId}
-                        user={{ id: u.id, name: u.name, email: u.email, role: u.role }}
-                        isDisabled={isDisabled}
-                        actionDisabled={tenantInactive || (!isDisabled && isLastActiveAdmin)}
-                        quotaFull={isDisabled && quotaFull}
-                        {...(tooltip !== undefined ? { disabledTooltip: tooltip } : {})}
-                      />
+                      <div className="flex items-center gap-2">
+                        <RevokeReactivateAction
+                          tenantId={tenantId}
+                          user={{ id: u.id, name: u.name, email: u.email, role: u.role }}
+                          isDisabled={isDisabled}
+                          actionDisabled={tenantInactive || (!isDisabled && isLastActiveAdmin)}
+                          quotaFull={isDisabled && quotaFull}
+                          {...(tooltip !== undefined ? { disabledTooltip: tooltip } : {})}
+                        />
+                        <DeleteUserAction
+                          tenantId={tenantId}
+                          user={{ id: u.id, name: u.name, email: u.email, role: u.role }}
+                          actionDisabled={isLastActiveAdmin}
+                          {...(isLastActiveAdmin
+                            ? { disabledTooltip: t("deleteDialog.lastAdminTooltip") }
+                            : {})}
+                        />
+                      </div>
                     </td>
                   </tr>
                 );

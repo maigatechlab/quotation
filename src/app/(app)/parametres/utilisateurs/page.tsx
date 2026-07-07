@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { can } from "@/lib/permissions";
 import { user as userTable } from "@/lib/schema";
@@ -13,16 +13,22 @@ export default async function UtilisateursPage() {
   const { session, role } = result;
   if (!can(role, "user.manage")) redirect("/");
 
-  const users = await db
-    .select({
-      id: userTable.id,
-      name: userTable.name,
-      email: userTable.email,
-      role: userTable.role,
-      createdAt: userTable.createdAt,
-    })
-    .from(userTable)
-    .orderBy(asc(userTable.createdAt));
+  const rawCid = (session.user as Record<string, unknown>).companyId;
+  const companyId = typeof rawCid === "string" && rawCid !== "" ? rawCid : null;
+
+  const users = companyId
+    ? await db
+        .select({
+          id: userTable.id,
+          name: userTable.name,
+          email: userTable.email,
+          role: userTable.role,
+          createdAt: userTable.createdAt,
+        })
+        .from(userTable)
+        .where(eq(userTable.companyId, companyId))
+        .orderBy(asc(userTable.createdAt))
+    : [];
 
   return (
     <div className="flex flex-col px-5 pt-8">

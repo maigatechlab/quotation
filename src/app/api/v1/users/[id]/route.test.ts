@@ -21,9 +21,9 @@ import { db } from "@/lib/db";
 const ADMIN_ID = "admin-1";
 const TARGET_ID = "user-2";
 
-function mockSession(role: string, id = ADMIN_ID) {
+function mockSession(role: string, id = ADMIN_ID, companyId: string | null = "co-1") {
   vi.mocked(auth.api.getSession).mockResolvedValue({
-    user: { id, role } as never,
+    user: { id, role, companyId } as never,
     session: {} as never,
   });
 }
@@ -101,6 +101,23 @@ describe("PATCH /api/v1/users/[id]", () => {
     expect(res.status).toBe(404);
     const body = await res.json();
     expect(body.error.code).toBe("NOT_FOUND");
+  });
+
+  it("404 si la cible appartient a un autre tenant (pas de fuite cross-tenant)", async () => {
+    mockSession("admin");
+    // Simulates the companyId filter excluding a cross-tenant user id — same
+    // shape as "not found" from the caller's perspective.
+    mockDbUpdate([]);
+    const res = await PATCH(makeReq({ role: "commercial" }), makeParams());
+    expect(res.status).toBe(404);
+  });
+
+  it("403 si companyId absent sur la session", async () => {
+    mockSession("admin", ADMIN_ID, null);
+    const res = await PATCH(makeReq({ role: "commercial" }), makeParams());
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error.code).toBe("FORBIDDEN");
   });
 
   it("200 succès admin met à jour rôle", async () => {

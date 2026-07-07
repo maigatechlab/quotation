@@ -218,6 +218,51 @@ describe("recordPayment", () => {
     });
   });
 
+  describe("trial tenant", () => {
+    beforeEach(() => {
+      h.tenantRow.status = "trial";
+      h.tenantRow.subscriptionEnd = new Date("2026-06-20T00:00:00.000Z"); // before periodEnd
+    });
+
+    it("promotes to active and clears trialEndsAt", async () => {
+      const result = await recordPayment({ tenantId: "tenant-1", input: makeInput(), ...PARAMS });
+      expect(result.activated).toBe(true);
+      expect(h.txUpdateSet).toHaveBeenCalledTimes(1);
+      const setArg = callArg(h.txUpdateSet, 0, 0);
+      expect(setArg.status).toBe("active");
+      expect(setArg.trialEndsAt).toBeNull();
+      expect(setArg.subscriptionEnd).toBeInstanceOf(Date);
+    });
+
+    it("promotes even when subscriptionEnd already covers the period", async () => {
+      h.tenantRow.subscriptionEnd = new Date("2026-12-31T00:00:00.000Z"); // after periodEnd
+      const result = await recordPayment({ tenantId: "tenant-1", input: makeInput(), ...PARAMS });
+      expect(result.activated).toBe(true);
+      expect(result.subscriptionExtended).toBe(false);
+      const setArg = callArg(h.txUpdateSet, 0, 0);
+      expect(setArg.status).toBe("active");
+      expect(setArg).not.toHaveProperty("subscriptionEnd");
+    });
+
+    it("inserts payment_recorded and activated events", async () => {
+      await recordPayment({ tenantId: "tenant-1", input: makeInput(), ...PARAMS });
+      expect(h.outerInsertValues).toHaveBeenCalledTimes(2);
+      const activatedEvent = callArg(h.outerInsertValues, 1, 0);
+      expect(activatedEvent.eventType).toBe("activated");
+      const after = activatedEvent.after as Record<string, unknown>;
+      expect(after.status).toBe("active");
+    });
+
+    it("active tenant is never promoted (no activated event)", async () => {
+      h.tenantRow.status = "active";
+      const result = await recordPayment({ tenantId: "tenant-1", input: makeInput(), ...PARAMS });
+      expect(result.activated).toBe(false);
+      const setArg = callArg(h.txUpdateSet, 0, 0);
+      expect(setArg).not.toHaveProperty("status");
+      expect(h.outerInsertValues).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("suspended tenant + reactivateIfSuspended=true", () => {
     beforeEach(() => {
       h.tenantRow.status = "suspended";

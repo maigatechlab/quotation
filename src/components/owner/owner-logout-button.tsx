@@ -14,7 +14,7 @@ export function OwnerLogoutButton() {
     await signOut({
       fetchOptions: {
         onSuccess: () => {
-          router.push("/");
+          router.push("/owner/login");
           router.refresh();
         },
       },
