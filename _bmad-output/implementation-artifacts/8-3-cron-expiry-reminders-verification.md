@@ -13,7 +13,7 @@ depends_on:
 
 # Story 8.3 : Vérification du cron d'expiration et de rappels
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -233,6 +233,15 @@ pnpm build
 - [vercel.json] — configuration cron déjà présente (racine du repo)
 - [env.example] — `CRON_SECRET=` (ligne ~70)
 - [project-context.md] — règles générales du projet (quota, audit, DB)
+
+### Review Findings
+
+_Code review adversarial (Blind Hunter + Edge Case Hunter + Acceptance Auditor), 2026-07-07, opus-4-8. Baseline `6d86a44`, scopé à la File List de la story._
+
+- [x] [Review][Patch] `hasPaymentCoveringPeriod` — filtre `lte(periodStart, subscriptionEnd)` : conservé (plus correct que l'AC laxiste — rejette un paiement de période future disjointe qui laisserait un trou de couverture ; cas "renouvellement à tort suspendu" non-atteignable car record-payment avance `subscriptionEnd`). Déviation AC silencieuse corrigée par commentaire justificatif dans le code. [src/lib/cron/expiry-decisions.ts:120]
+- [x] [Review][Patch] Migration `0020` — DELETE de dédup ajouté avant le `CREATE UNIQUE INDEX` (supprime les lignes `tenant_events` dupliquées `actor_id='system'` laissées par l'ancien bug d'idempotence, via `ctid`), pour que `pnpm db:migrate`/`pnpm build` ne casse pas sur un environnement où l'ancien cron a tourné. [drizzle/0020_outgoing_thunderbolts.sql:1]
+- [x] [Review][Defer] Event "payment covers period, skipped suspension" loggé avec `eventType='reminder_sent'` — toute requête de reporting comptant `event_type='reminder_sent'` sur-compte les rappels. Pré-existant (l'ancien code utilisait déjà `reminder_sent` pour ce skip). [src/lib/cron/expiry-job.ts] — deferred, pre-existing
+- [x] [Review][Defer] Enforcement : redirection `suspended` post-grâce élargie à TOUTES les suspensions (y compris blocage manuel/fraude sans grâce) vers `/subscription-expired`, dont la copie "renouveler" et le param `date` du proxy (fallback `updatedAt` si `subscriptionEnd` null) sont trompeurs pour une suspension non liée à l'expiration. Blocage d'accès correct ; nuance de messaging hors périmètre 8-3. [src/lib/tenants/tenant-enforcement.ts:25] — deferred, pre-existing
 
 ## Dev Agent Record
 

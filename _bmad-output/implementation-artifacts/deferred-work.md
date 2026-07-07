@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 8-3-cron-expiry-reminders-verification (2026-07-07)
+
+- **Event "payment covers period, skipped suspension" loggé avec `eventType='reminder_sent'`** [`src/lib/cron/expiry-job.ts`] — Toute requête de reporting comptant `event_type='reminder_sent'` sur-compte les rappels réels (ce skip de suspension n'est pas un rappel). Pré-existant : l'ancien code utilisait déjà `reminder_sent` pour cet event ; non introduit par 8-3. Envisager un `eventType` dédié si un reporting fin des rappels devient nécessaire.
+- **Redirection `suspended` post-grâce élargie à toutes les causes de suspension** [`src/lib/tenants/tenant-enforcement.ts:25`] — Un tenant suspendu pour fraude/blocage manuel (sans grâce) est désormais redirigé vers `/subscription-expired`, dont la copie ("renouveler votre abonnement") et le param `date` du proxy (`src/proxy.ts`, fallback `updatedAt` quand `subscriptionEnd` est null) sont trompeurs pour une suspension non liée à l'expiration. Le blocage d'accès lui-même est correct/désiré ; seule la sémantique du message de la page est en cause. Distinguer la cause de suspension dans la page d'enforcement si des suspensions non-expiry deviennent courantes.
+
 ## Deferred from: code review of 7-8-reactivation-after-payment (2026-07-03)
 
 - **Verrou pessimiste absent sur le paiement pendant la réactivation** [`src/lib/tenants/covering-payment.ts:43-54`, `src/lib/tenants/reactivate.ts:325-340`] — `getPaymentForTenant` fait un simple SELECT (pas de `FOR UPDATE`) à l'intérieur de la transaction de réactivation, contrairement au tenant qui est verrouillé. Aucune route ne permet actuellement d'éditer/supprimer un paiement après création — fenêtre de course non exploitable en pratique aujourd'hui, mais à revisiter si un endpoint d'édition de paiement apparaît.
