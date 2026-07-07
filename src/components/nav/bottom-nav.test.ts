@@ -43,7 +43,6 @@ describe("shouldHideNav", () => {
 
   it("est caché sur les routes auth et les routes plein écran", () => {
     expect(shouldHideNav("/login")).toBe(true);
-    expect(shouldHideNav("/register")).toBe(true);
     expect(shouldHideNav("/forgot-password")).toBe(true);
     expect(shouldHideNav("/reset-password")).toBe(true);
     expect(shouldHideNav("/devis/nouveau")).toBe(true);

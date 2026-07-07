@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 
 const HIDE_NAV_EXACT = [
   "/login",
-  "/register",
   "/forgot-password",
   "/reset-password",
   "/devis/nouveau",
