@@ -65,14 +65,9 @@ export function AppSidebar({ userName, userEmail, role }: AppSidebarProps) {
       className="hidden lg:flex fixed inset-y-0 left-0 z-30 w-64 flex-col border-r border-sidebar-border bg-sidebar"
       aria-label="Navigation principale"
     >
-      <div className="flex items-center gap-3 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-navy">
-          <span className="font-serif text-lg font-semibold text-text-on-dark">Q</span>
-        </div>
-        <div className="leading-tight">
-          <p className="text-sm font-bold text-sidebar-foreground">Quotation</p>
-          <p className="text-xs text-text-muted">Logistique</p>
-        </div>
+      <div className="flex items-center px-5 py-5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-full.svg" alt="Quotation Logistique" width={210} height={137} />
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-2">
