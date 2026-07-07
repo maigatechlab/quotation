@@ -12,7 +12,8 @@ import { useWizardStore } from "@/stores/wizard-store";
 
 interface WizardStepConditionsProps {
   userId: string;
-  company: CompanyLocal;
+  /** Null when no company row exists locally — the step still works, without company defaults. */
+  company: CompanyLocal | null;
 }
 
 /**
@@ -70,7 +71,7 @@ export function WizardStepConditions({ userId, company }: WizardStepConditionsPr
   // QuoteLocal.conditionsPaiement en priorité, sinon CompanyLocal.conditionsPaiementDefaut.
   useEffect(() => {
     let cancelled = false;
-    const fallback = company.conditionsPaiementDefaut ?? "";
+    const fallback = company?.conditionsPaiementDefaut ?? "";
 
     const load = async () => {
       try {
@@ -99,7 +100,7 @@ export function WizardStepConditions({ userId, company }: WizardStepConditionsPr
     return () => {
       cancelled = true;
     };
-  }, [quoteId, company.conditionsPaiementDefaut]);
+  }, [quoteId, company?.conditionsPaiementDefaut]);
 
   // --- Helpers clauses -----------------------------------------------------
 

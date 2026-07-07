@@ -29,6 +29,7 @@ interface StatusChangeSheetProps {
   quoteId: string;
   currentStatus: QuoteStatusValue;
   userId: string;
+  userName: string;
   onClose: () => void;
   isOpen: boolean;
 }
@@ -49,6 +50,7 @@ export function StatusChangeSheet({
   quoteId,
   currentStatus,
   userId,
+  userName,
   onClose,
   isOpen,
 }: StatusChangeSheetProps) {
@@ -157,6 +159,7 @@ export function StatusChangeSheet({
         fromStatus: dbQuote.status,
         toStatus: newStatus,
         changedBy: userId,
+        changedByName: userName,
         changedAt: now,
         note: null,
       };

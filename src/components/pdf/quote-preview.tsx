@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -23,10 +23,12 @@ import { duplicateQuoteLocal } from "@/lib/duplicate-quote-local";
 import { can } from "@/lib/permissions";
 import type { Role } from "@/lib/permissions";
 import { isTerminalStatus } from "@/lib/quote-status";
+import { resolveActorLabel, type UsersById } from "@/lib/quote-status-actor";
 
 interface QuotePreviewProps {
   quoteId: string;
   userId: string;
+  userName: string;
   role: Role;
 }
 
@@ -45,10 +47,40 @@ function buildQuotePdfFilename(quoteNumber: string, clientName: string): string 
 
   return `Devis-${safeQuoteNumber}-${safeClientName}.pdf`;
 }
-export function QuotePreview({ quoteId, userId, role }: QuotePreviewProps) {
+export function QuotePreview({ quoteId, userId, userName, role }: QuotePreviewProps) {
   const router = useRouter();
   const t = useTranslations("devis");
   const { quote, lines, clauses, statusLogs } = useLiveQuote(quoteId);
+
+  // Résolution des acteurs legacy (Story 8.8 — AC1/AC2) : uniquement un filet de
+  // sécurité pour les entrées d'historique écrites avant le snapshot `changedByName`.
+  // `null` tant que non chargé (permission absente, hors-ligne, requête échouée) —
+  // distinct d'une Map vide (chargée avec succès mais utilisateur introuvable).
+  const [usersById, setUsersById] = useState<UsersById | null>(null);
+
+  useEffect(() => {
+    if (!can(role, "user.read")) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/v1/users");
+        if (!res.ok) return;
+        const users = (await res.json()) as Array<{ id: string; name: string; email: string }>;
+        if (cancelled) return;
+        setUsersById(new Map(users.map((u) => [u.id, { name: u.name, email: u.email }])));
+      } catch {
+        // best-effort — reste "non chargé" (Utilisateur inconnu), jamais bloquant.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [role]);
+
+  const actorLabels = {
+    deleted: t("detail.historyByDeleted"),
+    unknown: t("detail.historyByUnknown"),
+  };
   // useLiveCompany returns CompanyLocal | undefined | null.
   // Keep undefined distinct so PDF actions wait for the company lookup to settle.
   const companyResult = useLiveCompany();
@@ -258,12 +290,17 @@ export function QuotePreview({ quoteId, userId, role }: QuotePreviewProps) {
                         from: log.fromStatus ? STATUS_CONFIG[log.fromStatus].label : "—",
                         to: STATUS_CONFIG[log.toStatus].label,
                       })}
-                      {log.changedBy && (
-                        <>
-                          {" "}
-                          {t("detail.historyBy", { user: log.changedBy })}
-                        </>
-                      )}
+                      {(() => {
+                        const actor = resolveActorLabel(log, usersById, actorLabels);
+                        return (
+                          actor && (
+                            <>
+                              {" "}
+                              {t("detail.historyBy", { user: actor })}
+                            </>
+                          )
+                        );
+                      })()}
                     </span>
                   </li>
                 ))}
@@ -412,9 +449,10 @@ export function QuotePreview({ quoteId, userId, role }: QuotePreviewProps) {
                             : "—",
                           to: STATUS_CONFIG[log.toStatus].label,
                         })}
-                        {log.changedBy && (
-                          <> {t("detail.historyBy", { user: log.changedBy })}</>
-                        )}
+                        {(() => {
+                          const actor = resolveActorLabel(log, usersById, actorLabels);
+                          return actor && <> {t("detail.historyBy", { user: actor })}</>;
+                        })()}
                       </span>
                     </div>
                   </li>
@@ -529,6 +567,7 @@ export function QuotePreview({ quoteId, userId, role }: QuotePreviewProps) {
         quoteId={quoteId}
         currentStatus={quote.status}
         userId={userId}
+        userName={userName}
         isOpen={isStatusSheetOpen}
         onClose={() => setIsStatusSheetOpen(false)}
       />

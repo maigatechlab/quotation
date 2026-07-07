@@ -144,6 +144,7 @@ export interface QuoteStatusLogLocal {
   fromStatus?: QuoteLocal["status"];
   toStatus: QuoteLocal["status"];
   changedBy?: string;
+  changedByName?: string;
   changedAt: string;
   note: string | null;
 }
