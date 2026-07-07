@@ -117,6 +117,16 @@ export async function hasPaymentCoveringPeriod(tenant: {
   subscriptionEnd: Date | null;
 }): Promise<boolean> {
   if (!tenant.subscriptionEnd) return false;
+  // "Covering" = a payment whose interval brackets subscriptionEnd
+  // (periodStart <= subscriptionEnd <= periodEnd). Both bounds matter:
+  //   - gte(periodEnd, subscriptionEnd): paid at least through the expiry point.
+  //   - lte(periodStart, subscriptionEnd): the payment period actually contains
+  //     the expiry point — this rejects a DISJOINT future-period payment
+  //     (e.g. periodStart = subscriptionEnd + 30d) that would leave a coverage
+  //     gap at expiry. AC2 quotes only `periodEnd >= subscriptionEnd`; the
+  //     periodStart bound is an intentional tightening (that looser form would
+  //     wrongly treat a future prepayment with a gap as covering, skipping a
+  //     suspension the tenant should get).
   const covering = await db
     .select({ id: subscriptionPayments.id })
     .from(subscriptionPayments)
