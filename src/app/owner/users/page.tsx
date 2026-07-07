@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { asc } from "drizzle-orm";
 import { eq } from "drizzle-orm";
+import { DeleteUserAction } from "@/components/owner/tenant-detail/delete-user-action";
 import { db } from "@/lib/db";
 import { requireOwnerAuth } from "@/lib/session";
 import { user as userTable, tenants } from "@/lib/schema";
@@ -15,7 +16,8 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default async function UsersPage() {
-  await requireOwnerAuth();
+  const session = await requireOwnerAuth();
+  const currentUserId = session.user.id;
 
   const rows = await db
     .select({
@@ -30,6 +32,10 @@ export default async function UsersPage() {
     .from(userTable)
     .leftJoin(tenants, eq(userTable.tenantId, tenants.id))
     .orderBy(asc(userTable.createdAt));
+
+  const activeSuperadminCount = rows.filter(
+    (u) => u.role === "superadmin" && u.disabledAt === null
+  ).length;
 
   return (
     <div className="flex flex-col gap-4">
@@ -47,7 +53,7 @@ export default async function UsersPage() {
           href="/owner/users/new"
           className="inline-flex h-10 items-center gap-2 rounded-xl bg-brand-navy px-4 text-sm font-semibold text-text-on-dark hover:bg-brand-navy-deep transition-colors"
         >
-          + Nouveau compte
+          + Nouveau compte owner
         </Link>
       </div>
 
@@ -61,6 +67,7 @@ export default async function UsersPage() {
               <th className="px-4 py-3 text-left font-semibold text-text-muted">Tenant</th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted">Statut</th>
               <th className="px-4 py-3 text-left font-semibold text-text-muted">Créé le</th>
+              <th className="px-4 py-3 text-left font-semibold text-text-muted">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -92,11 +99,31 @@ export default async function UsersPage() {
                 <td className="px-4 py-3 text-text-muted text-xs">
                   {u.createdAt.toLocaleDateString("fr-FR")}
                 </td>
+                <td className="px-4 py-3">
+                  {(() => {
+                    const isSelf = u.id === currentUserId;
+                    const isLastSuperadmin =
+                      u.role === "superadmin" && !u.disabledAt && activeSuperadminCount <= 1;
+                    const disabledReason = isSelf
+                      ? "Vous ne pouvez pas supprimer votre propre compte"
+                      : isLastSuperadmin
+                        ? "Dernier compte superadmin — ne peut pas être supprimé"
+                        : undefined;
+                    return (
+                      <DeleteUserAction
+                        user={{ id: u.id, name: u.name, email: u.email, role: u.role ?? "commercial" }}
+                        endpoint={`/api/v1/owner/users/${u.id}`}
+                        actionDisabled={isSelf || isLastSuperadmin}
+                        {...(disabledReason !== undefined ? { disabledTooltip: disabledReason } : {})}
+                      />
+                    );
+                  })()}
+                </td>
               </tr>
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-text-muted">
+                <td colSpan={7} className="px-4 py-8 text-center text-sm text-text-muted">
                   Aucun utilisateur.
                 </td>
               </tr>

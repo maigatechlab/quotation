@@ -4,15 +4,7 @@ import type { ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-export type TenantDetailTab = "infos" | "abonnement" | "utilisateurs" | "journal";
-
-export const VALID_TENANT_DETAIL_TABS: TenantDetailTab[] = [
-  "infos",
-  "abonnement",
-  "utilisateurs",
-  "journal",
-];
+import { VALID_TENANT_DETAIL_TABS, type TenantDetailTab } from "@/lib/owner/tenant-detail-tabs";
 
 interface Props {
   initialTab: TenantDetailTab;

@@ -24,17 +24,28 @@ import { Textarea } from "@/components/ui/textarea";
 
 type FieldErrors = Partial<Record<string, string>>;
 
-export interface SuspendDialogProps {
+export interface SuspendDialogControlledProps {
   tenantId: string;
   tenantName: string;
-  disabled?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function SuspendDialog({ tenantId, tenantName, disabled }: SuspendDialogProps) {
+/**
+ * Controlled variant — the caller owns open state and renders no trigger.
+ * Required by the tenants-list actions menu: a dialog mounted inside
+ * DropdownMenuContent unmounts when the menu closes, so it must live outside
+ * the menu and be driven from the menu item.
+ */
+export function SuspendDialogControlled({
+  tenantId,
+  tenantName,
+  open,
+  onOpenChange,
+}: SuspendDialogControlledProps) {
   const t = useTranslations("owner.tenants.suspend");
   const router = useRouter();
 
-  const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [reason, setReason] = useState<string>("");
@@ -48,7 +59,7 @@ export function SuspendDialog({ tenantId, tenantName, disabled }: SuspendDialogP
       setTotalBlock(false);
       setErrors({});
     }
-    setOpen(next);
+    onOpenChange(next);
   }
 
   async function handleSubmit() {
@@ -66,7 +77,7 @@ export function SuspendDialog({ tenantId, tenantName, disabled }: SuspendDialogP
       });
       if (res.ok) {
         toast.success(t("success", { name: tenantName }));
-        setOpen(false);
+        handleOpenChange(false);
         router.refresh();
       } else {
         const body = (await res.json()) as { error?: { code?: string; fields?: FieldErrors } };
@@ -86,17 +97,7 @@ export function SuspendDialog({ tenantId, tenantName, disabled }: SuspendDialogP
   }
 
   return (
-    <>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={disabled}
-        onClick={() => setOpen(true)}
-      >
-        {t("trigger")}
-      </Button>
-
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t("title", { name: tenantName })}</DialogTitle>
@@ -172,7 +173,32 @@ export function SuspendDialog({ tenantId, tenantName, disabled }: SuspendDialogP
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+    </Dialog>
+  );
+}
+
+export interface SuspendDialogProps {
+  tenantId: string;
+  tenantName: string;
+  disabled?: boolean;
+}
+
+/** Button-triggered variant used on the tenant detail page (Infos tab). */
+export function SuspendDialog({ tenantId, tenantName, disabled }: SuspendDialogProps) {
+  const t = useTranslations("owner.tenants.suspend");
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button variant="outline" size="sm" disabled={disabled} onClick={() => setOpen(true)}>
+        {t("trigger")}
+      </Button>
+      <SuspendDialogControlled
+        tenantId={tenantId}
+        tenantName={tenantName}
+        open={open}
+        onOpenChange={setOpen}
+      />
     </>
   );
 }

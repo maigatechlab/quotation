@@ -8,11 +8,7 @@ import { InfosTab } from "@/components/owner/tenant-detail/infos-tab";
 import { JournalTab, JOURNAL_EVENT_TYPES } from "@/components/owner/tenant-detail/journal-tab";
 import { SubscriptionTab } from "@/components/owner/tenant-detail/subscription-tab";
 import { UsersTab } from "@/components/owner/tenant-detail/users-tab";
-import {
-  TenantDetailTabs,
-  VALID_TENANT_DETAIL_TABS,
-  type TenantDetailTab,
-} from "@/components/owner/tenant-detail-tabs";
+import { TenantDetailTabs } from "@/components/owner/tenant-detail-tabs";
 import { TenantPlanBadge } from "@/components/owner/tenant-plan-badge";
 import { TenantStatusBadge } from "@/components/owner/tenant-status-badge";
 import {
@@ -23,6 +19,10 @@ import {
   getTenantPayments,
   getTenantUsers,
 } from "@/lib/owner/tenant-detail";
+import {
+  VALID_TENANT_DETAIL_TABS,
+  type TenantDetailTab,
+} from "@/lib/owner/tenant-detail-tabs";
 import { requireOwnerAuth } from "@/lib/session";
 import { isValidUuid } from "@/lib/validation/uuid";
 

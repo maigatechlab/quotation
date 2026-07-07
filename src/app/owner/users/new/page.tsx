@@ -9,10 +9,10 @@ export default function NewUserPage() {
           OWNER CONSOLE
         </p>
         <h1 className="mt-1 font-serif text-2xl font-semibold text-text-primary">
-          Créer un compte
+          Nouveau compte owner
         </h1>
         <p className="mt-0.5 text-sm text-text-secondary">
-          Nouveau compte utilisateur — accès immédiat après création.
+          Compte superadmin pour la console owner — accès immédiat après création.
         </p>
       </div>
 

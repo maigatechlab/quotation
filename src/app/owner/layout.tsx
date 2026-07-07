@@ -12,6 +12,8 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
       <header className="bg-brand-navy text-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark-light.svg" alt="Quotation Logistique" width={44} height={44} />
             <span className="font-serif text-lg font-semibold tracking-tight">Owner Console</span>
           </div>
 
@@ -29,6 +31,12 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
               {t("tenants")}
             </Link>
             <Link
+              href="/owner/users"
+              className="rounded-xl px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 transition-colors"
+            >
+              Utilisateurs
+            </Link>
+            <Link
               href="/owner/reports"
               className="rounded-xl px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 transition-colors"
             >
@@ -40,15 +48,12 @@ export default async function OwnerLayout({ children }: { children: React.ReactN
             >
               {t("settings")}
             </Link>
-            {(["payments"] as const).map((key) => (
-              <span
-                key={key}
-                title={t("comingSoon")}
-                className="cursor-not-allowed rounded-xl px-3 py-2 text-xs font-semibold text-white/30"
-              >
-                {t(key)}
-              </span>
-            ))}
+            <Link
+              href="/owner/payments"
+              className="rounded-xl px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 transition-colors"
+            >
+              {t("payments")}
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2">
