@@ -284,6 +284,14 @@ Permettre à un gérant/commercial de visualiser son activité : compteurs de de
 Durcir la v1 après le ship MVP-0 : chiffrement IndexedDB au repos (AES-GCM via le seam LocalCrypto), enforcement des quotas par tier (§12) + grace period, audit trail immutable + export, Background Sync API, CRUD des modèles de routes/corridors (presets figés en MVP-0), et backup/PITR géo-répliqué (§15.4). Palier de livraison distinct, séquençable après MVP-0.
 **FRs covered:** FR-NEW-ROUTES
 
+### Epic 7: Owner Panel & Gestion des abonnements SaaS `[Post-MVP]`
+Console owner multi-tenant : dashboard, création/suspension/réactivation/annulation de tenant, paiements mobile money + Stripe, gestion des utilisateurs par tenant, rapports, paramètres plateforme. Voir `Docs/business/owner-subscription-management.md`. Marqué `done` dans le sprint tracker mais jamais formalisé ici — non ré-audité dans le cadre d'Epic 8 hormis les points listés en Story 8.6.
+**FRs covered:** hors périmètre PRD initial (post-MVP, spécifié séparément)
+
+### Epic 8: Préparation Go-Live `[Post-MVP]`
+Combler les lacunes identifiées lors d'une passe de test E2E complète (2026-07-06) avant mise en production : vérification bout-en-bout du paiement Stripe, de l'envoi d'emails transactionnels, du cron de rappels, de la resynchronisation offline, des exports, un audit de sécurité ciblé cross-tenant (2 failles IDOR/fuite déjà trouvées et corrigées sur `/api/v1/users` pendant la passe de test), et le nettoyage des données/config de production. Epic de clôture avant bascule en production — ne livre pas de fonctionnalité utilisateur nouvelle, sécurise et vérifie l'existant.
+**Source :** `Docs/testing/test-plan.md` (section "Non couvert dans cette session" + "Bugs trouvés et corrigés")
+
 ---
 
 ## Epic 1: Socle, Design System & Authentification
@@ -1066,3 +1074,155 @@ So que je puisse reprendre le service après incident avec une perte de données
 **Then** RTO < 4 heures (reprise service), RPO < 1 heure (PITR continu, §15.4)
 **And** le scope couvre DB (PostgreSQL) + Blob storage (logos, signatures) + config app
 **And** la "device loss recovery" permet à un utilisateur d'exporter ses données + re-importer sur un nouvel appareil
+
+## Epic 8: Préparation Go-Live `[Post-MVP]`
+
+Sécuriser et vérifier bout-en-bout les fonctionnalités déjà implémentées mais jamais testées en conditions réelles, avant la première mise en production. Épic déclenché par une passe de test manuel E2E (2026-07-06, voir `Docs/testing/test-plan.md`) qui a couvert l'intégralité des flux Epic 1-7 côté fonctionnel et trouvé 4 bugs (2 critiques de sécurité cross-tenant, corrigés immédiatement) mais a explicitement exclu de son périmètre : Stripe réel, emails réels, cron, resync réseau, exports fichiers. Cet epic ferme ces trous avant le go-live.
+
+### Story 8.1: Vérification bout-en-bout du paiement Stripe
+
+As a opérateur de la plateforme,
+I want que le flux Stripe (checkout trial→payant + webhook) soit vérifié avec de vraies clés de test,
+So that les tenants peuvent réellement passer en payant sans intervention manuelle.
+
+**Acceptance Criteria:**
+
+**Given** `POST /api/v1/checkout/create-session` et `POST /api/webhooks/stripe` (Story 7-10, déjà codés)
+**When** je lance `stripe listen --forward-to localhost:3000/api/webhooks/stripe` avec des clés de test Stripe
+**Then** un checkout réel (carte de test Stripe) déclenche le webhook, met à jour `companySubscription`/`tenants` et enregistre un paiement dans `subscriptionPayments`
+
+**Given** l'idempotence attendue (table `stripeProcessedEvents`)
+**When** Stripe renvoie le même événement deux fois (retry réseau)
+**Then** le second traitement est un no-op (pas de double paiement enregistré)
+
+**Given** un paiement Stripe échoué ou une carte refusée
+**When** le webhook reçoit l'événement d'échec
+**Then** le tenant reste dans son état courant (pas de passage en payant), et l'échec est visible dans les logs/journal
+
+### Story 8.2: Vérification de la livraison des emails transactionnels
+
+As a admin plateforme,
+I want que tous les emails transactionnels partent réellement en production,
+So that les utilisateurs reçoivent bien leurs identifiants, rappels et confirmations.
+
+**Acceptance Criteria:**
+
+**Given** `RESEND_API_KEY` vide en dev (fallback console.log, `src/lib/email.ts`)
+**When** je configure une clé Resend de test + domaine vérifié
+**Then** les emails suivants sont envoyés et reçus réellement : bienvenue tenant (Story 7-3), invitation utilisateur (mot de passe oublié), rappel J-7/J-3 (Story 7-6), confirmation de paiement
+
+**Given** un domaine d'envoi non vérifié
+**When** un email est envoyé en prod sans `RESEND_API_KEY`
+**Then** le démarrage de l'app échoue explicitement (comportement déjà codé : `RESEND_API_KEY is required for production email delivery`) — vérifier que ce garde-fou est bien actif en environnement de prod cible
+
+### Story 8.3: Vérification du cron d'expiration et de rappels
+
+As a opérateur de la plateforme,
+I want que le cron `/api/cron/expiry-reminders` tourne réellement en production et déclenche les bonnes actions,
+So that les tenants en fin de trial/grâce sont notifiés et suspendus automatiquement sans intervention manuelle.
+
+**Acceptance Criteria:**
+
+**Given** le job cron (Story 7-6) et un tenant en trial à J-7/J-3 de l'expiration
+**When** le cron s'exécute (déclenché manuellement en staging via `curl` ou `vercel cron`)
+**Then** les emails de rappel appropriés partent (une seule fois par palier, pas de doublon si le cron tourne plusieurs fois le même jour)
+
+**Given** un tenant dont le trial/grâce expire sans paiement
+**When** le cron s'exécute après la date d'expiration
+**Then** le tenant passe automatiquement en `suspended`, avec un événement `tenantEvents` + notification
+
+**Given** l'environnement de production cible
+**When** je configure le déclenchement du cron (Vercel Cron / autre)
+**Then** le endpoint est protégé (secret partagé ou équivalent) pour empêcher un déclenchement non autorisé
+
+### Story 8.4: Test des cas limites de synchronisation offline/reconnexion
+
+As a commercial travaillant hors ligne,
+I want que la synchronisation résiste à une vraie coupure réseau et à des conflits concurrents,
+So that je ne perde jamais de devis ni de données client en travaillant sur le terrain.
+
+**Acceptance Criteria:**
+
+**Given** un devis créé en mode local (`TEMP-xxxx`) pendant une coupure réseau simulée (DevTools offline / avion)
+**When** le réseau revient
+**Then** la Background Sync (Story 6.4) rejoue la queue et le devis obtient son numéro définitif, sans duplication (idempotence `opId`, déjà couverte par Story 2.1/6.4 en tests unitaires — à revérifier en conditions réseau réelles)
+
+**Given** deux appareils modifiant le même client/devis hors ligne puis se reconnectant
+**When** la synchronisation résout le conflit (LWW, `revision`)
+**Then** aucune donnée n'est silencieusement perdue sans trace ; un conflit détecté est visible (log ou UI)
+
+**Given** le mode quota lecture-seule (Story 6.2, grâce expirée)
+**When** un utilisateur tente une mutation hors ligne dans cet état
+**Then** la mutation est rejetée proprement au retour de sync, avec message clair à l'utilisateur (pas d'échec silencieux)
+
+### Story 8.5: Vérification des exports (rapports, paiements, audit)
+
+As a admin plateforme ou tenant,
+I want que tous les boutons d'export produisent des fichiers corrects et complets,
+So that je peux réellement utiliser ces exports pour la comptabilité et la conformité.
+
+**Acceptance Criteria:**
+
+**Given** `GET /api/v1/owner/reports/tenants/export` et `/owner/reports/payments/export`
+**When** je déclenche l'export CSV/Excel depuis l'UI owner
+**Then** le fichier téléchargé s'ouvre correctement, contient les colonnes attendues et les données correspondent à ce qui est affiché à l'écran (pas de troncature, encodage correct pour les caractères accentués)
+
+**Given** `GET /api/v1/audit/export` (Story 6.3)
+**When** un admin tenant exporte le journal d'audit (JSON et CSV)
+**Then** l'export couvre bien 7 ans de rétention affichés, et le format JSON est ré-important/parsable
+
+### Story 8.6: Audit de sécurité ciblé cross-tenant
+
+As a responsable sécurité,
+I want un audit systématique de toutes les routes API scopées par tenant,
+So that les 2 failles trouvées pendant la passe de test (fuite cross-tenant + IDOR sur `/api/v1/users`, déjà corrigées) n'aient pas d'équivalent ailleurs dans l'API.
+
+**Acceptance Criteria:**
+
+**Given** les 2 bugs de sécurité déjà corrigés (`GET/PATCH /api/v1/users[/id]` — filtrage manquant par `companyId`)
+**When** je passe en revue toutes les routes sous `src/app/api/v1/**` qui lisent ou modifient des entités scopées par `companyId` (clients, quotes, quoteLines, clauses, templates, routeTemplates, company)
+**Then** chaque `SELECT`/`UPDATE`/`DELETE` inclut bien une clause `WHERE company_id = <companyId de la session>`, avec un test de non-régression par route (payload d'un autre tenant → 403/404, jamais 200 avec les données d'autrui)
+
+**Given** les routes `owner/**` (accès plateforme, cross-tenant par design)
+**When** je vérifie leur garde d'autorisation
+**Then** `requireOwnerSession`/équivalent est bien systématique, sans route owner accessible à un rôle tenant
+
+**Given** l'ensemble de la matrice de permissions (`src/lib/permissions.ts`)
+**When** je croise déclaratif (permissions) et effectif (implémentation route par route)
+**Then** aucun écart n'existe entre ce que la matrice autorise et ce que le code applique réellement
+
+### Story 8.7: Nettoyage pré-production
+
+As a opérateur de la plateforme,
+I want que l'environnement de production ne contienne aucune donnée ou configuration de test,
+So that le premier client réel n'ait aucune trace de la phase de développement/QA.
+
+**Acceptance Criteria:**
+
+**Given** les comptes et tenants créés pendant la passe de test QA (`qa-owner@…`, `sahel-admin@…`, tenants "QA Transit SARL"/"Sahel Cargo Express SARL", etc.)
+**When** je prépare la base de production
+**Then** ces comptes/tenants n'existent pas en base de production (nouvelle base ou nettoyage explicite avant bascule, jamais un dump de la base de dev)
+
+**Given** les variables d'environnement requises en production (`env.example`)
+**When** je déploie en production
+**Then** `RESEND_API_KEY`, `NEXT_PUBLIC_SENTRY_DSN`, `BETTER_AUTH_SECRET` (valeur unique de prod, jamais celle de dev), `POSTGRES_URL` (instance de prod) et les clés Stripe live sont toutes configurées et vérifiées via `pnpm env:check` ou équivalent
+
+**Given** le premier superadmin de production
+**When** je crée ce compte
+**Then** il est créé via un mot de passe fort dédié, distinct de tout compte QA, et le script `scripts/create-superadmin.ts` (ou équivalent non-interactif) est utilisé plutôt qu'un compte laissé par erreur en base
+
+### Story 8.8 (mineure): Affichage lisible de l'acteur dans l'historique de statut des devis
+
+As a utilisateur consultant l'historique d'un devis,
+I want voir le nom de la personne ayant changé le statut plutôt que son id technique,
+So that l'historique soit lisible sans avoir à recouper avec la base de données.
+
+**Acceptance Criteria:**
+
+**Given** l'historique actuel affichant `De Brouillon vers Validé par <userId>` (id technique brut)
+**When** l'historique est affiché
+**Then** le nom (ou email si nom absent) de l'utilisateur est résolu et affiché à la place de l'id brut
+
+**Given** un utilisateur supprimé depuis (Story 7-9, suppression définitive)
+**When** son historique de transitions est consulté
+**Then** un libellé de repli lisible est affiché (ex: "Utilisateur supprimé") plutôt qu'une erreur ou un id orphelin

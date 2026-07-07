@@ -101,7 +101,10 @@
 # story 7-12 review 2026-07-04 (platform_settings singleton, accesseurs async platform-config.ts, refactor 5 dispatch emails, page /owner/settings Server Action ; fix transversal Better Auth additionalFields role/companyId manquants ; 832/832 tests, build OK ; E2E Ã©crit mais bloquÃ© par bug Playwright/env prÃ©existant, vÃ©rifiÃ© manuellement via session rÃ©elle)
 # epic-7 done 2026-07-04 (toutes stories 7-1 Ã  7-12 complÃ©tÃ©es)
 generated: 2026-06-21
-last_updated: 2026-07-06
+last_updated: 2026-07-07
+# story 8-3 done 2026-07-07 (code review opus-4-8: 2 decision->patch appliqués — filtre hasPaymentCoveringPeriod documenté, dédup migration 0020 ; 2 defer ; 871/871 tests, check OK)
+# story 8-3 review 2026-07-07 (verification E2E locale cron expiry-reminders, AC1/AC2/AC3 confirmes ; bug idempotence corrige -- event "payment covers period, skipped suspension" duplique a chaque run, fix hasPaymentCoverageSkipEventBeenSent ; gap enforcement suspended documente hors perimetre ; Vercel Cron prod DEFERRED, pas de deploiement actif ; 867/867 tests, build OK)
+# story 8-1 blocked 2026-07-06 (Stripe non disponible pour entite Niger/Mali/Burkina Faso, hors liste pays supportes ; verification live impossible, tests unitaires existants seuls en couverture ; reste ready-for-dev, reprendre si entite facturante eligible UE/USA disponible)
 # story 8-8 review 2026-07-06 (snapshot changedByName + fallback legacy /api/v1/users garde permission, 862/862 tests, build OK)
 # story 8-8 done 2026-07-06 (code review approuvé, aucun finding)
 # story 8-6 in-progress 2026-07-06
@@ -258,11 +261,11 @@ development_status:
   # sur /api/v1/users, dÃ©jÃ  corrigÃ©s hors cycle de story â€” voir 8-6 pour l'audit Ã©largi restant)
   epic-8: in-progress
   8-1-stripe-e2e-verification: ready-for-dev
-  8-2-transactional-email-verification: review
-  8-3-cron-expiry-reminders-verification: ready-for-dev
+  8-2-transactional-email-verification: done
+  8-3-cron-expiry-reminders-verification: done
   8-4-offline-sync-edge-cases: ready-for-dev
   8-5-exports-verification: ready-for-dev
-  8-6-cross-tenant-security-audit: review
+  8-6-cross-tenant-security-audit: done
   8-7-production-cleanup: ready-for-dev
   8-8-quote-status-actor-display: done
   epic-8-retrospective: optional
