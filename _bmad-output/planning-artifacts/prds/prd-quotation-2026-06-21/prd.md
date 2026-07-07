@@ -891,7 +891,7 @@ Le tableau bord affiche le total des montants devisés sur la période sélectio
 - **SM-C2**: Taille bundle PWA — Optimiser excessivement dégrade fonctionnalités offline. Contre-balance FR-35, FR-36.
 
 ---
-
+11
 ## 8. Open Questions
 
 1. **Modèle de monétisation** — Abonnement mensuel ? Par utilisateur ? Par devis ? Fixe + usage ? `[CRITICAL v1]`
