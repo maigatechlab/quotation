@@ -26,14 +26,20 @@ vi.mock("drizzle-orm", () => ({
   eq: () => "eq",
   and: () => "and",
   gte: () => "gte",
+  lte: () => "lte",
 }));
 
 import {
+  autoSuspendedNote,
   calendarDaysBetween,
   computeReminderAction,
+  graceExpiredNote,
   hasGraceExpiredEventBeenSent,
+  hasPaymentCoverageSkipEventBeenSent,
   hasPaymentCoveringPeriod,
   hasReminderBeenSent,
+  paymentCoverageSkipNote,
+  reminderSentNote,
   stageForDaysRemaining,
   type TenantForDecision,
 } from "./expiry-decisions";
@@ -192,12 +198,18 @@ describe("DB-backed helpers", () => {
 
   it("hasReminderBeenSent → false when no matching event", async () => {
     h.selectResult.mockReturnValue([]);
-    expect(await hasReminderBeenSent("tenant-1", "first")).toBe(false);
+    expect(await hasReminderBeenSent("tenant-1", "first", new Date("2026-07-08T00:00:00Z"))).toBe(false);
   });
 
   it("hasReminderBeenSent → true when a matching event exists", async () => {
     h.selectResult.mockReturnValue([{ id: "evt-1" }]);
-    expect(await hasReminderBeenSent("tenant-1", "first")).toBe(true);
+    expect(await hasReminderBeenSent("tenant-1", "first", new Date("2026-07-08T00:00:00Z"))).toBe(true);
+  });
+
+  it("reminderSentNote → scopes the note to stage + subscriptionEnd, so a renewed period gets a fresh key", () => {
+    const noteA = reminderSentNote("first", new Date("2026-07-08T00:00:00Z"));
+    const noteB = reminderSentNote("first", new Date("2026-08-08T00:00:00Z"));
+    expect(noteA).not.toBe(noteB);
   });
 
   it("hasPaymentCoveringPeriod → false when no covering payment", async () => {
@@ -220,9 +232,26 @@ describe("DB-backed helpers", () => {
   });
 
   it("hasGraceExpiredEventBeenSent → false/true per DB result", async () => {
+    const subEnd = new Date("2026-06-01T00:00:00Z");
     h.selectResult.mockReturnValue([]);
-    expect(await hasGraceExpiredEventBeenSent("tenant-1")).toBe(false);
+    expect(await hasGraceExpiredEventBeenSent("tenant-1", subEnd)).toBe(false);
     h.selectResult.mockReturnValue([{ id: "evt-2" }]);
-    expect(await hasGraceExpiredEventBeenSent("tenant-1")).toBe(true);
+    expect(await hasGraceExpiredEventBeenSent("tenant-1", subEnd)).toBe(true);
+  });
+
+  it("hasPaymentCoverageSkipEventBeenSent → false/true per DB result", async () => {
+    const subEnd = new Date("2026-07-01T00:00:00Z");
+    h.selectResult.mockReturnValue([]);
+    expect(await hasPaymentCoverageSkipEventBeenSent("tenant-1", subEnd)).toBe(false);
+    h.selectResult.mockReturnValue([{ id: "evt-3" }]);
+    expect(await hasPaymentCoverageSkipEventBeenSent("tenant-1", subEnd)).toBe(true);
+  });
+
+  it("period-scoped notes → same base, different subscriptionEnd produces different key (reactivation-then-re-expiry doesn't collide)", () => {
+    const subEndA = new Date("2026-06-01T00:00:00Z");
+    const subEndB = new Date("2026-09-01T00:00:00Z");
+    expect(autoSuspendedNote(subEndA)).not.toBe(autoSuspendedNote(subEndB));
+    expect(graceExpiredNote(subEndA)).not.toBe(graceExpiredNote(subEndB));
+    expect(paymentCoverageSkipNote(subEndA)).not.toBe(paymentCoverageSkipNote(subEndB));
   });
 });

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "idx_tenant_events_cron_idempotent" ON "tenant_events" USING btree ("tenant_id","event_type","note") WHERE "tenant_events"."actor_id" = 'system';

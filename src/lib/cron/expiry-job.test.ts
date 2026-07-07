@@ -16,6 +16,7 @@ const h = vi.hoisted(() => {
   }));
   const hasReminderBeenSent = vi.fn<() => Promise<boolean>>(() => Promise.resolve(false));
   const hasPaymentCoveringPeriod = vi.fn<() => Promise<boolean>>(() => Promise.resolve(false));
+  const hasPaymentCoverageSkipEventBeenSent = vi.fn<() => Promise<boolean>>(() => Promise.resolve(false));
   const hasGraceExpiredEventBeenSent = vi.fn<() => Promise<boolean>>(() => Promise.resolve(false));
 
   return {
@@ -29,6 +30,7 @@ const h = vi.hoisted(() => {
     buildOwnerContact,
     hasReminderBeenSent,
     hasPaymentCoveringPeriod,
+    hasPaymentCoverageSkipEventBeenSent,
     hasGraceExpiredEventBeenSent,
   };
 });
@@ -106,6 +108,8 @@ vi.mock("./expiry-decisions", async (importOriginal) => {
     ...actual,
     hasReminderBeenSent: (...args: unknown[]) => h.hasReminderBeenSent(...(args as [])),
     hasPaymentCoveringPeriod: (...args: unknown[]) => h.hasPaymentCoveringPeriod(...(args as [])),
+    hasPaymentCoverageSkipEventBeenSent: (...args: unknown[]) =>
+      h.hasPaymentCoverageSkipEventBeenSent(...(args as [])),
     hasGraceExpiredEventBeenSent: (...args: unknown[]) => h.hasGraceExpiredEventBeenSent(...(args as [])),
   };
 });
@@ -135,6 +139,7 @@ beforeEach(() => {
   h.getTenantAdminEmail.mockResolvedValue("admin@tenant.ne");
   h.hasReminderBeenSent.mockResolvedValue(false);
   h.hasPaymentCoveringPeriod.mockResolvedValue(false);
+  h.hasPaymentCoverageSkipEventBeenSent.mockResolvedValue(false);
   h.hasGraceExpiredEventBeenSent.mockResolvedValue(false);
 });
 
@@ -182,7 +187,16 @@ describe("runExpiryJob", () => {
     expect(h.sendEmail).not.toHaveBeenCalled();
     expect(h.insertValues).toHaveBeenCalledOnce();
     const insertArg = (h.insertValues.mock.calls as unknown[][])[0]![0] as Record<string, unknown>;
-    expect(insertArg["note"]).toBe("payment covers period, skipped suspension");
+    expect(insertArg["note"]).toBe("payment covers period, skipped suspension@2026-07-01T00:00:00.000Z");
+  });
+
+  it("covering payment idempotent: second run does not re-log 'payment covers period' event", async () => {
+    h.candidates.mockReturnValue([tenant({ subscriptionEnd: new Date("2026-07-01T00:00:00Z") })]);
+    h.hasPaymentCoveringPeriod.mockResolvedValue(true);
+    h.hasPaymentCoverageSkipEventBeenSent.mockResolvedValue(true);
+    const result = await runExpiryJob({ now: NOW });
+    expect(result.processed.suspended).toBe(0);
+    expect(h.insertValues).not.toHaveBeenCalled();
   });
 
   it("grace-expired idempotent: second run does not re-log the event", async () => {
