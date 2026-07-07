@@ -1,4 +1,4 @@
-import { and, eq, gte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { tenantEvents, subscriptionPayments } from "@/lib/schema";
 import type { TenantPlan, TenantStatus } from "@/lib/tenants/tenant-config";
@@ -76,7 +76,28 @@ export function computeReminderAction(tenant: TenantForDecision, now: Date): Rem
   return { kind: "none" };
 }
 
-export async function hasReminderBeenSent(tenantId: string, stage: ReminderStage): Promise<boolean> {
+/**
+ * Appends subscriptionEnd to a lifecycle-event note so per-tenant idempotence
+ * guards are scoped to *this* billing period. Without it, a tenant that gets
+ * reactivated and later expires again would hit the same constant note as its
+ * previous suspension/grace-expiry/payment-coverage-skip — the app-level
+ * check-then-insert guard (and the DB unique index on (tenantId, eventType,
+ * note)) would then treat the new lifecycle event as already handled and
+ * silently skip it.
+ */
+function periodScopedNote(base: string, subscriptionEnd: Date): string {
+  return `${base}@${subscriptionEnd.toISOString()}`;
+}
+
+export function reminderSentNote(stage: ReminderStage, subscriptionEnd: Date): string {
+  return periodScopedNote(stage, subscriptionEnd);
+}
+
+export async function hasReminderBeenSent(
+  tenantId: string,
+  stage: ReminderStage,
+  subscriptionEnd: Date
+): Promise<boolean> {
   const existing = await db
     .select({ id: tenantEvents.id })
     .from(tenantEvents)
@@ -84,7 +105,7 @@ export async function hasReminderBeenSent(tenantId: string, stage: ReminderStage
       and(
         eq(tenantEvents.tenantId, tenantId),
         eq(tenantEvents.eventType, "reminder_sent"),
-        eq(tenantEvents.note, stage)
+        eq(tenantEvents.note, reminderSentNote(stage, subscriptionEnd))
       )
     )
     .limit(1);
@@ -102,6 +123,7 @@ export async function hasPaymentCoveringPeriod(tenant: {
     .where(
       and(
         eq(subscriptionPayments.tenantId, tenant.id),
+        lte(subscriptionPayments.periodStart, tenant.subscriptionEnd),
         gte(subscriptionPayments.periodEnd, tenant.subscriptionEnd)
       )
     )
@@ -109,9 +131,22 @@ export async function hasPaymentCoveringPeriod(tenant: {
   return covering.length > 0;
 }
 
+const AUTO_SUSPENDED_NOTE = "auto-suspended (J0, no payment)";
+
+export function autoSuspendedNote(subscriptionEnd: Date): string {
+  return periodScopedNote(AUTO_SUSPENDED_NOTE, subscriptionEnd);
+}
+
 const GRACE_EXPIRED_NOTE = "grace expired (read-only confirmed)";
 
-export async function hasGraceExpiredEventBeenSent(tenantId: string): Promise<boolean> {
+export function graceExpiredNote(subscriptionEnd: Date): string {
+  return periodScopedNote(GRACE_EXPIRED_NOTE, subscriptionEnd);
+}
+
+export async function hasGraceExpiredEventBeenSent(
+  tenantId: string,
+  subscriptionEnd: Date
+): Promise<boolean> {
   const existing = await db
     .select({ id: tenantEvents.id })
     .from(tenantEvents)
@@ -119,7 +154,7 @@ export async function hasGraceExpiredEventBeenSent(tenantId: string): Promise<bo
       and(
         eq(tenantEvents.tenantId, tenantId),
         eq(tenantEvents.eventType, "suspended"),
-        eq(tenantEvents.note, GRACE_EXPIRED_NOTE)
+        eq(tenantEvents.note, graceExpiredNote(subscriptionEnd))
       )
     )
     .limit(1);
@@ -127,3 +162,35 @@ export async function hasGraceExpiredEventBeenSent(tenantId: string): Promise<bo
 }
 
 export { GRACE_EXPIRED_NOTE };
+
+const PAYMENT_COVERS_PERIOD_NOTE = "payment covers period, skipped suspension";
+
+export function paymentCoverageSkipNote(subscriptionEnd: Date): string {
+  return periodScopedNote(PAYMENT_COVERS_PERIOD_NOTE, subscriptionEnd);
+}
+
+/**
+ * Idempotence guard for the "expired but a payment already covers the period" branch.
+ * Scoped to subscriptionEnd (billing period): if the tenant is reactivated and later
+ * expires again, that's a new period and must be re-evaluated, not silently skipped
+ * because a past period logged this same note.
+ */
+export async function hasPaymentCoverageSkipEventBeenSent(
+  tenantId: string,
+  subscriptionEnd: Date
+): Promise<boolean> {
+  const existing = await db
+    .select({ id: tenantEvents.id })
+    .from(tenantEvents)
+    .where(
+      and(
+        eq(tenantEvents.tenantId, tenantId),
+        eq(tenantEvents.eventType, "reminder_sent"),
+        eq(tenantEvents.note, paymentCoverageSkipNote(subscriptionEnd))
+      )
+    )
+    .limit(1);
+  return existing.length > 0;
+}
+
+export { PAYMENT_COVERS_PERIOD_NOTE };

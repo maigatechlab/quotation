@@ -544,6 +544,14 @@ export const tenantEvents = pgTable(
   (t) => [
     index("idx_tenant_events_tenant_id").on(t.tenantId),
     index("idx_tenant_events_created_at").on(t.createdAt),
+    // DB-level idempotence guard for cron-generated rows (actorId = CRON_SYSTEM_ACTOR_ID,
+    // see src/lib/cron/constants.ts): concurrent cron runs can both pass the
+    // check-then-insert idempotence check before either commits, so the app-level guard
+    // alone can't prevent duplicates. Scoped to actor_id='system' so it never collides
+    // with legitimate repeatable admin actions (suspend/reactivate/cancel) that reuse notes.
+    uniqueIndex("idx_tenant_events_cron_idempotent")
+      .on(t.tenantId, t.eventType, t.note)
+      .where(sql`${t.actorId} = 'system'`),
   ]
 );
 

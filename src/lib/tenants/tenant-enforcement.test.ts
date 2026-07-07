@@ -20,9 +20,25 @@ describe("enforceTenantAccess", () => {
     if (decision.action === "redirect") expect(decision.redirectPath).toBe("/subscription-expired");
   });
 
-  it("suspended -> allow reads; mutation blocking happens in API routes", () => {
+  it("suspended, no grace set → redirect", () => {
     const decision = enforceTenantAccess(makeTenant("suspended"), NOW);
-    expect(decision.action).toBe("allow");
+    expect(decision.action).toBe("redirect");
+    if (decision.action === "redirect") expect(decision.redirectPath).toBe("/subscription-expired");
+  });
+
+  it("suspended + grace active → allow-with-grace", () => {
+    const decision = enforceTenantAccess(makeTenant("suspended", PAST, FUTURE), NOW);
+    expect(decision.action).toBe("allow-with-grace");
+    if (decision.action === "allow-with-grace") {
+      expect(decision.graceEndsAt.toISOString()).toBe(FUTURE.toISOString());
+    }
+  });
+
+  it("suspended + grace expired → redirect", () => {
+    const expiredGrace = new Date("2026-06-10T00:00:00Z");
+    const decision = enforceTenantAccess(makeTenant("suspended", PAST, expiredGrace), NOW);
+    expect(decision.action).toBe("redirect");
+    if (decision.action === "redirect") expect(decision.redirectPath).toBe("/subscription-expired");
   });
 
   it("active without subscriptionEnd → allow", () => {
