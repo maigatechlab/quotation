@@ -180,22 +180,22 @@ export async function fetchTenantsPage(
       createdAt: tenants.createdAt,
       lastPaymentAmount: sql<number | null>`(
         SELECT amount FROM subscription_payments
-        WHERE tenant_id = ${tenants.id}
+        WHERE tenant_id = "tenants"."id"
         ORDER BY paid_at DESC, id DESC LIMIT 1
       )`,
       lastPaymentMethod: sql<string | null>`(
         SELECT payment_method FROM subscription_payments
-        WHERE tenant_id = ${tenants.id}
+        WHERE tenant_id = "tenants"."id"
         ORDER BY paid_at DESC, id DESC LIMIT 1
       )`,
       lastPaymentDate: sql<Date | null>`(
         SELECT paid_at FROM subscription_payments
-        WHERE tenant_id = ${tenants.id}
+        WHERE tenant_id = "tenants"."id"
         ORDER BY paid_at DESC, id DESC LIMIT 1
       )`,
       activeUsers: sql<number>`(
         SELECT COUNT(*)::int FROM "user"
-        WHERE tenant_id = ${tenants.id}
+        WHERE tenant_id = "tenants"."id"
       )`,
     })
     .from(tenants)

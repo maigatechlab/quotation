@@ -161,7 +161,7 @@ export async function computeRenewalForecast(monthStart: Date): Promise<{
       subscriptionEnd: tenants.subscriptionEnd,
       lastCycle: sql<"monthly" | "annual" | null>`(
         SELECT billing_cycle FROM subscription_payments
-        WHERE tenant_id = ${tenants.id}
+        WHERE tenant_id = "tenants"."id"
         ORDER BY paid_at DESC LIMIT 1
       )`,
     })
