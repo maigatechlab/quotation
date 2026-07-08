@@ -1,5 +1,5 @@
 ﻿# generated: 2026-06-21
-# last_updated: 2026-07-06
+# last_updated: 2026-07-08
 # story 5-1 done 2026-06-26
 # story 5-3 done 2026-06-26
 # story 4-3 done 2026-06-27
@@ -102,6 +102,13 @@
 # epic-7 done 2026-07-04 (toutes stories 7-1 Ã  7-12 complÃ©tÃ©es)
 generated: 2026-06-21
 last_updated: 2026-07-07
+# story 8-5 review 2026-07-07 (4 endpoints export vérifiés par trace code + exécution réelle builders CSV octet par octet ; bug désalignement colonnes/données corrigé dans buildTenantsCsv (activeUsers/maxUsers), +1 test régression ; Playwright bloqué bug pré-existant même que 7-8..7-12/8-3/8-4 ; 881/881 tests, check OK)
+# story 8-5 done 2026-07-07 (code review BMAD 3 couches: 2 decisions + 3 patchs — cellule fusionnée "3 / 5" avec espaces (anti-coercition date Excel), en-têtes CSV échappés via esc(), test régression renforcé (alignement positionnel), scripts/tmp-bump-quota.ts supprimé, sous-tâches annotées limitations réelles ; 2 defers dans deferred-work.md (dates DD/MM/YYYY csv.ts, borne to audit export) ; 882/882 tests, check OK)
+# story 8-5 in-progress 2026-07-07
+# story 8-3 done 2026-07-07 (BMAD code review follow-up, post-done: hasPaymentCoveringPeriod semi-open bound periodEnd>subscriptionEnd, reminder-email claim-before-send race fix, enforceTenantAccess realigned readonly-vs-redirect for suspended/totalBlock/cancelled ; remaining gaps: Vercel Cron prod trigger + CRON_SECRET dashboard unverified, real RESEND_API_KEY delivery unproven ; 61 focused tests + 878/878 full, check OK)
+# story 8-4 in-progress 2026-07-07
+# story 8-4 review 2026-07-07 (fix pushSingleOp quota/readonly vs conflit LWW, +3 tests ; renumerotation TEMP->definitif gap confirme non traite ; Tasks 1/2/4 verifies par trace code, Playwright bloque bug pre-existant meme que 7-8..7-12/8-3 ; 874/874 tests, check OK)
+# story 8-4 done 2026-07-07 (code review BMAD 3 couches: 3 decisions + 9 patchs — resolution LWW differee SW->fenetre via SyncOp.conflictEntity (fix ecriture en clair hors couche chiffrement + toast AC2), Web Lock inter-contextes quotation-sync-push, gate quota serveur etendu aux upserts update-sur-entite-absente, dead-letter 4xx SW, messages FR, module partage quota-rejection.ts ; 2 defers dans deferred-work.md (rearmement ops failed post-quota, scan non indexe hook) ; 880/880 tests, check OK)
 # story 8-3 done 2026-07-07 (code review opus-4-8: 2 decision->patch appliqués — filtre hasPaymentCoveringPeriod documenté, dédup migration 0020 ; 2 defer ; 871/871 tests, check OK)
 # story 8-3 review 2026-07-07 (verification E2E locale cron expiry-reminders, AC1/AC2/AC3 confirmes ; bug idempotence corrige -- event "payment covers period, skipped suspension" duplique a chaque run, fix hasPaymentCoverageSkipEventBeenSent ; gap enforcement suspended documente hors perimetre ; Vercel Cron prod DEFERRED, pas de deploiement actif ; 867/867 tests, build OK)
 # story 8-1 blocked 2026-07-06 (Stripe non disponible pour entite Niger/Mali/Burkina Faso, hors liste pays supportes ; verification live impossible, tests unitaires existants seuls en couverture ; reste ready-for-dev, reprendre si entite facturante eligible UE/USA disponible)
@@ -263,9 +270,9 @@ development_status:
   8-1-stripe-e2e-verification: ready-for-dev
   8-2-transactional-email-verification: done
   8-3-cron-expiry-reminders-verification: done
-  8-4-offline-sync-edge-cases: ready-for-dev
-  8-5-exports-verification: ready-for-dev
+  8-4-offline-sync-edge-cases: done
+  8-5-exports-verification: done
   8-6-cross-tenant-security-audit: done
-  8-7-production-cleanup: ready-for-dev
+  8-7-production-cleanup: review
   8-8-quote-status-actor-display: done
   epic-8-retrospective: optional

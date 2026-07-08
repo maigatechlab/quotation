@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const h = vi.hoisted(() => {
   const selectResult = vi.fn<() => unknown[]>(() => []);
-  return { selectResult };
+  const operators: string[] = [];
+  return { selectResult, operators };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -23,10 +24,23 @@ vi.mock("@/lib/schema", () => ({
 }));
 
 vi.mock("drizzle-orm", () => ({
-  eq: () => "eq",
+  eq: () => {
+    h.operators.push("eq");
+    return "eq";
+  },
   and: () => "and",
-  gte: () => "gte",
-  lte: () => "lte",
+  gt: () => {
+    h.operators.push("gt");
+    return "gt";
+  },
+  gte: () => {
+    h.operators.push("gte");
+    return "gte";
+  },
+  lte: () => {
+    h.operators.push("lte");
+    return "lte";
+  },
 }));
 
 import {
@@ -193,6 +207,7 @@ describe("calendarDaysBetween", () => {
 describe("DB-backed helpers", () => {
   beforeEach(() => {
     h.selectResult.mockReturnValue([]);
+    h.operators.length = 0;
   });
   afterEach(() => vi.clearAllMocks());
 
@@ -226,6 +241,13 @@ describe("DB-backed helpers", () => {
     ).toBe(true);
   });
 
+  it("hasPaymentCoveringPeriod uses a semi-open end boundary (periodEnd must be after subscriptionEnd)", async () => {
+    h.selectResult.mockReturnValue([]);
+    await hasPaymentCoveringPeriod({ id: "tenant-1", subscriptionEnd: new Date("2026-07-01T00:00:00Z") });
+    expect(h.operators).toContain("lte");
+    expect(h.operators).toContain("gt");
+    expect(h.operators).not.toContain("gte");
+  });
   it("hasPaymentCoveringPeriod → false when subscriptionEnd is null", async () => {
     h.selectResult.mockReturnValue([{ id: "pay-1" }]);
     expect(await hasPaymentCoveringPeriod({ id: "tenant-1", subscriptionEnd: null })).toBe(false);
@@ -255,3 +277,4 @@ describe("DB-backed helpers", () => {
     expect(paymentCoverageSkipNote(subEndA)).not.toBe(paymentCoverageSkipNote(subEndB));
   });
 });
+

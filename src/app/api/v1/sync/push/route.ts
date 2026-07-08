@@ -630,11 +630,17 @@ async function applyOp(
     return { opId: op.opId, status: "conflict", entity: { error: "READONLY_MODE" } };
   }
 
-  // Quota check for quote.create (new entity only, not updates)
+  // Quota check for any op that will CREATE a quote row. Not just op.type ===
+  // "create": persistEntityMutation upserts (INSERT … onConflictDoUpdate), so an
+  // "update" op whose entity does not exist server-side (e.g. its create op was
+  // quota-rejected earlier) would otherwise create the quote without ever
+  // passing the quota gate or incrementing usage.
+  const createsQuote =
+    op.entity === "quote" && currentEntity === null && op.type !== "delete";
   let quotaWarn80pct = false;
   let quotaUsed = 0;
   let quotaLimit: number | null = null;
-  if (op.entity === "quote" && op.type === "create" && currentEntity === null) {
+  if (createsQuote) {
     const quotaResult = await checkQuota(userCompanyId, "quote.create", db);
     if (!quotaResult.allowed) {
       await db.insert(syncOpLog).values({
@@ -658,7 +664,7 @@ async function applyOp(
   await persistEntityMutation(op, newRevision, userCompanyId, userId, currentEntity);
 
   // Increment quota AFTER successful mutation
-  if (op.entity === "quote" && op.type === "create" && currentEntity === null) {
+  if (createsQuote) {
     await incrementQuotaUsed(userCompanyId, "quote.create", db);
     if (quotaWarn80pct && quotaLimit !== null) {
       void notifyQuota80Percent(userCompanyId, quotaUsed + 1, quotaLimit, db);

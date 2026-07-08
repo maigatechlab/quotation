@@ -1,6 +1,10 @@
+---
+baseline_commit: 3224ece107f390a99a24f9598d46005409c0352f
+---
+
 # Story 8.7: Nettoyage pré-production
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -18,27 +22,27 @@ so that le premier client réel n'ait aucune trace de la phase de développement
 
 ## Tasks / Subtasks
 
-- [ ] Task 1 — Étendre `serverEnvSchema`/`checkEnv()` (`src/lib/env.ts`) pour couvrir les variables critiques de prod (AC: #2)
-  - [ ] Ajouter à `serverEnvSchema` : `RESEND_API_KEY` (obligatoire quand `NODE_ENV === "production"`, optionnel sinon — utiliser `.superRefine()` ou un schema conditionnel, ne pas casser le dev où la clé est vide par design), `EMAIL_FROM` (requis avec `RESEND_API_KEY`), `CRON_SECRET` (obligatoire en production), `NEXT_PUBLIC_SENTRY_DSN` (optionnel mais validé si présent — appartient en réalité à `clientEnvSchema` puisqu'il est `NEXT_PUBLIC_*`), `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` (obligatoires en production, cf. Story 7-10).
-  - [ ] Ce gap est documenté dans les Dev Notes de Story 8.2 (ligne ~164-166, `8-2-transactional-email-verification.md`) et Story 8.3 (ligne ~172-174, `8-3-cron-expiry-reminders-verification.md`) : `serverEnvSchema` ne référence aujourd'hui NI `RESEND_API_KEY` NI `CRON_SECRET`, alors que `src/lib/email.ts` et `src/app/api/cron/expiry-reminders/route.ts` font chacun leur propre check runtime (throw à l'appel, pas au boot). Le but de cette tâche est de fermer ce gap au niveau du schema Zod centralisé pour qu'un seul `pnpm env:check` avant déploiement suffise.
-  - [ ] Ne PAS rendre ces champs obligatoires inconditionnellement dans `serverEnvSchema` — cela casserait le dev local où `RESEND_API_KEY`/`STRIPE_SECRET_KEY` sont volontairement vides (fallback console.log / mode test). Utiliser une validation conditionnelle sur `NODE_ENV` (voir pattern dans Dev Notes ci-dessous).
-  - [ ] Mettre à jour `checkEnv()` en cohérence : avertissement en dev si absent, erreur bloquante si `NODE_ENV === "production"` et absent.
-  - [ ] Ajouter un test unitaire `src/lib/env.test.ts` (nouveau fichier — n'existe pas encore) couvrant : dev sans ces clés → OK ; production sans `RESEND_API_KEY`/`CRON_SECRET`/`STRIPE_SECRET_KEY` → throw ; production avec toutes les clés → OK.
-- [ ] Task 2 — Réparer le script `pnpm env:check` (AC: #2)
-  - [ ] `package.json` ligne 19 : `"env:check": "node -e \"require('./src/lib/env.ts').checkEnv()\" || echo '...'"` — cette commande est cassée : `node -e require(...)` ne peut pas charger un fichier `.ts` directement (pas de transpilation), donc `pnpm env:check` échoue systématiquement aujourd'hui (à vérifier en l'exécutant : `pnpm env:check`).
-  - [ ] Remplacer par un script fonctionnel utilisant `tsx` (déjà utilisé par `pnpm superadmin` ligne 18) : `"env:check": "npx tsx -e \"import { checkEnv } from './src/lib/env'; checkEnv();\""` (ou créer `scripts/env-check.ts` dédié si plus lisible, à la discrétion du dev).
-  - [ ] Vérifier manuellement que la commande corrigée s'exécute sans erreur en local (`pnpm env:check`) et détecte bien un `POSTGRES_URL`/`BETTER_AUTH_SECRET` manquant (test négatif rapide en renommant temporairement `.env`, ne pas committer ce changement).
-- [ ] Task 3 — Documenter la checklist de nettoyage pré-bascule production (AC: #1, #3)
-  - [ ] Ajouter une section dans `Docs/testing/test-plan.md` (ou nouveau `Docs/ops/go-live-checklist.md` si plus approprié — vérifier convention existante dans `Docs/` avant de choisir) listant explicitement : les comptes/tenants QA à ne PAS retrouver en prod (`qa-owner@maigatechlab.test`, `sahel-admin@…`, `kadi.commercial@…`, `moussa.operateur@…`, tenants "QA Transit SARL", "Sahel Cargo Express SARL"), la variable d'environnement de chacune des clés listées en AC#2 avec sa source (Stripe Dashboard, Resend Dashboard, Sentry, `openssl rand -hex 32` pour `CRON_SECRET`/`BETTER_AUTH_SECRET`), et la procédure de création du superadmin de prod (Task 4).
-  - [ ] Confirmer explicitement (documenter la décision) : la base de production est une **base neuve** (migrations appliquées via `pnpm db:migrate` sur une instance PostgreSQL vierge), jamais un dump/clone de la base de dev/QA — c'est la voie la plus sûre pour satisfaire AC#1 sans risque d'oubli d'un enregistrement de test.
-  - [ ] Si une base partagée dev/QA/prod existait déjà (à vérifier — voir Dev Notes), documenter la requête SQL de nettoyage ciblé (delete des tenants par `id`/`slug` connus, cascade sur `user`, `company`, etc.) comme filet de sécurité, mais la recommandation reste une base neuve.
-- [ ] Task 4 — Vérifier/adapter `scripts/create-superadmin.ts` pour un usage non-interactif fiable en CI/déploiement (AC: #3)
-  - [ ] Le script existant est **interactif** (prompts `readline` pour email/password, voir lignes 20-50). Il fonctionne pour une création manuelle en local via `pnpm superadmin`, mais l'AC demande "un script non-interactif équivalent" comme option. Décider et documenter dans Completion Notes : soit (a) le script interactif existant est jugé suffisant pour une création manuelle unique en prod (recommandé — pas de sur-ingénierie pour un cas d'usage one-shot), soit (b) ajouter un mode non-interactif via variables d'env (`SUPERADMIN_EMAIL`, `SUPERADMIN_PASSWORD` lues si présentes, sinon fallback aux prompts).
-  - [ ] Si (b) est choisi : ne JAMAIS committer de mot de passe en dur, ne jamais logger le mot de passe en clair (le script actuel ne le fait pas — vérifier que toute modification préserve ce comportement).
-  - [ ] Documenter la commande finale à exécuter pour créer le superadmin de prod (`pnpm superadmin` avec `.env` pointant vers `POSTGRES_URL` de production, exécuté depuis un poste sécurisé, jamais via un pipeline CI qui logguerait la sortie).
-- [ ] Task 5 — Valider par la suite de tests complète (AC: #2)
-  - [ ] `pnpm check` (lint + typecheck + vitest, incluant le nouveau `env.test.ts`) doit passer.
-  - [ ] `pnpm build` doit rester vert (le `db:migrate` du build ne doit pas échouer si les nouvelles validations `env.ts` sont correctement conditionnées au `NODE_ENV`).
+- [x] Task 1 — Étendre `serverEnvSchema`/`checkEnv()` (`src/lib/env.ts`) pour couvrir les variables critiques de prod (AC: #2)
+  - [x] Ajouter à `serverEnvSchema` : `RESEND_API_KEY` (obligatoire quand `NODE_ENV === "production"`, optionnel sinon — utiliser `.superRefine()` ou un schema conditionnel, ne pas casser le dev où la clé est vide par design), `EMAIL_FROM` (requis avec `RESEND_API_KEY`), `CRON_SECRET` (obligatoire en production), `NEXT_PUBLIC_SENTRY_DSN` (optionnel mais validé si présent — appartient en réalité à `clientEnvSchema` puisqu'il est `NEXT_PUBLIC_*`), `STRIPE_SECRET_KEY` et `STRIPE_WEBHOOK_SECRET` (obligatoires en production, cf. Story 7-10).
+  - [x] Ce gap est documenté dans les Dev Notes de Story 8.2 (ligne ~164-166, `8-2-transactional-email-verification.md`) et Story 8.3 (ligne ~172-174, `8-3-cron-expiry-reminders-verification.md`) : `serverEnvSchema` ne référence aujourd'hui NI `RESEND_API_KEY` NI `CRON_SECRET`, alors que `src/lib/email.ts` et `src/app/api/cron/expiry-reminders/route.ts` font chacun leur propre check runtime (throw à l'appel, pas au boot). Le but de cette tâche est de fermer ce gap au niveau du schema Zod centralisé pour qu'un seul `pnpm env:check` avant déploiement suffise.
+  - [x] Ne PAS rendre ces champs obligatoires inconditionnellement dans `serverEnvSchema` — cela casserait le dev local où `RESEND_API_KEY`/`STRIPE_SECRET_KEY` sont volontairement vides (fallback console.log / mode test). Utiliser une validation conditionnelle sur `NODE_ENV` (voir pattern dans Dev Notes ci-dessous).
+  - [x] Mettre à jour `checkEnv()` en cohérence : avertissement en dev si absent, erreur bloquante si `NODE_ENV === "production"` et absent.
+  - [x] Ajouter un test unitaire `src/lib/env.test.ts` (nouveau fichier — n'existe pas encore) couvrant : dev sans ces clés → OK ; production sans `RESEND_API_KEY`/`CRON_SECRET`/`STRIPE_SECRET_KEY` → throw ; production avec toutes les clés → OK.
+- [x] Task 2 — Réparer le script `pnpm env:check` (AC: #2)
+  - [x] `package.json` ligne 19 : `"env:check": "node -e \"require('./src/lib/env.ts').checkEnv()\" || echo '...'"` — cette commande est cassée : `node -e require(...)` ne peut pas charger un fichier `.ts` directement (pas de transpilation), donc `pnpm env:check` échoue systématiquement aujourd'hui (à vérifier en l'exécutant : `pnpm env:check`).
+  - [x] Remplacer par un script fonctionnel utilisant `tsx` (déjà utilisé par `pnpm superadmin` ligne 18) : `"env:check": "npx tsx -e \"import { checkEnv } from './src/lib/env'; checkEnv();\""` (ou créer `scripts/env-check.ts` dédié si plus lisible, à la discrétion du dev).
+  - [x] Vérifier manuellement que la commande corrigée s'exécute sans erreur en local (`pnpm env:check`) et détecte bien un `POSTGRES_URL`/`BETTER_AUTH_SECRET` manquant (test négatif rapide en renommant temporairement `.env`, ne pas committer ce changement).
+- [x] Task 3 — Documenter la checklist de nettoyage pré-bascule production (AC: #1, #3)
+  - [x] Ajouter une section dans `Docs/testing/test-plan.md` (ou nouveau `Docs/ops/go-live-checklist.md` si plus approprié — vérifier convention existante dans `Docs/` avant de choisir) listant explicitement : les comptes/tenants QA à ne PAS retrouver en prod (`qa-owner@maigatechlab.test`, `sahel-admin@…`, `kadi.commercial@…`, `moussa.operateur@…`, tenants "QA Transit SARL", "Sahel Cargo Express SARL"), la variable d'environnement de chacune des clés listées en AC#2 avec sa source (Stripe Dashboard, Resend Dashboard, Sentry, `openssl rand -hex 32` pour `CRON_SECRET`/`BETTER_AUTH_SECRET`), et la procédure de création du superadmin de prod (Task 4).
+  - [x] Confirmer explicitement (documenter la décision) : la base de production est une **base neuve** (migrations appliquées via `pnpm db:migrate` sur une instance PostgreSQL vierge), jamais un dump/clone de la base de dev/QA — c'est la voie la plus sûre pour satisfaire AC#1 sans risque d'oubli d'un enregistrement de test.
+  - [x] Si une base partagée dev/QA/prod existait déjà (à vérifier — voir Dev Notes), documenter la requête SQL de nettoyage ciblé (delete des tenants par `id`/`slug` connus, cascade sur `user`, `company`, etc.) comme filet de sécurité, mais la recommandation reste une base neuve.
+- [x] Task 4 — Vérifier/adapter `scripts/create-superadmin.ts` pour un usage non-interactif fiable en CI/déploiement (AC: #3)
+  - [x] Le script existant est **interactif** (prompts `readline` pour email/password, voir lignes 20-50). Il fonctionne pour une création manuelle en local via `pnpm superadmin`, mais l'AC demande "un script non-interactif équivalent" comme option. Décider et documenter dans Completion Notes : soit (a) le script interactif existant est jugé suffisant pour une création manuelle unique en prod (recommandé — pas de sur-ingénierie pour un cas d'usage one-shot), soit (b) ajouter un mode non-interactif via variables d'env (`SUPERADMIN_EMAIL`, `SUPERADMIN_PASSWORD` lues si présentes, sinon fallback aux prompts).
+  - [x] Si (b) est choisi : ne JAMAIS committer de mot de passe en dur, ne jamais logger le mot de passe en clair (le script actuel ne le fait pas — vérifier que toute modification préserve ce comportement).
+  - [x] Documenter la commande finale à exécuter pour créer le superadmin de prod (`pnpm superadmin` avec `.env` pointant vers `POSTGRES_URL` de production, exécuté depuis un poste sécurisé, jamais via un pipeline CI qui logguerait la sortie).
+- [x] Task 5 — Valider par la suite de tests complète (AC: #2)
+  - [x] `pnpm check` (lint + typecheck + vitest, incluant le nouveau `env.test.ts`) doit passer.
+  - [x] `pnpm build` doit rester vert (le `db:migrate` du build ne doit pas échouer si les nouvelles validations `env.ts` sont correctement conditionnées au `NODE_ENV`).
 
 ## Dev Notes
 
@@ -148,10 +152,34 @@ Aucun de ces identifiants n'apparaît dans un script de seed committé (vérifi�
 
 ### Agent Model Used
 
-TBD (à renseigner par l'agent dev lors de l'implémentation)
+Claude Sonnet 5 (claude-sonnet-5)
 
 ### Debug Log References
 
+- `npx vitest run src/lib/env.test.ts` — 6/6 tests passed on first run
+- `pnpm env:check` — manually verified: passes with real `.env`, throws `POSTGRES_URL is required` when temporarily stripped from a scratch copy (`.env` restored immediately after, never committed)
+- `pnpm check` — 0 errors, 46 pre-existing warnings (unrelated to this story), 888/888 tests passed
+- `pnpm build` blocked at `db:migrate` step: local Postgres/Docker unavailable (`docker-compose.yml` was removed in commit `cb4f65d`, `.env` still points to `localhost:5434` — pre-existing infra gap, unrelated to this story's changes). Verified instead with `NODE_ENV=production npx next build --webpack` directly (bypassing `db:migrate`) — build completed successfully, confirming the new `env.ts` validation does not break the Next.js build itself.
+
 ### Completion Notes List
 
+- Task 1: Extended `serverEnvSchema` with `.superRefine()` to require `RESEND_API_KEY`, `EMAIL_FROM`, `CRON_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` only when `NODE_ENV === "production"`; dev/test stay unaffected. Added `NEXT_PUBLIC_SENTRY_DSN` to `clientEnvSchema` (optional). Updated `checkEnv()` to throw in production for the same set of keys, warn in dev. New `src/lib/env.test.ts` (6 tests) covers dev-pass, production-throw (per missing key), production-pass-all-present, and pre-existing `POSTGRES_URL` guard.
+- Task 2: `pnpm env:check` was broken (`node -e require('*.ts')` cannot transpile TS). Created `scripts/env-check.ts` (mirrors `scripts/create-superadmin.ts` style) and pointed `package.json`'s `env:check` script at it via `npx tsx --env-file=.env`. Manually verified both the pass and fail paths.
+- Task 3: Added "Checklist de nettoyage pré-bascule production" section to `Docs/testing/test-plan.md` (no existing `Docs/ops/` convention found, so appended to test-plan.md alongside the existing QA account list it references). Documents: QA accounts/tenants not to carry into prod, the "fresh database" decision (never a dev/QA dump), the env var source table for AC#2, and the superadmin creation procedure.
+- Task 4: Decision (a) taken — the existing interactive `scripts/create-superadmin.ts` (`pnpm superadmin`) is sufficient for a one-shot production superadmin creation; no non-interactive env-var mode added (avoids over-engineering a single manual invocation, and avoids the risk of a CI pipeline logging a plaintext password). Documented the exact command and constraints in the Task 3 checklist doc.
+- Task 5: `pnpm check` green (lint/typecheck/vitest, 888 tests). `pnpm build`'s `db:migrate` step fails locally due to an unrelated pre-existing infra gap (Docker Compose file removed in a prior commit, no local Postgres running) — not caused by this story. Verified the Next.js build itself succeeds in production mode via direct `next build --webpack` invocation, confirming the new env validation doesn't regress the build.
+- ✅ Resolved review finding [High]: `pnpm env:check` could silently skip production-only checks when `NODE_ENV` wasn't already `"production"` (e.g. a pre-prod `.env` missing `NODE_ENV` entirely, as `env.example` does). Added `--production` flag to `scripts/env-check.ts` (forces `process.env.NODE_ENV = "production"` before calling `checkEnv()`) and a new `pnpm env:check:production` script. Updated the go-live checklist in `Docs/testing/test-plan.md` to mandate the new command instead of the plain `env:check`. Verified against the real local `.env` (which has no `NODE_ENV` set): `pnpm env:check` passes silently, `pnpm env:check:production` correctly throws `STRIPE_SECRET_KEY is required in production`.
+- ✅ Resolved review finding [Medium]: `NEXT_PUBLIC_SENTRY_DSN` was `z.string().optional()`, accepting any garbage value when present. Changed to `z.union([z.literal(""), z.string().url(...)]).optional()` (empty string allowed per `env.example` convention, otherwise must be a valid URL). Added 3 tests to `src/lib/env.test.ts` covering empty, valid, and malformed DSN via `getClientEnv()`.
+
 ### File List
+
+- `src/lib/env.ts` (modified — `serverEnvSchema` conditional production validation, `clientEnvSchema` Sentry DSN URL validation, `checkEnv()` production enforcement)
+- `src/lib/env.test.ts` (new, then extended with `getClientEnv()` DSN tests — 9 tests total)
+- `scripts/env-check.ts` (new, then extended with `--production` flag)
+- `package.json` (modified — `env:check` script, new `env:check:production` script)
+- `Docs/testing/test-plan.md` (modified — pre-production cleanup checklist section, updated to reference `env:check:production`)
+
+## Change Log
+
+- 2026-07-08: Closed the `RESEND_API_KEY`/`CRON_SECRET`/`STRIPE_*` boot-time validation gap deferred by Stories 8.2/8.3; fixed the broken `pnpm env:check` script; documented the pre-production QA cleanup checklist and superadmin creation procedure. All tasks complete, `pnpm check` green (888 tests).
+- 2026-07-08: Addressed code review findings — 2 items resolved (1 High: `env:check:production` flag to force production-mode validation regardless of ambient `NODE_ENV`; 1 Medium: `NEXT_PUBLIC_SENTRY_DSN` URL validation). `pnpm check` green (891 tests).

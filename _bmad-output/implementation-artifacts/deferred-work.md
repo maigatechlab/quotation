@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 8-5-exports-verification (2026-07-07)
+
+- **`buildTenantsCsv` utilise `formatDateFr` (DD/MM/YYYY) au lieu de `YYYY-MM-DD`** [`src/lib/owner/csv.ts:29,33,35`] — Viole la règle transverse « dates CSV toujours YYYY-MM-DD » (project-context + Dev Notes 8-5). Pré-existant, cohérent avec l'affichage écran (AC2 satisfait). À harmoniser dans une passe transversale exports (les exports `reports-csv.ts` utilisent déjà `toIsoDateOnly`).
+- **Export audit : borne `to` en `T23:59:59Z` exclut la dernière seconde de la journée** [`src/app/api/v1/audit/export/route.ts:73`] — Événements entre 23:59:59.001 et minuit exclus de l'export. Pré-existant, JSON et CSV cohérents entre eux (AC3 tenu). Fix : `lt(when, to + 1 jour)` borne exclusive.
+
 ## Deferred from: code review of 8-3-cron-expiry-reminders-verification (2026-07-07)
 
 - **Event "payment covers period, skipped suspension" loggé avec `eventType='reminder_sent'`** [`src/lib/cron/expiry-job.ts`] — Toute requête de reporting comptant `event_type='reminder_sent'` sur-compte les rappels réels (ce skip de suspension n'est pas un rappel). Pré-existant : l'ancien code utilisait déjà `reminder_sent` pour cet event ; non introduit par 8-3. Envisager un `eventType` dédié si un reporting fin des rappels devient nécessaire.
@@ -194,3 +199,8 @@
 - Provisioning Stripe utilise encore `PLAN_LIMITS` pour `maxUsers` [src/lib/stripe/handle-checkout-completed.ts:115] -- pre-existing / Stripe explicitement hors scope 7-12. A traiter si platform_settings doit s'appliquer aux tenants Stripe.
 - Emails Stripe et annulation n'appliquent pas uniformement le sender plateforme [src/lib/stripe/handle-checkout-completed.ts:195] -- pre-existing / hors liste des toggles AC6. A traiter via helper lifecycle email centralise.
 - Idempotence reminder cron race-prone en executions concurrentes [src/lib/cron/expiry-job.ts:93] -- pre-existing / tradeoff deja documente dans le code. A traiter avec outbox ou cle d'idempotence atomique.
+
+## Deferred from: code review of 8-4-offline-sync-edge-cases (2026-07-07)
+
+- Aucun mecanisme de rearmement des ops `failed` quand le quota est leve [src/lib/sync/push.ts:69] -- gap produit/UX : pas de bouton "reessayer", pas de re-queue au retour en statut `ok` ; la mutation locale n'est jamais poussee et l'icone d'erreur reste permanente. Candidat nouvelle story.
+- Hook use-failed-sync-ids : scan integral non indexe de syncQueue a chaque mutation [src/hooks/use-failed-sync-ids.ts:19] -- pre-existing (pattern du hook d'origine), `filter()` plein parcours reexecute par liveQuery a chaque cycle de sync. Index ou `where` si la file grossit.

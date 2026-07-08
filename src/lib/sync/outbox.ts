@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/local-db";
 import type { SyncOp, SyncOpEntity } from "@/lib/local-db";
-import { BACKGROUND_SYNC_TAG } from "@/lib/sync/constants";
+import { BACKGROUND_SYNC_TAG, SYNC_LOCK_NAME } from "@/lib/sync/constants";
 import type { PushResult } from "@/lib/sync/push";
 import type { EntityTable } from "dexie";
 
@@ -103,6 +103,25 @@ export async function applyLocalMutation(
 // P9: guard covers the full push+pull cycle so concurrent triggerSync calls don't race
 let syncInProgress = false;
 
+/**
+ * Apply LWW conflicts the SW's direct push detected but could not resolve
+ * (story 8-4 review): the SW's Dexie handle has no encryption layer and no
+ * toast, so it parks the server entity on the op (failed:true + conflictEntity)
+ * and the window resolves it here via handleConflict — encryption, auditMirror
+ * and toast included — then removes the op.
+ */
+async function resolveDeferredConflicts(): Promise<void> {
+  const deferred = await db.syncQueue
+    .filter((op) => op.failed === true && op.conflictEntity !== undefined)
+    .toArray();
+  if (deferred.length === 0) return;
+  const { handleConflict } = await import("@/lib/sync/conflict");
+  for (const op of deferred) {
+    await handleConflict(op, op.conflictEntity);
+    await db.syncQueue.delete(op.opId);
+  }
+}
+
 export async function processQueue(): Promise<PushResult | null> {
   const { pushOps } = await import("@/lib/sync/push");
   // Bug fix (Story 6-4 / Deferred Work 2026-06-24):
@@ -123,11 +142,21 @@ export async function triggerSync(): Promise<PushResult | null> {
   if (typeof navigator !== "undefined" && !navigator.onLine) return null;
   syncInProgress = true;
   try {
-    const result = await processQueue();
-    const { pullDelta } = await import("@/lib/sync/pull");
-    const cursor = localStorage.getItem("SYNC_CURSOR_global") ?? new Date(0).toISOString();
-    await pullDelta(cursor);
-    return result;
+    const run = async (): Promise<PushResult | null> => {
+      await resolveDeferredConflicts();
+      const result = await processQueue();
+      const { pullDelta } = await import("@/lib/sync/pull");
+      const cursor = localStorage.getItem("SYNC_CURSOR_global") ?? new Date(0).toISOString();
+      await pullDelta(cursor);
+      return result;
+    };
+    // Cross-context Web Lock shared with the SW's direct push (sw.ts) — the
+    // per-tab syncInProgress guard can't see the SW or other tabs draining the
+    // same IndexedDB syncQueue.
+    if (typeof navigator !== "undefined" && "locks" in navigator) {
+      return await navigator.locks.request(SYNC_LOCK_NAME, run);
+    }
+    return await run();
   } finally {
     syncInProgress = false;
   }

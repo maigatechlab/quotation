@@ -67,7 +67,7 @@ export async function proxy(request: NextRequest) {
     const resolved = await resolveTenantByHost(host, db, testSlug);
 
     if (resolved.kind === "tenant") {
-      const decision = enforceTenantAccess(resolved.tenant);
+      const decision = await enforceTenantAccess(resolved.tenant);
 
       if (decision.action === "redirect" && !isPublicPath(pathname)) {
         const redirectUrl = new URL("/subscription-expired", request.url);
@@ -126,3 +126,4 @@ export const config = {
   // /owner/* included so the proxy runs but skips tenant resolution (handled above).
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.svg$|.*\\.png$|.*\\.ico$|.*\\.webp$|.*\\.jpg$|.*\\.jpeg$|.*\\.woff2?$).*)"],
 };
+

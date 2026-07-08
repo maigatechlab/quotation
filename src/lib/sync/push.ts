@@ -1,6 +1,10 @@
 "use client";
 
 import { db } from "@/lib/local-db";
+import {
+  getQuotaRejectionMessage,
+  getQuotaRejectionReason,
+} from "@/lib/sync/quota-rejection";
 import type { SyncOp } from "@/lib/local-db";
 
 const BACKOFF_DELAYS_MS = [1000, 2000, 4000, 8000, 16000] as const;
@@ -22,34 +26,6 @@ class FatalHttpError extends Error {
   }
 }
 
-// Quota/readonly rejections reuse the conflict response shape ({status:"conflict",
-// entity:{error:"READONLY_MODE"|"QUOTA_EXCEEDED"|...}}) but `entity` has no `id` —
-// it must be distinguished from a real LWW conflict entity before calling handleConflict.
-// Only match the server's known reasons (route.ts: "READONLY_MODE" or checkQuota's
-// QUOTA_EXCEEDED-family strings) — a real conflict entity that happens to carry an
-// `error` field (or a malformed server payload) must still go through LWW handling.
-const KNOWN_QUOTA_REJECTION_REASONS = new Set(["READONLY_MODE", "QUOTA_EXCEEDED"]);
-
-function getQuotaRejectionReason(entity: unknown): string | undefined {
-  if (
-    entity !== null &&
-    typeof entity === "object" &&
-    "error" in entity &&
-    typeof (entity as { error: unknown }).error === "string" &&
-    KNOWN_QUOTA_REJECTION_REASONS.has((entity as { error: string }).error)
-  ) {
-    return (entity as { error: string }).error;
-  }
-  return undefined;
-}
-
-function getQuotaRejectionMessage(reason: string): string {
-  if (reason === "READONLY_MODE") {
-    return "Compte en lecture seule : mutation refusée à la synchronisation.";
-  }
-  return "Quota dépassé : mutation refusée à la synchronisation.";
-}
-
 async function pushSingleOp(op: SyncOp): Promise<PushOpResult> {
   const res = await fetch("/api/v1/sync/push", {
     method: "POST",
@@ -63,7 +39,9 @@ async function pushSingleOp(op: SyncOp): Promise<PushOpResult> {
       const body = (await res.json()) as {
         results: Array<{ opId: string; status: string; entity?: unknown }>;
       };
-      const result = body.results[0];
+      // Match by opId — never assume results[0] aligns with the pushed op
+      // (a misaligned response must not fail/resolve/delete the wrong op).
+      const result = body.results.find((r) => r.opId === op.opId);
       const quotaReason = getQuotaRejectionReason(result?.entity);
       if (quotaReason) {
         // Quota/readonly rejection is not an editing conflict — do not run LWW
@@ -85,7 +63,7 @@ async function pushSingleOp(op: SyncOp): Promise<PushOpResult> {
     }
     await db.syncQueue.update(op.opId, {
       failed: true,
-      lastError: "malformed or unresolvable conflict response",
+      lastError: "Réponse de synchronisation invalide : conflit non résolu.",
     });
     return { opId: op.opId, status: "failed" };
   }

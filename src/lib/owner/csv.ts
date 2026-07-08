@@ -11,8 +11,7 @@ const HEADERS = [
   "lastPaymentAmount",
   "lastPaymentMethod",
   "lastPaymentDate",
-  "activeUsers",
-  "maxUsers",
+  "activeUsers/maxUsers",
   "createdAt",
 ];
 
@@ -32,12 +31,14 @@ export function buildTenantsCsv(rows: TenantRow[]): string {
       r.lastPaymentAmount !== null ? String(r.lastPaymentAmount) : "",
       r.lastPaymentMethod ?? "",
       r.lastPaymentDate ? formatDateFr(r.lastPaymentDate) : "",
-      `${r.activeUsers}/${r.maxUsers}`,
+      // Spaces around "/" match the on-screen display and prevent Excel
+      // from coercing values like "3/5" into dates when opening the CSV.
+      `${r.activeUsers} / ${r.maxUsers}`,
       formatDateFr(r.createdAt),
     ]
       .map(esc)
       .join(","),
   );
   // UTF-8 BOM (U+FEFF) required for Excel in Niger/AES region
-  return "﻿" + [HEADERS.join(","), ...lines].join("\r\n");
+  return "﻿" + [HEADERS.map(esc).join(","), ...lines].join("\r\n");
 }

@@ -1,4 +1,4 @@
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gt, lte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { tenantEvents, subscriptionPayments } from "@/lib/schema";
 import type { TenantPlan, TenantStatus } from "@/lib/tenants/tenant-config";
@@ -134,7 +134,7 @@ export async function hasPaymentCoveringPeriod(tenant: {
       and(
         eq(subscriptionPayments.tenantId, tenant.id),
         lte(subscriptionPayments.periodStart, tenant.subscriptionEnd),
-        gte(subscriptionPayments.periodEnd, tenant.subscriptionEnd)
+        gt(subscriptionPayments.periodEnd, tenant.subscriptionEnd)
       )
     )
     .limit(1);
@@ -204,3 +204,4 @@ export async function hasPaymentCoverageSkipEventBeenSent(
 }
 
 export { PAYMENT_COVERS_PERIOD_NOTE };
+

@@ -4,31 +4,64 @@ import { z } from "zod";
  * Server-side environment variables schema.
  * These variables are only available on the server.
  */
-const serverEnvSchema = z.object({
-  // Database
-  POSTGRES_URL: z.string().url("Invalid database URL"),
+const serverEnvSchema = z
+  .object({
+    // Database
+    POSTGRES_URL: z.string().url("Invalid database URL"),
 
-  // Authentication
-  BETTER_AUTH_SECRET: z
-    .string()
-    .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
+    // Authentication
+    BETTER_AUTH_SECRET: z
+      .string()
+      .min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
 
-  // OAuth
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
+    // OAuth
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
 
-  // AI
-  OPENROUTER_API_KEY: z.string().optional(),
-  OPENROUTER_MODEL: z.string().default("openai/gpt-5-mini"),
+    // AI
+    OPENROUTER_API_KEY: z.string().optional(),
+    OPENROUTER_MODEL: z.string().default("openai/gpt-5-mini"),
 
-  // Storage
-  BLOB_READ_WRITE_TOKEN: z.string().optional(),
+    // Storage
+    BLOB_READ_WRITE_TOKEN: z.string().optional(),
 
-  // App
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
-});
+    // Email (Resend) — required in production only, empty by design in dev/test
+    RESEND_API_KEY: z.string().optional(),
+    EMAIL_FROM: z.string().optional(),
+
+    // Cron
+    CRON_SECRET: z.string().optional(),
+
+    // Stripe (Story 7-10)
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+    // App
+    NODE_ENV: z
+      .enum(["development", "production", "test"])
+      .default("development"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.NODE_ENV !== "production") return;
+
+    const requiredInProduction = [
+      ["RESEND_API_KEY", data.RESEND_API_KEY],
+      ["EMAIL_FROM", data.EMAIL_FROM],
+      ["CRON_SECRET", data.CRON_SECRET],
+      ["STRIPE_SECRET_KEY", data.STRIPE_SECRET_KEY],
+      ["STRIPE_WEBHOOK_SECRET", data.STRIPE_WEBHOOK_SECRET],
+    ] as const;
+
+    for (const [key, value] of requiredInProduction) {
+      if (!value) {
+        ctx.addIssue({
+          code: "custom",
+          path: [key],
+          message: `${key} is required in production`,
+        });
+      }
+    }
+  });
 
 /**
  * Client-side environment variables schema.
@@ -36,6 +69,9 @@ const serverEnvSchema = z.object({
  */
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  NEXT_PUBLIC_SENTRY_DSN: z
+    .union([z.literal(""), z.string().url("Invalid Sentry DSN URL")])
+    .optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -66,6 +102,7 @@ export function getServerEnv(): ServerEnv {
 export function getClientEnv(): ClientEnv {
   const parsed = clientEnvSchema.safeParse({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   });
 
   if (!parsed.success) {
@@ -85,6 +122,7 @@ export function getClientEnv(): ClientEnv {
  */
 export function checkEnv(): void {
   const warnings: string[] = [];
+  const isProduction = process.env.NODE_ENV === "production";
 
   // Check required variables
   if (!process.env.POSTGRES_URL) {
@@ -93,6 +131,25 @@ export function checkEnv(): void {
 
   if (!process.env.BETTER_AUTH_SECRET) {
     throw new Error("BETTER_AUTH_SECRET is required");
+  }
+
+  // Production-only required variables (Story 8.7 — closes gap left by
+  // Stories 8.2/8.3 where these were only checked at runtime, not at boot)
+  const productionRequired: Array<[string, string | undefined]> = [
+    ["RESEND_API_KEY", process.env.RESEND_API_KEY],
+    ["EMAIL_FROM", process.env.EMAIL_FROM],
+    ["CRON_SECRET", process.env.CRON_SECRET],
+    ["STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY],
+    ["STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET],
+  ];
+
+  for (const [key, value] of productionRequired) {
+    if (!value) {
+      if (isProduction) {
+        throw new Error(`${key} is required in production`);
+      }
+      warnings.push(`${key} is not set.`);
+    }
   }
 
   // Check optional variables and warn

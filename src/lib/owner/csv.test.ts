@@ -34,8 +34,30 @@ describe("buildTenantsCsv", () => {
     const csv = buildTenantsCsv([]);
     const firstLine = csv.slice(1).split("\r\n")[0]!;
     expect(firstLine).toBe(
-      "name,slug,plan,status,subscriptionEnd,daysRemaining,lastPaymentAmount,lastPaymentMethod,lastPaymentDate,activeUsers,maxUsers,createdAt",
+      '"name","slug","plan","status","subscriptionEnd","daysRemaining","lastPaymentAmount","lastPaymentMethod","lastPaymentDate","activeUsers/maxUsers","createdAt"',
     );
+  });
+
+  it("keeps header and data columns aligned (regression: activeUsers/maxUsers split into two headers but one data cell)", () => {
+    const csv = buildTenantsCsv([SAMPLE_ROW]);
+    const lines = csv.slice(1).split("\r\n");
+    expect(lines).toHaveLength(2);
+    // Same field parser for both rows — all fields (headers included) are quoted.
+    const fieldRe = /"(?:[^"]|"")*"/g;
+    const headers: string[] = lines[0]!.match(fieldRe) ?? [];
+    const fields: string[] = lines[1]!.match(fieldRe) ?? [];
+    expect(headers.length).toBeGreaterThan(0);
+    expect(fields).toHaveLength(headers.length);
+    // Positional check: the merged cell sits under its own header, not shifted.
+    const mergedIdx = headers.indexOf('"activeUsers/maxUsers"');
+    expect(mergedIdx).toBeGreaterThan(-1);
+    expect(fields[mergedIdx]).toBe('"3 / 5"');
+  });
+
+  it("formats the merged users cell with spaces so Excel does not coerce it into a date", () => {
+    const csv = buildTenantsCsv([SAMPLE_ROW]);
+    expect(csv).toContain('"3 / 5"');
+    expect(csv).not.toContain('"3/5"');
   });
 
   it("uses CRLF line endings", () => {

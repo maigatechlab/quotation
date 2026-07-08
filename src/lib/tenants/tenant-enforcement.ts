@@ -1,3 +1,4 @@
+import { isTotalBlock } from "./tenant-access";
 import type { TenantStatus } from "./tenant-config";
 
 export type EnforcementDecision =
@@ -5,28 +6,29 @@ export type EnforcementDecision =
   | { action: "allow-with-grace"; graceEndsAt: Date }
   | { action: "redirect"; redirectPath: "/subscription-expired" };
 
-export function enforceTenantAccess(
+export async function enforceTenantAccess(
   tenant: {
+    id: string;
     status: TenantStatus;
     subscriptionEnd: Date | null;
     gracePeriodEndsAt: Date | null;
   },
   now: Date = new Date()
-): EnforcementDecision {
+): Promise<EnforcementDecision> {
   if (tenant.status === "cancelled") {
     return { action: "redirect", redirectPath: "/subscription-expired" };
   }
 
   const grace = tenant.gracePeriodEndsAt !== null ? new Date(tenant.gracePeriodEndsAt) : null;
 
-  // Cron (story 7-6) sets status=suspended once subscriptionEnd passes. Grace window
-  // still lets the tenant in; past the grace window (or with no grace at all — e.g. a
-  // fraud/manual total-block suspension) the tenant must be redirected out of the app.
   if (tenant.status === "suspended") {
+    if (await isTotalBlock(tenant)) {
+      return { action: "redirect", redirectPath: "/subscription-expired" };
+    }
     if (grace !== null && grace > now) {
       return { action: "allow-with-grace", graceEndsAt: grace };
     }
-    return { action: "redirect", redirectPath: "/subscription-expired" };
+    return { action: "allow" };
   }
 
   if (tenant.subscriptionEnd !== null) {
@@ -34,9 +36,11 @@ export function enforceTenantAccess(
     if (subEnd < now && grace !== null && grace > now) {
       return { action: "allow-with-grace", graceEndsAt: grace };
     }
-    // status is still active/trial here — cron hasn't suspended yet. Automatic
-    // suspension post-grace is DEFERRED to the cron job (story 7-6).
+    // status is still active/trial here; cron hasn't suspended yet. Automatic
+    // suspension post-grace is deferred to the cron job (story 7-6).
   }
 
   return { action: "allow" };
 }
+
+

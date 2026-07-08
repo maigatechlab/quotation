@@ -72,6 +72,23 @@ const REMINDER_STAGE_NOTIFICATION: Record<ReminderStage, NotificationType> = {
   urgent: "reminderJ1",
 };
 
+async function deleteCronEventClaim(params: {
+  tenantId: string;
+  eventType: "reminder_sent" | "suspended";
+  note: string;
+}): Promise<void> {
+  await db
+    .delete(tenantEvents)
+    .where(
+      and(
+        eq(tenantEvents.tenantId, params.tenantId),
+        eq(tenantEvents.eventType, params.eventType),
+        eq(tenantEvents.actorId, CRON_SYSTEM_ACTOR_ID),
+        eq(tenantEvents.note, params.note)
+      )
+    );
+}
+
 export async function runExpiryJob(opts: { now?: Date } = {}): Promise<ExpiryJobResult> {
   const now = opts.now ?? new Date();
   const result: ExpiryJobResult = {
@@ -122,19 +139,11 @@ export async function runExpiryJob(opts: { now?: Date } = {}): Promise<ExpiryJob
           ownerEmail: contact.displayEmail,
         };
 
-        await sendEmail({
-          to: adminEmail,
-          from: await getNotificationSenderAddress(),
-          subject: reminderSubject(decision.stage),
-          html: buildReminderEmailHtml(decision.stage, emailParams),
-          text: buildReminderEmailText(decision.stage, emailParams),
-        });
+        const note = reminderSentNote(decision.stage, tenant.subscriptionEnd!);
 
-        // Send-then-log: event inserted only after a successful send (AC4) —
-        // a crash between send and insert would allow one duplicate email on
-        // the next cycle, which is an accepted tradeoff over a distributed
-        // email+DB transaction. The DB unique guard (idx_tenant_events_cron_idempotent)
-        // catches the case where two concurrent runs both raced past hasReminderBeenSent.
+        // Claim-before-send: the DB unique guard decides which concurrent cron
+        // invocation owns this reminder. If the email send fails, remove the claim
+        // so the next run can retry.
         try {
           await db.insert(tenantEvents).values({
             tenantId: tenant.id,
@@ -142,11 +151,24 @@ export async function runExpiryJob(opts: { now?: Date } = {}): Promise<ExpiryJob
             actorId: CRON_SYSTEM_ACTOR_ID,
             before: null,
             after: { stage: decision.stage, daysRemaining: decision.daysRemaining },
-            note: reminderSentNote(decision.stage, tenant.subscriptionEnd!),
+            note,
           });
         } catch (err) {
           if (!isUniqueViolation(err)) throw err;
           continue;
+        }
+
+        try {
+          await sendEmail({
+            to: adminEmail,
+            from: await getNotificationSenderAddress(),
+            subject: reminderSubject(decision.stage),
+            html: buildReminderEmailHtml(decision.stage, emailParams),
+            text: buildReminderEmailText(decision.stage, emailParams),
+          });
+        } catch (err) {
+          await deleteCronEventClaim({ tenantId: tenant.id, eventType: "reminder_sent", note });
+          throw err;
         }
         result.processed.reminders++;
       } else if (decision.kind === "expired") {
@@ -261,3 +283,5 @@ export async function runExpiryJob(opts: { now?: Date } = {}): Promise<ExpiryJob
 
   return result;
 }
+
+

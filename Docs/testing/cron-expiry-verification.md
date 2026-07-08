@@ -120,3 +120,13 @@ Tous les tenants/paiements/Ã©vÃ©nements de test crÃ©Ã©s pour cette vÃ©rification
 
 - `pnpm check` (lint + typecheck + vitest) : 867/867 tests verts, 0 erreur lint (45 warnings prÃ©-existants `import/order`, non liÃ©s Ã  cette story).
 - `pnpm build` : voir Dev Agent Record de la story pour le rÃ©sultat.
+## Revue de code 8-3 — corrections supplémentaires
+
+La revue BMAD de Story 8-3 a fermé trois défauts de code supplémentaires :
+
+- `hasPaymentCoveringPeriod` utilise désormais une borne de fin semi-ouverte (`period_end > subscriptionEnd`) pour éviter qu'un paiement qui se termine exactement à `subscriptionEnd` empêche indéfiniment la suspension.
+- Les rappels email sont désormais protégés contre deux exécutions concurrentes du cron : le job revendique d'abord la clé d'idempotence `tenant_events`, puis envoie l'email uniquement si l'insert a gagné. En cas d'échec d'envoi, la revendication est supprimée pour permettre un retry.
+- `enforceTenantAccess` respecte à nouveau la distinction produit Story 7-5/7-6 : suspension non-paiement = lecture seule (navigation autorisée, mutations bloquées par `assertTenantWritable`), suspension `totalBlock=true` ou `cancelled` = redirect `/subscription-expired`. La formulation Story 8-3 qui demandait une redirection proxy pour tout `suspended` post-grâce est donc à traiter comme un écart d'AC/documentation, pas comme la règle produit finale.
+
+Gaps d'acceptance restant ouverts : déclenchement Vercel Cron production + `CRON_SECRET` dashboard non vérifiés faute de déploiement actif ; livraison réelle depuis le chemin cron non prouvée dans cette passe locale sans `RESEND_API_KEY`.
+
