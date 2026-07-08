@@ -6,6 +6,7 @@ const h = vi.hoisted(() => {
   const updateWhere = vi.fn(() => ({ returning: updateReturning }));
   const updateSet = vi.fn(() => ({ where: updateWhere }));
   const insertValues = vi.fn(() => Promise.resolve());
+  const deleteWhere = vi.fn(() => Promise.resolve());
   const sendEmail = vi.fn<() => Promise<void>>(() => Promise.resolve());
   const getTenantAdminEmail = vi.fn<() => Promise<string | null>>(() => Promise.resolve("admin@tenant.ne"));
   const buildOwnerContact = vi.fn(() => ({
@@ -25,6 +26,7 @@ const h = vi.hoisted(() => {
     updateWhere,
     updateSet,
     insertValues,
+    deleteWhere,
     sendEmail,
     getTenantAdminEmail,
     buildOwnerContact,
@@ -39,6 +41,7 @@ vi.mock("@/lib/db", () => {
   const ops = {
     update: () => ({ set: h.updateSet }),
     insert: () => ({ values: h.insertValues }),
+    delete: () => ({ where: h.deleteWhere }),
   };
   return {
     db: {
@@ -135,6 +138,7 @@ beforeEach(() => {
   h.candidates.mockReturnValue([]);
   h.updateReturning.mockResolvedValue([{ id: "tenant-1", status: "suspended" }]);
   h.insertValues.mockResolvedValue(undefined);
+  h.deleteWhere.mockResolvedValue(undefined);
   h.sendEmail.mockResolvedValue(undefined);
   h.getTenantAdminEmail.mockResolvedValue("admin@tenant.ne");
   h.hasReminderBeenSent.mockResolvedValue(false);
@@ -163,6 +167,21 @@ describe("runExpiryJob", () => {
     expect(h.insertValues).not.toHaveBeenCalled();
   });
 
+  it("concurrent reminder race: unique violation claim means no duplicate email", async () => {
+    h.candidates.mockReturnValue([tenant()]);
+    h.insertValues.mockRejectedValueOnce(Object.assign(new Error("duplicate"), { code: "23505" }));
+    const result = await runExpiryJob({ now: NOW });
+    expect(result.processed.reminders).toBe(0);
+    expect(h.sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("reminder send failure removes the claim so a later cron can retry", async () => {
+    h.candidates.mockReturnValue([tenant()]);
+    h.sendEmail.mockRejectedValueOnce(new Error("Resend down"));
+    const result = await runExpiryJob({ now: NOW });
+    expect(result.processed.errors).toBe(1);
+    expect(h.deleteWhere).toHaveBeenCalledOnce();
+  });
   it("suspension J0 without covering payment: updates tenant, sends expiry email, inserts suspended event", async () => {
     h.candidates.mockReturnValue([tenant({ subscriptionEnd: new Date("2026-07-01T00:00:00Z") })]);
     const result = await runExpiryJob({ now: NOW });
@@ -287,3 +306,4 @@ describe("runExpiryJob", () => {
     expect(h.insertValues).not.toHaveBeenCalled();
   });
 });
+

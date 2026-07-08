@@ -15,10 +15,14 @@ export function useFailedSyncIds(): Map<string, string> {
 
   useEffect(() => {
     const subscription = liveQuery(async () => {
-      const ops = await db.syncQueue.filter((op) => op.failed === true).toArray();
+      // sortBy(queuedAt) so the Map really keeps the most recent op's message
+      // per entity (toArray() iterates in primary-key order — random UUIDs).
+      const ops = await db.syncQueue.filter((op) => op.failed === true).sortBy("queuedAt");
       const byEntity = new Map<string, string>();
       for (const op of ops) {
-        byEntity.set(op.entityId, op.lastError ?? "Échec de synchronisation");
+        // `||` not `??` — an empty lastError must still fall back (empty
+        // tooltip + empty sr-only = icon without accessible name).
+        byEntity.set(op.entityId, op.lastError || "Échec de synchronisation");
       }
       return byEntity;
     }).subscribe({

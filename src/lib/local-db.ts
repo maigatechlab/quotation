@@ -188,6 +188,12 @@ export interface SyncOp {
   retryCount?: number;
   lastError?: string;
   createdBy?: string;
+  // Server entity from an LWW conflict detected by the SW's direct push
+  // (story 8-4 review). The SW cannot resolve it itself (no encryption layer,
+  // no toast) — the window applies it via handleConflict on the next sync
+  // trigger, then deletes the op. Always set together with failed:true so the
+  // op is excluded from push batches (the server would answer "noop").
+  conflictEntity?: unknown;
 }
 
 export interface AuditEventLocal {

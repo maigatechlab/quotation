@@ -224,6 +224,33 @@ describe("POST /api/v1/sync/push", () => {
     expect(db.insert).not.toHaveBeenCalled();
   });
 
+  it("409 QUOTA_EXCEEDED when an update op would CREATE a quote (upsert) past the quota", async () => {
+    // Regression (story 8-4 review): persistEntityMutation upserts, so an
+    // "update" op whose quote doesn't exist server-side (its create was
+    // quota-rejected earlier) must pass the same quota gate as a create —
+    // otherwise it creates the quote without ever checking or incrementing quota.
+    mockSession("admin", CID_A);
+    const subAtLimit = { ...MOCK_SUB, quotaUsedQuotes: 50 }; // starter limit = 50
+    mockSelectOnce([]); // idempotency → not seen
+    mockSelectOnce([]); // quote doesn't exist server-side
+    mockAllInserts(); // syncOpLog insert for the rejection
+    mockSelectOnce([subAtLimit]); // getOrCreateSubscription (readonly gate) → ok status
+    mockSelectOnce([subAtLimit]); // checkQuota → getOrCreateSubscription → at limit
+
+    const quoteUpdateOp = {
+      ...BASE_OP,
+      entity: "quote",
+      type: "update",
+      payload: { number: "TEMP-AAAA-0001", status: "draft" },
+      baseRevision: 1,
+    };
+    const res = await POST(makeReq([quoteUpdateOp]));
+    expect(res.status).toBe(409);
+    const body = await res.json() as { results: Array<{ status: string; entity: unknown }> };
+    expect(body.results[0]!.status).toBe("conflict");
+    expect(body.results[0]!.entity).toEqual({ error: "QUOTA_EXCEEDED" });
+  });
+
   // Per-entity permission gate (company.update)
   it("403 when commercial pushes company sync op — company.update denied, no DB calls", async () => {
     mockSession("commercial", CID_A);
