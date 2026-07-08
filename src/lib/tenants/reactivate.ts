@@ -15,7 +15,7 @@ import {
   buildReactivationEmailHtml,
   buildReactivationEmailText,
 } from "@/lib/tenants/reactivate-email";
-import { APEX_DOMAIN } from "@/lib/tenants/tenant-config";
+import { buildTenantUrl } from "@/lib/tenants/tenant-config";
 import { getTenantAdminEmail } from "@/lib/tenants/tenant-contact";
 import type { ReactivateInput } from "@/lib/validation/reactivate";
 
@@ -191,7 +191,7 @@ export async function reactivateTenant(params: ReactivateParams): Promise<Reacti
     if (adminEmail) {
       const tenantRow = await getTenantBasic(tenantId);
       if (tenantRow) {
-        const subdomainUrl = `https://${tenantRow.slug}.${APEX_DOMAIN}`;
+        const subdomainUrl = buildTenantUrl(tenantRow.slug);
         const emailParams = {
           tenantName: tenantRow.name,
           subdomainUrl,

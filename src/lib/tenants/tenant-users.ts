@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/email";
 import { session as sessionTable, tenantEvents, tenants, user as userTable } from "@/lib/schema";
 import { TenantConflictError } from "@/lib/tenants/create-tenant";
 import { generatePassword } from "@/lib/tenants/password";
-import { APEX_DOMAIN } from "@/lib/tenants/tenant-config";
+import { buildTenantUrl } from "@/lib/tenants/tenant-config";
 import { buildWelcomeEmailHtml, buildWelcomeEmailText } from "@/lib/tenants/welcome-email";
 import type { CreateTenantUserInput } from "@/lib/validation/tenant-user";
 
@@ -221,7 +221,7 @@ export async function createUserInTenant(
   }
   const userId = createdUserId as string;
 
-  const subdomainUrl = `https://${params.tenantSlug}.${APEX_DOMAIN}`;
+  const subdomainUrl = buildTenantUrl(params.tenantSlug);
 
   // 6. Welcome email — best-effort
   let emailSent = false;

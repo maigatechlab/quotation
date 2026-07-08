@@ -15,6 +15,28 @@ export const PLAN_LIMITS: Record<TenantPlan, { maxUsers: number }> = {
 
 export const APEX_DOMAIN = process.env.APEX_DOMAIN ?? "quotation.com";
 
+/**
+ * Builds the public URL for a tenant's subdomain.
+ *
+ * When the app runs on localhost (NEXT_PUBLIC_APP_URL host is `localhost`),
+ * subdomains of APEX_DOMAIN don't resolve — the proxy instead accepts
+ * `{slug}.localhost` (see extractSlugFromHost). Emails and UI must link there,
+ * otherwise recipients get an unreachable `https://{slug}.quotation.com` URL.
+ */
+export function buildTenantUrl(slug: string): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  try {
+    const parsed = new URL(appUrl);
+    if (parsed.hostname === "localhost") {
+      const port = parsed.port ? `:${parsed.port}` : "";
+      return `${parsed.protocol}//${slug}.localhost${port}`;
+    }
+  } catch {
+    // fall through to apex-domain URL
+  }
+  return `https://${slug}.${APEX_DOMAIN}`;
+}
+
 // FCFA reference prices per plan/cycle (Epic 7 §7). Stripe checkout (story 7-10)
 // converts these to EUR at a fixed rate; mobile-money payments (7-4) use them
 // as-is. `free` has no checkout — 0 XOF, never charged.

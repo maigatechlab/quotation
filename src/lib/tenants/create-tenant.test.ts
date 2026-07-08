@@ -53,6 +53,7 @@ vi.mock("@/lib/email", () => ({
 
 vi.mock("@/lib/tenants/tenant-config", () => ({
   APEX_DOMAIN: "quotation.com",
+  buildTenantUrl: (slug: string) => `https://${slug}.quotation.com`,
   DEFAULT_TRIAL_DAYS: 14,
 }));
 

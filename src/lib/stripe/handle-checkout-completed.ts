@@ -21,7 +21,7 @@ import { calculatePeriodFromCycle } from "@/lib/tenants/period";
 import { reactivateTenantWithPayment } from "@/lib/tenants/reactivate";
 import { generateSlug, validateSlug } from "@/lib/tenants/slug";
 import { SYSTEM_ACTOR_ID } from "@/lib/tenants/system-actor";
-import { APEX_DOMAIN, PLAN_LIMITS } from "@/lib/tenants/tenant-config";
+import { buildTenantUrl, PLAN_LIMITS } from "@/lib/tenants/tenant-config";
 import { buildWelcomeEmailHtml, buildWelcomeEmailText } from "@/lib/tenants/welcome-email";
 
 export class StripeWebhookError extends Error {
@@ -145,7 +145,7 @@ async function handleCreation(
     return inserted;
   });
 
-  const subdomainUrl = `https://${slug}.${APEX_DOMAIN}`;
+  const subdomainUrl = buildTenantUrl(slug);
   const password = generatePassword();
 
   let adminUserId: string | undefined;
@@ -337,7 +337,7 @@ async function handleRenewal(
   if (tenantRow) {
     try {
       if (adminUser?.email) {
-        const subdomainUrl = `https://${tenantRow.slug}.${APEX_DOMAIN}`;
+        const subdomainUrl = buildTenantUrl(tenantRow.slug);
         const emailParams = {
           tenantName: tenantRow.name,
           subdomainUrl,
