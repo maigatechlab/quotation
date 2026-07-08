@@ -91,6 +91,7 @@ vi.mock("drizzle-orm", () => ({
 
 vi.mock("@/lib/tenants/tenant-config", () => ({
   APEX_DOMAIN: "quotation.com",
+  buildTenantUrl: (slug: string) => `https://${slug}.quotation.com`,
   DEFAULT_GRACE_PERIOD_DAYS: 7,
 }));
 

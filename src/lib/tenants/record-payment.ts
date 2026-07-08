@@ -16,7 +16,7 @@ import {
   reactivateTenantWithPayment,
   type ReactivationEmailStatus,
 } from "@/lib/tenants/reactivate";
-import { APEX_DOMAIN } from "@/lib/tenants/tenant-config";
+import { buildTenantUrl } from "@/lib/tenants/tenant-config";
 import type { RecordPaymentInput } from "@/lib/validation/payment";
 
 export class RecordPaymentError extends Error {
@@ -165,7 +165,7 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Record
       .limit(1);
 
     if (adminUser?.email) {
-      const subdomainUrl = `https://${tenantSnapshot!.slug}.${APEX_DOMAIN}`;
+      const subdomainUrl = buildTenantUrl(tenantSnapshot!.slug);
       const emailParams = {
         tenantName: tenantSnapshot!.name,
         subdomainUrl,

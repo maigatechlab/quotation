@@ -11,7 +11,7 @@ import {
   getPlanLimits,
   getTrialDays,
 } from "./platform-config";
-import { APEX_DOMAIN } from "./tenant-config";
+import { buildTenantUrl } from "./tenant-config";
 import { calculateTrialDates } from "./tenant-dates";
 import { buildWelcomeEmailHtml, buildWelcomeEmailText } from "./welcome-email";
 
@@ -151,7 +151,7 @@ export async function createTenantWithAdmin(
     throw err;
   }
 
-  const subdomainUrl = `https://${input.slug}.${APEX_DOMAIN}`;
+  const subdomainUrl = buildTenantUrl(input.slug);
 
   // 8. Welcome email — best-effort, gated by the platform "trialWelcome" toggle
   let emailSent = false;

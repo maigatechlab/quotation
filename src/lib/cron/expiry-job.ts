@@ -8,7 +8,7 @@ import {
   getNotificationToggle,
   type NotificationType,
 } from "@/lib/tenants/platform-config";
-import { APEX_DOMAIN } from "@/lib/tenants/tenant-config";
+import { buildTenantUrl } from "@/lib/tenants/tenant-config";
 import { buildOwnerContact, getTenantAdminEmail } from "@/lib/tenants/tenant-contact";
 import { CRON_SYSTEM_ACTOR_ID } from "./constants";
 import {
@@ -132,7 +132,7 @@ export async function runExpiryJob(opts: { now?: Date } = {}): Promise<ExpiryJob
 
         const emailParams = {
           tenantName: tenant.name,
-          subdomainUrl: `https://${tenant.slug}.${APEX_DOMAIN}`,
+          subdomainUrl: buildTenantUrl(tenant.slug),
           expiryDateFormatted: formatDateFR(tenant.subscriptionEnd!),
           daysRemaining: decision.daysRemaining,
           ownerWhatsapp: contact.displayWhatsapp,
@@ -232,7 +232,7 @@ export async function runExpiryJob(opts: { now?: Date } = {}): Promise<ExpiryJob
           try {
             const expiryParams = {
               tenantName: tenant.name,
-              subdomainUrl: `https://${tenant.slug}.${APEX_DOMAIN}`,
+              subdomainUrl: buildTenantUrl(tenant.slug),
               graceEndsAtFormatted: formatDateFR(gracePeriodEndsAt),
               graceDays,
               ownerWhatsapp: contact.displayWhatsapp,

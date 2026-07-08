@@ -36,6 +36,11 @@ const serverEnvSchema = z
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
+    // Multi-tenant subdomains — defaults to placeholder "quotation.com" in
+    // tenant-config.ts, so it must be set explicitly in production or every
+    // emailed tenant URL points to an unreachable domain.
+    APEX_DOMAIN: z.string().optional(),
+
     // App
     NODE_ENV: z
       .enum(["development", "production", "test"])
@@ -50,6 +55,7 @@ const serverEnvSchema = z
       ["CRON_SECRET", data.CRON_SECRET],
       ["STRIPE_SECRET_KEY", data.STRIPE_SECRET_KEY],
       ["STRIPE_WEBHOOK_SECRET", data.STRIPE_WEBHOOK_SECRET],
+      ["APEX_DOMAIN", data.APEX_DOMAIN],
     ] as const;
 
     for (const [key, value] of requiredInProduction) {
@@ -141,6 +147,7 @@ export function checkEnv(): void {
     ["CRON_SECRET", process.env.CRON_SECRET],
     ["STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY],
     ["STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET],
+    ["APEX_DOMAIN", process.env.APEX_DOMAIN],
   ];
 
   for (const [key, value] of productionRequired) {
@@ -163,6 +170,17 @@ export function checkEnv(): void {
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     warnings.push("BLOB_READ_WRITE_TOKEN is not set. Using local storage for file uploads.");
+  }
+
+  if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+    const parsedClientEnv = clientEnvSchema.safeParse({
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+      NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    });
+
+    if (!parsedClientEnv.success) {
+      throw new Error("NEXT_PUBLIC_SENTRY_DSN must be a valid URL when set");
+    }
   }
 
   // Log warnings in development

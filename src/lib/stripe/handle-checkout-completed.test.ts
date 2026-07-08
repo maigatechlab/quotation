@@ -161,6 +161,7 @@ vi.mock("@/lib/tenants/system-actor", () => ({
 
 vi.mock("@/lib/tenants/tenant-config", () => ({
   APEX_DOMAIN: "quotation.com",
+  buildTenantUrl: (slug: string) => `https://${slug}.quotation.com`,
   PLAN_LIMITS: { free: { maxUsers: 1 }, pro: { maxUsers: 5 }, enterprise: { maxUsers: 20 } },
 }));
 

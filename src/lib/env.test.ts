@@ -31,6 +31,7 @@ describe("checkEnv", () => {
     vi.stubEnv("CRON_SECRET", "secret");
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_x");
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    vi.stubEnv("APEX_DOMAIN", "quotation-app.example.com");
 
     expect(() => checkEnv()).toThrow("RESEND_API_KEY is required in production");
   });
@@ -43,6 +44,7 @@ describe("checkEnv", () => {
     vi.stubEnv("CRON_SECRET", "");
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_x");
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    vi.stubEnv("APEX_DOMAIN", "quotation-app.example.com");
 
     expect(() => checkEnv()).toThrow("CRON_SECRET is required in production");
   });
@@ -55,8 +57,22 @@ describe("checkEnv", () => {
     vi.stubEnv("CRON_SECRET", "secret");
     vi.stubEnv("STRIPE_SECRET_KEY", "");
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    vi.stubEnv("APEX_DOMAIN", "quotation-app.example.com");
 
     expect(() => checkEnv()).toThrow("STRIPE_SECRET_KEY is required in production");
+  });
+
+  it("throws in production when APEX_DOMAIN is missing", () => {
+    stubBaseRequired();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("RESEND_API_KEY", "re_live_x");
+    vi.stubEnv("EMAIL_FROM", "no-reply@example.com");
+    vi.stubEnv("CRON_SECRET", "secret");
+    vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_x");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    vi.stubEnv("APEX_DOMAIN", "");
+
+    expect(() => checkEnv()).toThrow("APEX_DOMAIN is required in production");
   });
 
   it("passes in production when all required keys are present", () => {
@@ -67,6 +83,7 @@ describe("checkEnv", () => {
     vi.stubEnv("CRON_SECRET", "secret");
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_x");
     vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    vi.stubEnv("APEX_DOMAIN", "quotation-app.example.com");
 
     expect(() => checkEnv()).not.toThrow();
   });
@@ -77,6 +94,22 @@ describe("checkEnv", () => {
     vi.stubEnv("NODE_ENV", "development");
 
     expect(() => checkEnv()).toThrow("POSTGRES_URL is required");
+  });
+
+  it("rejects a malformed NEXT_PUBLIC_SENTRY_DSN on the env check path", () => {
+    stubBaseRequired();
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("RESEND_API_KEY", "re_live_x");
+    vi.stubEnv("EMAIL_FROM", "no-reply@example.com");
+    vi.stubEnv("CRON_SECRET", "secret");
+    vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_x");
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_x");
+    vi.stubEnv("APEX_DOMAIN", "quotation-app.example.com");
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "not-a-url");
+
+    expect(() => checkEnv()).toThrow(
+      "NEXT_PUBLIC_SENTRY_DSN must be a valid URL when set"
+    );
   });
 });
 
