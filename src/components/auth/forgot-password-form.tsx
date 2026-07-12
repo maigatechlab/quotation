@@ -25,7 +25,7 @@ export function ForgotPasswordForm() {
       })
 
       if (result.error) {
-        if (result.error.message === "RESET_RATE_LIMIT_EXCEEDED") {
+        if (result.error.message === "RESET_RATE_LIMIT_EXCEEDED" || result.error.status === 429) {
           setError("Trop de demandes. Réessayez dans une heure.")
         } else if (result.error.code === "EMAIL_DELIVERY_NOT_CONFIGURED") {
           setError(
