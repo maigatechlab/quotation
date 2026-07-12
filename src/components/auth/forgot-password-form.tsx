@@ -27,6 +27,10 @@ export function ForgotPasswordForm() {
       if (result.error) {
         if (result.error.message === "RESET_RATE_LIMIT_EXCEEDED") {
           setError("Trop de demandes. Réessayez dans une heure.")
+        } else if (result.error.code === "EMAIL_DELIVERY_NOT_CONFIGURED") {
+          setError(
+            "L'envoi d'emails n'est pas encore configuré. Contactez l'administrateur pour réinitialiser votre mot de passe."
+          )
         } else {
           setError("Une erreur est survenue. Veuillez réessayer.")
         }
