@@ -152,8 +152,15 @@ const passwordResetRateLimitPlugin = {
   },
 }
 
+const apexDomain = process.env.APEX_DOMAIN
+
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL,
+  // Tenant apps live on {slug}.APEX_DOMAIN — their same-origin /api/auth calls
+  // carry a subdomain Origin that must be trusted alongside the apex baseURL.
+  trustedOrigins: apexDomain
+    ? [`https://${apexDomain}`, `https://*.${apexDomain}`]
+    : [],
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
