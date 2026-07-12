@@ -11,11 +11,22 @@ import {
 } from "@/components/ui/card"
 import { auth } from "@/lib/auth"
 
-export default async function ResetPasswordPage() {
-  const session = await auth.api.getSession({ headers: await headers() })
+export default async function ResetPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string; error?: string }>
+}) {
+  const { token, error } = await searchParams
 
-  if (session) {
-    redirect("/")
+  // A token (or a token error from Better Auth's redirect) means the user
+  // arrived from the email link — let them set a new password / see the error
+  // even if this browser still holds a live session.
+  if (!token && !error) {
+    const session = await auth.api.getSession({ headers: await headers() })
+
+    if (session) {
+      redirect("/")
+    }
   }
 
   return (
