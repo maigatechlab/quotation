@@ -8,7 +8,7 @@ test.describe("/subscription-expired page", () => {
     await expect(page.getByText("expiré ou a été suspendu")).toBeVisible();
     await expect(page.getByText("29 juin 2026")).toBeVisible();
     await expect(page.getByText("données sont conservées")).toBeVisible();
-    await expect(page.getByText("Maiga Tech Lab")).toBeVisible();
+    await expect(page.getByText("Maiga Tech Lab").first()).toBeVisible();
     await expect(page.getByRole("button", { name: /déconnecter/i })).toBeVisible();
 
     // No sidebar or quota banner
@@ -19,6 +19,6 @@ test.describe("/subscription-expired page", () => {
   test("shows fallback contact when OWNER_WHATSAPP/EMAIL not configured", async ({ page }) => {
     await page.goto("/subscription-expired?date=2026-06-29T00:00:00.000Z");
     // The page should display some contact info (either real or placeholder)
-    await expect(page.getByText(/Maiga Tech Lab|contact@maigatechlab.com/i)).toBeVisible();
+    await expect(page.getByText(/Maiga Tech Lab|contact@maigatechlab.com/i).first()).toBeVisible();
   });
 });

@@ -5,7 +5,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export const recordPaymentSchema = z
   .object({
-    paymentMethod: z.enum(["nitta", "wave", "amana", "stripe", "cash", "virement"], {
+    paymentMethod: z.enum(["nitta", "wave", "amana", "cash", "virement"], {
       error: "La méthode de paiement est requise",
     }),
     paymentReference: z.string().trim().max(200).optional(),

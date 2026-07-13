@@ -37,9 +37,8 @@ export function buildTenantUrl(slug: string): string {
   return `https://${slug}.${APEX_DOMAIN}`;
 }
 
-// FCFA reference prices per plan/cycle (Epic 7 §7). Stripe checkout (story 7-10)
-// converts these to EUR at a fixed rate; mobile-money payments (7-4) use them
-// as-is. `free` has no checkout — 0 XOF, never charged.
+// FCFA reference prices per plan/cycle (Epic 7 §7), used for manual and
+// mobile-money subscription payment administration. `free` is 0 XOF.
 /** @deprecated Fallback only — use getPlanPrices() (story 7-12). */
 export const PLAN_PRICES_XOF: Record<TenantPlan, { monthly: number; annual: number }> = {
   free: { monthly: 0, annual: 0 },
@@ -50,6 +49,5 @@ export const PLAN_PRICES_XOF: Record<TenantPlan, { monthly: number; annual: numb
 // NOTE: the platform_settings async accessors (getTrialDays, getGracePeriodDays,
 // getPlanLimits, getPlanPrices, getOwnerContact, getNotificationToggle,
 // getNotificationSenderAddress — story 7-12) live in ./platform-config.ts, NOT
-// here. This file is imported by the client component src/app/checkout/checkout-form.tsx
-// (for PLAN_PRICES_XOF) — pulling in the DB-backed data layer here would drag
-// `pg`/`postgres` Node builtins into the browser bundle.
+// here so shared configuration stays free of database dependencies and does not
+// pull `pg`/`postgres` Node builtins into client bundles.

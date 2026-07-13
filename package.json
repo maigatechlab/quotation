@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "cross-env PLAYWRIGHT_FORCE_ASYNC_LOADER=1 playwright test",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -46,12 +46,12 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dexie": "^4.4.4",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.2",
     "flexsearch": "^0.8.212",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.539.0",
-    "next": "16.1.6",
+    "next": "16.2.10",
     "next-intl": "^4.13.0",
     "next-themes": "^0.4.6",
     "pg": "^8.20.0",
@@ -62,7 +62,6 @@
     "react-markdown": "^10.1.0",
     "serwist": "^9.5.11",
     "sonner": "^2.0.7",
-    "stripe": "^22.3.0",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.14"
@@ -77,9 +76,10 @@
     "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
+    "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.4",
-    "eslint-config-next": "16.0.7",
+    "eslint-config-next": "16.2.10",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.1.1",
     "prettier": "^3.8.3",
@@ -96,7 +96,8 @@
   "pnpm": {
     "overrides": {
       "@types/react": "19.2.5",
-      "@types/react-dom": "19.2.3"
+      "@types/react-dom": "19.2.3",
+      "postcss": "8.5.10"
     }
   }
 }

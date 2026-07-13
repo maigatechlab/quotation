@@ -2,7 +2,7 @@ import { checkEnv } from "../src/lib/env";
 
 // `--production` forces production-mode checks regardless of the loaded
 // NODE_ENV — a pre-prod .env file may omit NODE_ENV entirely, which would
-// otherwise silently skip RESEND_API_KEY/CRON_SECRET/STRIPE_* enforcement.
+// otherwise silently skip RESEND_API_KEY/CRON_SECRET enforcement.
 if (process.argv.includes("--production")) {
   process.env.NODE_ENV = "production";
 }

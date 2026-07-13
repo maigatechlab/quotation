@@ -27,7 +27,7 @@ async function createUserWithRole(email: string, role: "commercial" | "operateur
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const res = await fetch(`${base}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: base },
     body: JSON.stringify({ email, password: OWNER_PASSWORD, name: `Owner Settings ${role}` }),
   });
   if (!res.ok) throw new Error(`User creation failed: ${await res.text()}`);
@@ -49,7 +49,7 @@ test.beforeAll(async () => {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const res = await fetch(`${base}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: base },
     body: JSON.stringify({
       email: OWNER_EMAIL,
       password: OWNER_PASSWORD,
@@ -113,7 +113,7 @@ test("modifying a price persists and is reflected after reload", async ({ page }
   await priceInput.fill("30000");
   await page.getByRole("button", { name: "Enregistrer" }).click();
 
-  await expect(page.getByText("Paramètres plateforme enregistrÃ©s.")).toBeVisible({
+  await expect(page.getByText("Paramètres plateforme enregistrés.")).toBeVisible({
     timeout: 10_000,
   });
 
@@ -136,9 +136,15 @@ test("invalid gracePeriodDays shows an inline error and does not save", async ({
   await page.locator("#gracePeriodDays").fill("31");
   await page.getByRole("button", { name: "Enregistrer" }).click();
 
-  await expect(page.getByText("La durée de grâce doit Ãªtre entre 0 et 30 jours.")).toBeVisible({
-    timeout: 10_000,
-  });
+  // The input carries max={30}, so native form validation blocks the submit
+  // before the server-side Zod message can render.
+  await expect
+    .poll(async () =>
+      page
+        .locator("#gracePeriodDays")
+        .evaluate((el) => (el as HTMLInputElement).validity.rangeOverflow)
+    )
+    .toBe(true);
 
   const [row] = await db
     .select({ gracePeriodDays: platformSettings.gracePeriodDays })

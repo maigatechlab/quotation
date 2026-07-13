@@ -8,7 +8,6 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   nitta: "Nitta",
   wave: "Wave",
   amana: "Amana",
-  stripe: "Stripe",
   cash: "Cash",
   virement: "Virement",
 };

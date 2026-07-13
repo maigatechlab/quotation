@@ -62,11 +62,12 @@ async function checkDatabase(start: number): Promise<DatabaseCheck> {
 
     const latency_ms = Date.now() - start;
     return { status: "ok", schema_applied, latency_ms };
-  } catch (e) {
+  } catch {
     return {
       status: "error",
       schema_applied: false,
-      error: e instanceof Error ? e.message : "unknown",
+      // This endpoint is public; do not disclose database driver, host, or schema details.
+      error: "database check failed",
     };
   }
 }

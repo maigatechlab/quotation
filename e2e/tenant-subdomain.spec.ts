@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { eq } from "drizzle-orm";
 import { db } from "../src/lib/db";
-import { tenants } from "../src/lib/schema";
+import { tenantEvents, tenants } from "../src/lib/schema";
 import { clearTenantCache } from "../src/lib/tenants/resolve-tenant";
 
 // These tests require SUBDOMAIN_DEV_MODE=1 in the running server.
@@ -16,29 +16,42 @@ async function seedTenants() {
   await db.delete(tenants).where(eq(tenants.slug, slugSuspended)).execute();
   await db.delete(tenants).where(eq(tenants.slug, slugCancelled)).execute();
 
-  await db.insert(tenants).values([
-    {
-      name: "E2E Active Tenant",
-      slug: slugActive,
-      status: "active",
-      plan: "pro",
-      maxUsers: 5,
-    },
-    {
-      name: "E2E Suspended Tenant",
-      slug: slugSuspended,
-      status: "suspended",
-      plan: "free",
-      maxUsers: 1,
-    },
-    {
-      name: "E2E Cancelled Tenant",
-      slug: slugCancelled,
-      status: "cancelled",
-      plan: "free",
-      maxUsers: 1,
-    },
-  ]);
+  const inserted = await db
+    .insert(tenants)
+    .values([
+      {
+        name: "E2E Active Tenant",
+        slug: slugActive,
+        status: "active",
+        plan: "pro",
+        maxUsers: 5,
+      },
+      {
+        name: "E2E Suspended Tenant",
+        slug: slugSuspended,
+        status: "suspended",
+        plan: "free",
+        maxUsers: 1,
+      },
+      {
+        name: "E2E Cancelled Tenant",
+        slug: slugCancelled,
+        status: "cancelled",
+        plan: "free",
+        maxUsers: 1,
+      },
+    ])
+    .returning({ id: tenants.id, slug: tenants.slug });
+
+  // The proxy only redirects suspended tenants when the latest 'suspended'
+  // event carries totalBlock=true (non-payment suspensions stay read-only).
+  const suspendedId = inserted.find((t) => t.slug === slugSuspended)!.id;
+  await db.insert(tenantEvents).values({
+    tenantId: suspendedId,
+    eventType: "suspended",
+    actorId: "SYSTEM",
+    after: { status: "suspended", totalBlock: true },
+  });
 }
 
 test.beforeAll(async () => {
@@ -57,7 +70,7 @@ test.describe("Tenant subdomain routing (SUBDOMAIN_DEV_MODE=1)", () => {
   test("/subscription-expired accessible sans session", async ({ page }) => {
     await page.goto("/subscription-expired");
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByRole("heading", { name: /abonnement expiré/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /abonnement.*expiré|expiré.*abonnement/i })).toBeVisible();
   });
 
   test("tenant actif sans session → redirect login (pas subscription-expired)", async ({ browser }) => {
@@ -80,7 +93,7 @@ test.describe("Tenant subdomain routing (SUBDOMAIN_DEV_MODE=1)", () => {
     const page = await ctx.newPage();
     await page.goto("/dashboard");
     await expect(page).toHaveURL(/subscription-expired/);
-    await expect(page.getByRole("heading", { name: /abonnement expiré/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /abonnement.*expiré|expiré.*abonnement/i })).toBeVisible();
     await ctx.close();
   });
 

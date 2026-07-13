@@ -22,7 +22,7 @@ test.describe("Auth — connexion et déconnexion", () => {
   test("login avec mauvais mot de passe affiche erreur", async ({ page }) => {
     await page.goto("/login");
     await page.getByRole("button", { name: "Administrateur" }).click();
-    await page.locator("#email").fill(TEST_ADMIN_EMAIL);
+    await page.locator("#email").fill(`invalid-${Date.now()}@quotation.test`);
     await page.locator("#password").fill("mauvais-mot-de-passe");
     await page.getByRole("button", { name: "Se connecter" }).click();
     await expect(page.locator("[role='alert']#login-error")).toBeVisible({ timeout: 8_000 });
@@ -41,7 +41,9 @@ test.describe("Auth — connexion et déconnexion", () => {
   test("dashboard visible après connexion admin", async ({ page }) => {
     await loginAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD, "Administrateur");
     // Navigation bottom bar visible
-    await expect(page.locator("nav")).toBeVisible();
+    await expect(
+      page.getByRole("complementary", { name: "Navigation principale" }).getByRole("navigation")
+    ).toBeVisible();
     // Main content zone
     await expect(page.locator("#main-content")).toBeVisible();
   });

@@ -11,11 +11,8 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
 ];
-// Public checkout flow (story 7-10) — self-service signup, no session yet.
-const PUBLIC_PREFIXES = ["/checkout"];
 const AUTH_PREFIX = "/api/auth";
 const OWNER_PREFIX = "/owner";
-// /api/webhooks/stripe and /checkout MUST stay public — Stripe webhook + public checkout page.
 // API routes manage their own 401/403 — proxy must not redirect them to "/"
 const API_PREFIX = "/api/";
 // Headers the proxy is the sole authority to set — strip from any incoming request
@@ -24,7 +21,6 @@ const PROXY_CONTROLLED_HEADERS = ["x-tenant-id", "x-tenant-grace"];
 function isPublicPath(pathname: string): boolean {
   return (
     PUBLIC_PATHS.includes(pathname) ||
-    PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
     pathname.startsWith(AUTH_PREFIX) ||
     pathname.startsWith(API_PREFIX)
   );

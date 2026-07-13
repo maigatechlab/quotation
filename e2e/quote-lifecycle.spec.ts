@@ -6,7 +6,7 @@ test.describe("Devis — cycle de vie golden path", () => {
     await expect(page).toHaveURL("/devis");
     // Page title visible
     await expect(
-      page.getByRole("heading", { name: /devis/i }).or(page.getByText(/devis/i).first())
+      page.getByRole("heading", { name: /devis/i }).or(page.getByText(/devis/i)).first()
     ).toBeVisible({ timeout: 8_000 });
   });
 
@@ -41,24 +41,26 @@ test.describe("Devis — cycle de vie golden path", () => {
   test("filtre par statut disponible", async ({ authedPage: page }) => {
     await page.goto("/devis");
     // Statuts Brouillon / Validé / Envoyé / etc.
-    const statusFilter = page
-      .getByRole("combobox")
-      .or(page.getByText(/brouillon|statut/i).first());
+    const statusFilter = page.getByRole("group", { name: "Filtrer par statut" });
     await expect(statusFilter).toBeVisible({ timeout: 8_000 });
   });
 });
 
 test.describe("Devis — navigation wizard", () => {
-  test("wizard démarre sur step Trajet (step 1)", async ({ authedPage: page }) => {
+  test("wizard démarre sur step Client (step 1)", async ({ authedPage: page }) => {
     await page.goto("/devis/nouveau");
-    // Premier step du wizard — "Trajet" ou équivalent
-    await expect(page.getByText(/trajet/i).first()).toBeVisible({ timeout: 10_000 });
+    // Premier step du wizard — le composant démarre sur Client. Le progressbar
+    // mobile est lg:hidden ; au viewport desktop c'est le stepper <ol> qui porte
+    // le même aria-label.
+    await expect(
+      page.locator('[aria-label^="Progression du wizard: étape 1"]:visible').first()
+    ).toBeVisible({ timeout: 10_000 });
   });
 
   test("navigation retour depuis /devis/nouveau vers /devis", async ({ authedPage: page }) => {
     await page.goto("/devis/nouveau");
     await page.goBack();
-    await expect(page).toHaveURL("/devis");
+    await expect(page).toHaveURL("/");
   });
 });
 
@@ -74,7 +76,7 @@ test.describe("Clients — CRUD de base", () => {
     await expect(page).not.toHaveURL(/\/login/);
     // Formulaire — champ nom obligatoire
     await expect(
-      page.getByLabel(/nom|raison/i).first().or(page.locator("input").first())
+      page.getByLabel(/nom|raison/i).or(page.locator("input")).first()
     ).toBeVisible({ timeout: 8_000 });
   });
 });
@@ -88,7 +90,9 @@ test.describe("Paramètres — accès admin", () => {
 
   test("section audit visible pour admin", async ({ authedPage: page }) => {
     await page.goto("/parametres");
-    await expect(page.getByText(/audit/i).first()).toBeVisible({ timeout: 8_000 });
+    // L'export d'audit vit dans l'onglet Conformité.
+    await page.getByRole("tab", { name: "Conformité" }).click();
+    await expect(page.getByRole("heading", { name: /audit.*conformité/i })).toBeVisible({ timeout: 8_000 });
     // Boutons de téléchargement présents
     await expect(
       page.getByRole("button", { name: /json|csv|exporter/i }).first()

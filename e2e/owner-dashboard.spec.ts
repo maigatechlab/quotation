@@ -36,7 +36,7 @@ async function seedOwnerData() {
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const signupRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: OWNER_EMAIL, password: OWNER_PASSWORD, name: "Owner E2E" }),
   });
 
@@ -138,7 +138,7 @@ test.describe("Owner Dashboard (superadmin access)", () => {
     await loginAs(page, OWNER_EMAIL, OWNER_PASSWORD, "Owner");
     await page.goto("/owner");
     await expect(page).toHaveURL("/owner");
-    await expect(page.getByText("Owner Console")).toBeVisible();
+    await expect(page.getByText("Owner Console", { exact: true })).toBeVisible();
     await expect(page.getByText("Vue d'ensemble")).toBeVisible();
   });
 
@@ -174,10 +174,9 @@ test.describe("Owner Dashboard (superadmin access)", () => {
   test("export CSV retourne Content-Type text/csv avec BOM", async ({ page }) => {
     await loginAs(page, OWNER_EMAIL, OWNER_PASSWORD, "Owner");
 
-    const [response] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/api/v1/owner/tenants/export")),
-      page.goto("/api/v1/owner/tenants/export"),
-    ]);
+    // page.goto aborts on downloads — fetch through the page's request context
+    // instead (same cookies, no navigation).
+    const response = await page.request.get("/api/v1/owner/tenants/export");
 
     expect(response.headers()["content-type"]).toContain("text/csv");
     const body = await response.body();
@@ -190,7 +189,7 @@ test.describe("Owner Dashboard (superadmin access)", () => {
   test("layout owner : nav présente, Owner Console visible", async ({ page }) => {
     await loginAs(page, OWNER_EMAIL, OWNER_PASSWORD, "Owner");
     await page.goto("/owner");
-    await expect(page.getByText("Owner Console")).toBeVisible();
+    await expect(page.getByText("Owner Console", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Dashboard" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Tenants" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Retour à l'app" })).toBeVisible();

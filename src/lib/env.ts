@@ -32,9 +32,6 @@ const serverEnvSchema = z
     // Cron
     CRON_SECRET: z.string().optional(),
 
-    // Stripe (Story 7-10)
-    STRIPE_SECRET_KEY: z.string().optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().optional(),
 
     // Multi-tenant subdomains — defaults to placeholder "quotation.com" in
     // tenant-config.ts, so it must be set explicitly in production or every
@@ -53,8 +50,6 @@ const serverEnvSchema = z
       ["RESEND_API_KEY", data.RESEND_API_KEY],
       ["EMAIL_FROM", data.EMAIL_FROM],
       ["CRON_SECRET", data.CRON_SECRET],
-      ["STRIPE_SECRET_KEY", data.STRIPE_SECRET_KEY],
-      ["STRIPE_WEBHOOK_SECRET", data.STRIPE_WEBHOOK_SECRET],
       ["APEX_DOMAIN", data.APEX_DOMAIN],
     ] as const;
 
@@ -145,8 +140,6 @@ export function checkEnv(): void {
     ["RESEND_API_KEY", process.env.RESEND_API_KEY],
     ["EMAIL_FROM", process.env.EMAIL_FROM],
     ["CRON_SECRET", process.env.CRON_SECRET],
-    ["STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY],
-    ["STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET],
     ["APEX_DOMAIN", process.env.APEX_DOMAIN],
   ];
 

@@ -1,5 +1,5 @@
 ﻿import { afterEach, describe, expect, it, vi } from "vitest"
-import { buildResetPasswordHtml, isEmailDeliveryConfigured, sendEmail } from "./email"
+import { buildResetPasswordHtml, buildVerificationEmailHtml, isEmailDeliveryConfigured, sendEmail } from "./email"
 
 describe("email", () => {
   afterEach(() => {
@@ -18,6 +18,16 @@ describe("email", () => {
     expect(html).not.toContain("<script>alert(1)</script>")
   })
 
+  it("escapes verification email HTML content", () => {
+    const html = buildVerificationEmailHtml(
+      'user"><script>alert(1)</script>@example.com',
+      'https://example.com/verify?token=" onclick="alert(1)'
+    )
+
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;")
+    expect(html).toContain("&quot; onclick=&quot;alert(1)")
+    expect(html).not.toContain("<script>alert(1)</script>")
+  })
   it("requires Resend configuration in production", async () => {
     vi.stubEnv("NODE_ENV", "production")
     vi.stubEnv("RESEND_API_KEY", "")

@@ -9,7 +9,7 @@ export const notificationsSchema = z.object({
     .trim()
     .toLowerCase()
     .refine((value) => value === "" || z.string().email().safeParse(value).success, {
-      message: "Adresse email expÃ©diteur invalide.",
+      message: "Adresse email expéditeur invalide.",
     }),
   trialWelcome: z.coerce.boolean(),
   reminderJ7: z.coerce.boolean(),
@@ -21,8 +21,8 @@ export const notificationsSchema = z.object({
 });
 
 const POSTGRES_INT_MAX = 2_147_483_647;
-const PRICE_MESSAGE = "Le prix doit Ãªtre un entier positif (FCFA).";
-const MAX_USERS_MESSAGE = "Le nombre d'utilisateurs doit Ãªtre â‰¥ 1.";
+const PRICE_MESSAGE = "Le prix doit être un entier positif (FCFA).";
+const MAX_USERS_MESSAGE = "Le nombre d'utilisateurs doit être ≥ 1.";
 
 const priceField = z.coerce
   .number()
@@ -48,13 +48,13 @@ export const platformSettingsSchema = z.object({
   trialDays: z.coerce
     .number()
     .int()
-    .min(1, "La durÃ©e d'essai doit Ãªtre entre 1 et 60 jours.")
-    .max(60, "La durÃ©e d'essai doit Ãªtre entre 1 et 60 jours."),
+    .min(1, "La durée d'essai doit être entre 1 et 60 jours.")
+    .max(60, "La durée d'essai doit être entre 1 et 60 jours."),
   gracePeriodDays: z.coerce
     .number()
     .int()
-    .min(0, "La durÃ©e de grÃ¢ce doit Ãªtre entre 0 et 30 jours.")
-    .max(30, "La durÃ©e de grÃ¢ce doit Ãªtre entre 0 et 30 jours."),
+    .min(0, "La durée de grâce doit être entre 0 et 30 jours.")
+    .max(30, "La durée de grâce doit être entre 0 et 30 jours."),
   suspendedContactEmail: z.string().trim().toLowerCase().email("Adresse email invalide."),
   suspendedContactWhatsapp: z.string().trim(),
   expiryMessage: z.string().trim(),

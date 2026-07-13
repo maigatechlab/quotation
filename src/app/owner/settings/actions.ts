@@ -110,5 +110,5 @@ export async function savePlatformSettingsAction(
 
   console.warn("Parametres plateforme mis a jour");
 
-  return { success: true, message: "ParamÃ¨tres enregistrÃ©s." };
+  return { success: true, message: "Paramètres enregistrés." };
 }

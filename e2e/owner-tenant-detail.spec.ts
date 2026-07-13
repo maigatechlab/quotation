@@ -43,7 +43,7 @@ test.beforeAll(async () => {
 
   const ownerRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: OWNER_EMAIL, password: OWNER_PASSWORD, name: "Owner Detail E2E" }),
   });
   if (!ownerRes.ok) throw new Error(`Owner creation failed: ${await ownerRes.text()}`);
@@ -69,7 +69,7 @@ test.beforeAll(async () => {
   // Tenant admin user (via Better Auth signup, then link to tenant)
   const adminSignupRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: TENANT_ADMIN_EMAIL, password: "AdminTenant1234!", name: "Tenant Admin E2E" }),
   });
   if (!adminSignupRes.ok) throw new Error("Tenant admin creation failed");

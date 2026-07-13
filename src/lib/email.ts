@@ -60,6 +60,28 @@ export async function sendEmail({ to, subject, html, text, from }: SendEmailOpti
   }
 }
 
+export function buildVerificationEmailHtml(email: string, verificationUrl: string): string {
+  const safeEmail = escapeHtml(email)
+  const safeVerificationUrl = escapeAttribute(verificationUrl)
+
+  return `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 16px">
+      <h2 style="color:#1a2744">Vérifiez votre adresse email</h2>
+      <p>Bonjour,</p>
+      <p>Confirmez votre adresse email <strong>${safeEmail}</strong> pour activer votre compte Quotation Logistique.</p>
+      <p style="margin:24px 0">
+        <a href="${safeVerificationUrl}"
+           style="background:#1a2744;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+          Vérifier mon adresse email
+        </a>
+      </p>
+      <p style="color:#6b7280;font-size:14px">Ce lien est valable une heure et ne peut être utilisé qu'une seule fois.</p>
+      <p style="color:#6b7280;font-size:14px">Si vous n'avez pas créé de compte, ignorez cet email.</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
+      <p style="color:#9ca3af;font-size:12px">Quotation Logistique — Ne pas répondre à cet email.</p>
+    </div>
+  `
+}
 export function buildResetPasswordHtml(email: string, resetUrl: string): string {
   const safeEmail = escapeHtml(email)
   const safeResetUrl = escapeAttribute(resetUrl)

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { subscriptionPayments, tenants } from "@/lib/schema";
 
 export interface PaymentFilters {
-  method?: "nitta" | "wave" | "amana" | "stripe" | "cash" | "virement";
+  method?: "nitta" | "wave" | "amana" | "cash" | "virement";
   cycle?: "monthly" | "annual";
   from?: string; // YYYY-MM-DD, inclusive
   to?: string; // YYYY-MM-DD, inclusive
@@ -29,7 +29,7 @@ export interface PaymentRow {
 
 export const PAYMENTS_PAGE_SIZE = 25;
 
-const VALID_METHODS = new Set(["nitta", "wave", "amana", "stripe", "cash", "virement"]);
+const VALID_METHODS = new Set(["nitta", "wave", "amana", "cash", "virement"]);
 const VALID_CYCLES = new Set(["monthly", "annual"]);
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
