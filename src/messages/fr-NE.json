@@ -560,44 +560,6 @@
       "banner": "Votre abonnement expire le {date}. Régularisez votre paiement pour éviter l'interruption."
     }
   },
-  "checkout": {
-    "title": "Souscrire à Quotation Logistique",
-    "plan": {
-      "label": "Choisissez votre plan",
-      "pro": "Pro",
-      "enterprise": "Enterprise",
-      "freeHint": "(Le plan Free est disponible sur demande — contactez-nous)"
-    },
-    "cycle": {
-      "label": "Cycle de facturation",
-      "monthly": "Mensuel",
-      "annual": "Annuel",
-      "annualBadge": "2 mois offerts"
-    },
-    "fields": {
-      "adminEmail": "Email administrateur",
-      "companyName": "Nom de la société",
-      "adminName": "Nom complet"
-    },
-    "price": {
-      "xofPerMonth": "{amount}/mois",
-      "xofPerYear": "{amount}/an",
-      "eurApprox": "≈ {amount} €"
-    },
-    "submit": "Payer avec Stripe",
-    "submitting": "Redirection vers Stripe…",
-    "canceled": "Paiement annulé. Vous pouvez réessayer.",
-    "errors": {
-      "planFree": "Le plan Free n'est pas disponible au checkout",
-      "validation": "Vérifiez les champs du formulaire",
-      "stripe": "Impossible de démarrer le paiement. Réessayez."
-    },
-    "success": {
-      "title": "Paiement confirmé",
-      "body": "Votre espace est en cours d'activation. Vous recevrez un email avec vos identifiants de connexion dans quelques instants.",
-      "home": "Retour à l'accueil"
-    }
-  },
   "owner": {
     "layout": {
       "dashboard": "Dashboard",
@@ -615,7 +577,7 @@
       "sections": {
         "pricing": {
           "title": "Plans & tarifs",
-          "note": "Référence commerciale. Les prix Stripe (price_id) sont gérés dans le dashboard Stripe. La modification ici n'affecte pas les abonnements Stripe existants."
+          "note": "Référence commerciale. Les tarifs servent au suivi et à l'enregistrement manuel des paiements."
         },
         "quotas": {
           "title": "Quotas d'utilisateurs"
@@ -995,7 +957,6 @@
         "nitta": "Nitta",
         "wave": "Wave",
         "amana": "Amana",
-        "stripe": "Stripe",
         "cash": "Cash",
         "virement": "Virement"
       }
@@ -1060,7 +1021,6 @@
           "nitta": "Nitta",
           "wave": "Wave",
           "amana": "Amana",
-          "stripe": "Stripe",
           "cash": "Cash",
           "virement": "Virement"
         }

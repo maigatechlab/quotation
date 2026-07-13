@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { eq } from "drizzle-orm"
 import { emitLoginAudit, emitLogoutAudit } from "./audit"
 import { db } from "./db"
-import { buildResetPasswordHtml, isEmailDeliveryConfigured, sendEmail } from "./email"
+import { buildResetPasswordHtml, buildVerificationEmailHtml, isEmailDeliveryConfigured, sendEmail } from "./email"
 import { checkAccountLockout, recordLoginAttempt } from "./lockout"
 import { recordPasswordResetAttempt } from "./password-reset-rate-limit"
 import { session as sessionTable, user as userTable } from "./schema"
@@ -183,6 +183,14 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
+      // The suspended-tenant write guard (assertSessionTenantWritable) reads
+      // session.user.tenantId — without this field, the guard sees no tenant
+      // and suspended tenants can keep writing through the API.
+      tenantId: {
+        type: "string",
+        required: false,
+        input: false,
+      },
     },
   },
   plugins: [accountLockoutPlugin, passwordResetRateLimitPlugin, auditPlugin],
@@ -206,8 +214,12 @@ export const auth = betterAuth({
   emailVerification: {
     sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
-      // eslint-disable-next-line no-console
-      console.log(`\n${"=".repeat(60)}\nEMAIL VERIFICATION\nUser: ${user.email}\nVerification URL: ${url}\n${"=".repeat(60)}\n`)
+      await sendEmail({
+        to: user.email,
+        subject: "Vérifiez votre adresse email — Quotation Logistique",
+        html: buildVerificationEmailHtml(user.email, url),
+        text: `Vérifiez votre adresse email : ${url}\nCe lien expire dans une heure.`,
+      })
     },
   },
 })

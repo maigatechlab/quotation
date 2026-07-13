@@ -1,7 +1,5 @@
-// Server-only platform_settings accessors (story 7-12). Kept out of
-// tenant-config.ts because that file is imported by the client component
-// src/app/checkout/checkout-form.tsx — importing the DB-backed data layer
-// there would pull `pg`/`postgres` Node builtins into the browser bundle.
+// Server-only platform_settings accessors (story 7-12), kept separate so
+// shared tenant configuration stays free of database dependencies.
 import { getPlatformSettings } from "@/lib/data/platform-settings";
 import type { TenantPlan } from "./tenant-config";
 

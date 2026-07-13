@@ -43,7 +43,7 @@ async function seedTenantAdmin(email: string, tenantId: string) {
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const res = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email, password: "TenantAdmin1234!", name: "Tenant Admin E2E" }),
   });
   if (!res.ok) throw new Error(`Failed to create tenant admin ${email}: ${await res.text()}`);
@@ -65,7 +65,7 @@ test.beforeAll(async () => {
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const ownerRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: OWNER_EMAIL, password: OWNER_PASSWORD, name: "Owner Reactivate E2E" }),
   });
   if (!ownerRes.ok) throw new Error(`Owner creation failed: ${await ownerRes.text()}`);
@@ -113,7 +113,9 @@ test.beforeAll(async () => {
       currency: "XOF",
       paymentMethod: "wave",
       paidAt: new Date(),
-      periodStart: new Date(),
+      // findCoveringPayments compares periodStart against today at UTC
+      // midnight — start the period yesterday so the payment always covers.
+      periodStart: daysFromNow(-1),
       periodEnd: coveringPaymentEnd,
       billingCycle: "monthly",
       confirmedBy: superadminId,
@@ -124,7 +126,9 @@ test.beforeAll(async () => {
       currency: "XOF",
       paymentMethod: "nitta",
       paidAt: new Date(),
-      periodStart: new Date(),
+      // findCoveringPayments compares periodStart against today at UTC
+      // midnight — start the period yesterday so the payment always covers.
+      periodStart: daysFromNow(-1),
       periodEnd: coveringPaymentEnd,
       billingCycle: "monthly",
       confirmedBy: superadminId,
@@ -161,7 +165,9 @@ test.describe("Reactivate tenant (superadmin)", () => {
 
     await page.getByRole("button", { name: "Réactiver" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText(/Wave/)).toBeVisible();
+    // The dialog fetches covering payments on open — first hit on a cold dev
+    // server can exceed the default expect timeout.
+    await expect(page.getByText(/Wave/)).toBeVisible({ timeout: 20_000 });
 
     await page.getByRole("button", { name: "Confirmer la réactivation" }).click();
     await expect(page.getByText(/réactivé/)).toBeVisible({ timeout: 10_000 });
@@ -174,7 +180,11 @@ test.describe("Reactivate tenant (superadmin)", () => {
       .limit(1);
     expect(row?.status).toBe("active");
     expect(row?.gracePeriodEndsAt).toBeNull();
-    expect(row?.subscriptionEnd?.toDateString()).toBe(coveringPaymentEnd.toDateString());
+    // Reactivation normalizes the new subscriptionEnd to UTC midnight —
+    // compare calendar days in UTC, not in the local timezone.
+    expect(row?.subscriptionEnd?.toISOString().slice(0, 10)).toBe(
+      coveringPaymentEnd.toISOString().slice(0, 10)
+    );
 
     const events = await db
       .select()

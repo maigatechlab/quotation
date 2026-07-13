@@ -35,7 +35,7 @@ test.beforeAll(async () => {
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const res = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: OWNER_EMAIL, password: OWNER_PASSWORD, name: "Owner Create E2E" }),
   });
   if (!res.ok) throw new Error(`Failed to create owner: ${await res.text()}`);

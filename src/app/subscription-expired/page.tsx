@@ -12,10 +12,12 @@ interface SubscriptionExpiredPageProps {
 function formatEffectiveDate(value: string | undefined): string {
   const date = value ? new Date(value) : new Date();
   const safeDate = Number.isNaN(date.getTime()) ? new Date() : date;
+  // Fixed to UTC so the rendered date doesn't depend on the server's timezone.
   return safeDate.toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "long",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 

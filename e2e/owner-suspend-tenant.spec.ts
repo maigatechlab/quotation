@@ -35,7 +35,7 @@ test.beforeAll(async () => {
   // Create superadmin
   const ownerRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: OWNER_EMAIL, password: OWNER_PASSWORD, name: "Owner Suspend E2E" }),
   });
   if (!ownerRes.ok) throw new Error(`Owner creation failed: ${await ownerRes.text()}`);
@@ -51,7 +51,7 @@ test.beforeAll(async () => {
   // Create tenant admin user
   const tenantAdminRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: TENANT_ADMIN_EMAIL, password: "AdminTenant1234!", name: "Tenant Admin E2E" }),
   });
   if (!tenantAdminRes.ok) throw new Error(`Tenant admin creation failed`);
@@ -114,8 +114,8 @@ test("suspend with reason succeeds and updates status", async ({ page }) => {
 
   await page.getByRole("button", { name: "Confirmer la suspension" }).click();
 
-  // Toast success and page refresh
-  await expect(page.getByText(/suspendu/i)).toBeVisible({ timeout: 10_000 });
+  // Toast success and page refresh (badge + toast both match — take first)
+  await expect(page.getByText(/suspendu/i).first()).toBeVisible({ timeout: 10_000 });
 
   // Verify DB state
   const [row] = await db.select({ status: tenants.status }).from(tenants).where(eq(tenants.id, tenantId)).limit(1);

@@ -37,7 +37,7 @@ async function seedData() {
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const signupRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: OWNER_EMAIL, password: OWNER_PASSWORD, name: "Owner Pay E2E" }),
   });
   if (!signupRes.ok) throw new Error(`Failed to create owner: ${await signupRes.text()}`);
@@ -71,7 +71,7 @@ async function seedData() {
   // Create admin user for active tenant via Better Auth
   const adminSignupRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({
       email: "tenant-admin-pay@quotation.test",
       password: "Tenant1234!",
@@ -183,9 +183,14 @@ test.describe("Record Payment Modal (superadmin)", () => {
     await page.locator("#amount").fill("25000.50");
     await page.getByRole("button", { name: "Enregistrer le paiement" }).click();
 
-    // Error visible for amount
+    // The amount input carries step="1", so native form validation blocks the
+    // submit on a decimal value before the Zod message can render.
     await expect(page.getByRole("dialog")).toBeVisible();
-    await expect(page.getByText(/entier/i)).toBeVisible();
+    await expect
+      .poll(async () =>
+        page.locator("#amount").evaluate((el) => (el as HTMLInputElement).validity.stepMismatch)
+      )
+      .toBe(true);
   });
 
   test("soumission valide → toast success + modal fermé + page refresh", async ({ page }) => {
@@ -205,8 +210,8 @@ test.describe("Record Payment Modal (superadmin)", () => {
 
     await page.getByRole("button", { name: "Enregistrer le paiement" }).click();
 
-    // Toast success
-    await expect(page.getByText(/25 000/)).toBeVisible({ timeout: 10_000 });
+    // Toast success — fr-FR grouping uses a narrow no-break space (U+202F).
+    await expect(page.locator("[data-sonner-toast]").getByText(/25[\s  ]000/)).toBeVisible({ timeout: 10_000 });
 
     // Modal closed
     await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 5_000 });

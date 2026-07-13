@@ -6,7 +6,7 @@ export interface TenantFilters {
   status?: "active" | "trial" | "suspended" | "cancelled";
   plan?: "free" | "pro" | "enterprise";
   expiry?: "expiring-7d" | "in-grace" | "overdue-30d";
-  paymentMethod?: "nitta" | "wave" | "amana" | "stripe" | "cash" | "virement";
+  paymentMethod?: "nitta" | "wave" | "amana" | "cash" | "virement";
   createdAfter?: string;
   createdBefore?: string;
   q?: string;
@@ -18,7 +18,7 @@ export const TENANTS_PAGE_SIZE = 25;
 const VALID_STATUSES = new Set(["active", "trial", "suspended", "cancelled"]);
 const VALID_PLANS = new Set(["free", "pro", "enterprise"]);
 const VALID_EXPIRY = new Set(["expiring-7d", "in-grace", "overdue-30d"]);
-const VALID_PAYMENT_METHODS = new Set(["nitta", "wave", "amana", "stripe", "cash", "virement"]);
+const VALID_PAYMENT_METHODS = new Set(["nitta", "wave", "amana", "cash", "virement"]);
 
 export function parseTenantFilters(
   sp: Record<string, string | string[] | undefined>,

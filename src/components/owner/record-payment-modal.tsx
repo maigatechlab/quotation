@@ -186,7 +186,7 @@ export function RecordPaymentModal({
                 <SelectValue placeholder="Choisir une méthode" />
               </SelectTrigger>
               <SelectContent>
-                {(["nitta", "wave", "amana", "stripe", "cash", "virement"] as const).map((m) => (
+                {(["nitta", "wave", "amana", "cash", "virement"] as const).map((m) => (
                   <SelectItem key={m} value={m}>
                     {t(`methods.${m}`)}
                   </SelectItem>

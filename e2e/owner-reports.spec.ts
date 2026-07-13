@@ -35,7 +35,7 @@ async function seedReportsData() {
   const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const signupRes = await fetch(`${BASE}/api/auth/sign-up/email`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Origin: BASE },
     body: JSON.stringify({ email: OWNER_EMAIL, password: OWNER_PASSWORD, name: "Owner Reports E2E" }),
   });
   if (!signupRes.ok) {
@@ -172,10 +172,11 @@ test.describe("Owner Reports (/owner/reports)", () => {
     const fromStr = from.toISOString().slice(0, 10);
     const toStr = new Date().toISOString().slice(0, 10);
 
-    const [response] = await Promise.all([
-      page.waitForResponse((r) => r.url().includes("/api/v1/owner/reports/payments/export")),
-      page.goto(`/api/v1/owner/reports/payments/export?from=${fromStr}&to=${toStr}`),
-    ]);
+    // page.goto aborts on downloads — fetch through the page's request context
+    // instead (same cookies, no navigation).
+    const response = await page.request.get(
+      `/api/v1/owner/reports/payments/export?from=${fromStr}&to=${toStr}`
+    );
 
     expect(response.headers()["content-type"]).toContain("text/csv");
     const body = await response.body();

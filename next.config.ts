@@ -31,6 +31,15 @@ const nextConfig: NextConfig = {
     ],
   },
   compress: true,
+  turbopack: {
+    resolveAlias: {
+      // flexsearch's CJS bundle dynamically require()s its Node build during
+      // client-component SSR, which Turbopack can't statically resolve and
+      // fails the whole dev compile. Pin the browser ESM bundle instead
+      // (production builds run webpack and are unaffected).
+      flexsearch: "flexsearch/dist/flexsearch.bundle.module.min.mjs",
+    },
+  },
   async headers() {
     return [
       {

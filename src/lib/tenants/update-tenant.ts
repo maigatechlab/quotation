@@ -22,8 +22,13 @@ export interface UpdateTenantResult {
 export async function applyTenantUpdate(params: UpdateTenantParams): Promise<UpdateTenantResult> {
   const { tenantId, input, actorId, actorEmail } = params;
 
-  // empty string means "clear the notes" â€” store NULL, not ""
+  // empty string means "clear the notes" — store NULL, not ""
   const normalizedNotes = input.notes === undefined ? undefined : input.notes === "" ? null : input.notes;
+
+  // Resolved before the transaction: getPlanLimits queries through the shared
+  // pool, and doing that while the transaction holds a connection deadlocks
+  // when the pool is down to one connection.
+  const planLimits = input.plan !== undefined ? await getPlanLimits() : null;
 
   // transaction + FOR UPDATE: the before snapshot and the update must be atomic,
   // otherwise concurrent PATCHes record a stale `before` in the audit event
@@ -44,9 +49,8 @@ export async function applyTenantUpdate(params: UpdateTenantParams): Promise<Upd
     };
 
     const payload: Partial<typeof tenants.$inferInsert> = {};
-    if (input.plan !== undefined) {
+    if (input.plan !== undefined && planLimits) {
       payload.plan = input.plan;
-      const planLimits = await getPlanLimits();
       // keep the per-tenant column in sync with the plan (source of truth for list/CSV/enforcement)
       payload.maxUsers = planLimits[input.plan].maxUsers;
     }
@@ -82,7 +86,7 @@ export async function applyTenantUpdate(params: UpdateTenantParams): Promise<Upd
         actorId,
         before: snapshotBefore,
         after,
-        note: `ModifiÃ© par ${actorEmail}`,
+        note: `Modifié par ${actorEmail}`,
       });
     } catch (err) {
       console.error("tenant_events (update) insert failed", err instanceof Error ? err.message : err);

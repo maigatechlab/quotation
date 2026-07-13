@@ -18,7 +18,7 @@ export function shouldHideNav(pathname: string): boolean {
   if (HIDE_NAV_EXACT.some((p) => pathname === p || pathname.startsWith(p + "/"))) {
     return true;
   }
-  // Masquer sur /devis/[id] (prÃ©visualisation) mais pas sur /devis (liste)
+  // Masquer sur /devis/[id] (prévisualisation) mais pas sur /devis (liste)
   if (/^\/devis\/.+$/.test(pathname)) {
     return true;
   }

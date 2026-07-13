@@ -1,5 +1,8 @@
 ﻿# generated: 2026-06-21
 # last_updated: 2026-07-08
+# story 8-1 removed 2026-07-08 (Stripe unsupported for Niger/Mali/Burkina Faso billing entity — verification story dropped, Stripe integration code 7-10 kept as-is; epic-8 -> done, all remaining stories complete)
+# story 8-7 done 2026-07-08 (follow-up review confirmed: both findings closed, env.test.ts 9/9, env:check + env:check:production verified, pnpm check 891/891 tests 0 errors 46 pre-existing warnings, no new findings)
+# story 8-7 done 2026-07-08 (code review: 1 Medium patched - env:check:production now validates malformed NEXT_PUBLIC_SENTRY_DSN; 892/892 tests, check OK, build:ci OK; pnpm build blocked by pre-existing local db:migrate infra)
 # story 5-1 done 2026-06-26
 # story 5-3 done 2026-06-26
 # story 4-3 done 2026-06-27
@@ -266,13 +269,12 @@ development_status:
   # Source: Docs/testing/test-plan.md (passe de test E2E 2026-07-06)
   # DÃ©clenchÃ©e par 4 bugs trouvÃ©s pendant la passe de test (2 critiques de sÃ©curitÃ© cross-tenant
   # sur /api/v1/users, dÃ©jÃ  corrigÃ©s hors cycle de story â€” voir 8-6 pour l'audit Ã©largi restant)
-  epic-8: in-progress
-  8-1-stripe-e2e-verification: ready-for-dev
+  epic-8: done
   8-2-transactional-email-verification: done
   8-3-cron-expiry-reminders-verification: done
   8-4-offline-sync-edge-cases: done
   8-5-exports-verification: done
   8-6-cross-tenant-security-audit: done
-  8-7-production-cleanup: review
+  8-7-production-cleanup: done
   8-8-quote-status-actor-display: done
   epic-8-retrospective: optional

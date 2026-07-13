@@ -1,8 +1,8 @@
 ﻿import { describe, expect, it } from "vitest";
 import { platformSettingsSchema } from "./platform-settings";
 
-const PRICE_MESSAGE = "Le prix doit Ãªtre un entier positif (FCFA).";
-const MAX_USERS_MESSAGE = "Le nombre d'utilisateurs doit Ãªtre â‰¥ 1.";
+const PRICE_MESSAGE = "Le prix doit être un entier positif (FCFA).";
+const MAX_USERS_MESSAGE = "Le nombre d'utilisateurs doit être ≥ 1.";
 
 function validInput(overrides: Record<string, unknown> = {}) {
   return {

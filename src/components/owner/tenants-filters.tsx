@@ -113,7 +113,6 @@ export function TenantsFilters({ current }: Props) {
             <SelectItem value="nitta">Nitta</SelectItem>
             <SelectItem value="wave">Wave</SelectItem>
             <SelectItem value="amana">Amana</SelectItem>
-            <SelectItem value="stripe">Stripe</SelectItem>
             <SelectItem value="cash">Cash</SelectItem>
             <SelectItem value="virement">Virement</SelectItem>
           </SelectContent>

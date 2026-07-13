@@ -1079,25 +1079,7 @@ So que je puisse reprendre le service après incident avec une perte de données
 
 Sécuriser et vérifier bout-en-bout les fonctionnalités déjà implémentées mais jamais testées en conditions réelles, avant la première mise en production. Épic déclenché par une passe de test manuel E2E (2026-07-06, voir `Docs/testing/test-plan.md`) qui a couvert l'intégralité des flux Epic 1-7 côté fonctionnel et trouvé 4 bugs (2 critiques de sécurité cross-tenant, corrigés immédiatement) mais a explicitement exclu de son périmètre : Stripe réel, emails réels, cron, resync réseau, exports fichiers. Cet epic ferme ces trous avant le go-live.
 
-### Story 8.1: Vérification bout-en-bout du paiement Stripe
-
-As a opérateur de la plateforme,
-I want que le flux Stripe (checkout trial→payant + webhook) soit vérifié avec de vraies clés de test,
-So that les tenants peuvent réellement passer en payant sans intervention manuelle.
-
-**Acceptance Criteria:**
-
-**Given** `POST /api/v1/checkout/create-session` et `POST /api/webhooks/stripe` (Story 7-10, déjà codés)
-**When** je lance `stripe listen --forward-to localhost:3000/api/webhooks/stripe` avec des clés de test Stripe
-**Then** un checkout réel (carte de test Stripe) déclenche le webhook, met à jour `companySubscription`/`tenants` et enregistre un paiement dans `subscriptionPayments`
-
-**Given** l'idempotence attendue (table `stripeProcessedEvents`)
-**When** Stripe renvoie le même événement deux fois (retry réseau)
-**Then** le second traitement est un no-op (pas de double paiement enregistré)
-
-**Given** un paiement Stripe échoué ou une carte refusée
-**When** le webhook reçoit l'événement d'échec
-**Then** le tenant reste dans son état courant (pas de passage en payant), et l'échec est visible dans les logs/journal
+> Story 8.1 (vérification Stripe) retirée le 2026-07-08 — Stripe non disponible pour entité Niger/Mali/Burkina Faso, hors liste pays supportés. Code Stripe (Story 7-10) conservé tel quel, non désactivé.
 
 ### Story 8.2: Vérification de la livraison des emails transactionnels
 

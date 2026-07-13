@@ -134,8 +134,7 @@ export async function recordPayment(params: RecordPaymentParams): Promise<Record
       const currentEnd = tenant.subscriptionEnd;
       const newEnd = new Date(params.input.periodEnd);
       const extendEnd = currentEnd === null || currentEnd < newEnd;
-      // A paid trial becomes a paying customer — mirrors the Stripe checkout
-      // path (status "active", trialEndsAt cleared).
+      // A paid trial becomes a paying customer (status "active", trialEndsAt cleared).
       const promoteFromTrial = tenant.status === "trial";
       if (extendEnd || promoteFromTrial) {
         await tx
