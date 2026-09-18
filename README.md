@@ -6,7 +6,7 @@ commissionnaires en douane du Niger — et, à terme, de l'espace AES.
 *A French-language SaaS for logistics quotations in West Africa. Multi-tenant,
 offline-first, built for the Sahel.*
 
-**Démo :** https://quotation-amber.vercel.app
+**Démo :** https://quotationlogistique.com
 
 <!-- À AJOUTER : une capture d'écran du wizard de devis ou du PDF généré. -->
 
