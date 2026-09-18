@@ -135,7 +135,14 @@ function makeInput(overrides: Partial<RecordPaymentInput> = {}): RecordPaymentIn
 
 const PARAMS = { actorId: "superadmin-1", actorEmail: "owner@maigatechlab.test" };
 
+// Les fixtures ci-dessus couvrent la période 15/06 → 15/07 2026. La
+// réactivation refuse une période déjà expirée, donc l'horloge doit rester
+// dans cette fenêtre — sinon la suite casse d'elle-même avec le temps.
+// `toFake: ["Date"]` uniquement : simuler les timers bloquerait les await.
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-06-20T00:00:00.000Z"));
+
   h.tenantRow.status = "active";
   h.tenantRow.subscriptionStart = null;
   h.tenantRow.subscriptionEnd = null;
@@ -153,6 +160,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.clearAllMocks();
 });
 

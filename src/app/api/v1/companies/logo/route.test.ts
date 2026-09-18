@@ -63,10 +63,13 @@ function makeLogoRequest(
   const file = new File([content], fileName, { type: fileType });
   const formData = new FormData();
   formData.append("logo", file);
-  return new Request("http://localhost/api/v1/companies/logo", {
+  const req = new Request("http://localhost/api/v1/companies/logo", {
     method: "POST",
     body: formData,
   });
+  // Bypass Request serialization — jsdom ne préserve pas File via formData()
+  vi.spyOn(req, "formData").mockResolvedValue(formData);
+  return req;
 }
 
 describe("POST /api/v1/companies/logo", () => {
